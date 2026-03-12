@@ -1,26 +1,37 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F8F8F8;
+  --foreground: #000000;
+  
+  /* Brand Colors */
+  --brand-primary: #F9EFE5;
+  --brand-black: #000000;
+  
+  /* Base Colors */
+  --base-gray-1: #7F8790;
+  --base-gray-2: #8F92A1;
+  --base-light: #F8F8F8;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-black: var(--brand-black);
+  
+  --color-base-gray-1: var(--base-gray-1);
+  --color-base-gray-2: var(--base-gray-2);
+  --color-base-light: var(--base-light);
+
+  --font-ibm: var(--font-ibm-plex-sans);
+  --font-roboto: var(--font-roboto);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Force specific colors even in dark mode if needed, 
+   but for now let's keep it simple to fix the user's issue */
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-ibm-plex-sans), sans-serif;
+  margin: 0;
 }
