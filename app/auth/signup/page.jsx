@@ -1,28 +1,21 @@
 import React from 'react'
 import Image from 'next/image'
+import Logo from '@/components/Logo'
+import Link from 'next/link'
 
 function SignupPage() {
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-[#F9EFE5] dark:bg-[#F9EFE5] font-ibm p-6 sm:p-10 overflow-hidden">
       {/* Logo Container */}
-      <div className="absolute -top-5 -left-2 lg:-top-10 lg:-left-5">
-        <Image 
-          src="/image/Finvera-logo.png" 
-          alt="Finvera Logo" 
-          width={455} 
-          height={80}
-          className="h-28 sm:h-36 lg:h-52 w-auto object-contain"
-          priority
-        />
-      </div>
+      <Logo />
       <div className="flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-20 max-w-6xl w-full">
         <section className="w-full lg:w-1/2 flex justify-center">
           <Image 
             src="/image/Signup.svg" 
             alt="Signup Illustration" 
-            width={500} 
-            height={500}
-            className="w-4/5 sm:w-2/3 lg:w-full h-auto"
+            width={400} 
+            height={400}
+            className="w-4/5 sm:w-2/3 lg:w-2/3 h-auto"
             priority
           />
         </section>
@@ -46,9 +39,9 @@ function SignupPage() {
             <button className='text-white bg-black rounded-xl py-4 border-2 border-transparent hover:bg-transparent hover:border-black cursor-pointer hover:text-black font-semibold transition-all shadow-lg hover:shadow-none'>
               Send Reset Link
             </button>
-            <button type="button" className='text-brand-black font-semibold cursor-pointer hover:text-base-gray-1 transition-all mt-2'>
+            <Link href="/auth/signin" className='text-center text-brand-black font-semibold cursor-pointer hover:text-base-gray-1 transition-all mt-2'>
               Back to the Login page
-            </button>
+            </Link>
           </form>
           
           <div className="mt-10 pt-6 border-t border-base-gray-1/10 text-center">
