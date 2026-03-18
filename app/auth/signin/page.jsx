@@ -26,7 +26,7 @@ function SigninPage() {
             alt="Signin Illustration" 
             width={400} 
             height={400}
-            className="w-3/4 sm:w-2/3 lg:max-w-[400px] h-auto object-contain drop-shadow-lg"
+            className="w-3/4 sm:w-2/3 lg:max-w-100 h-auto object-contain drop-shadow-lg"
             priority
           />
         </section>
@@ -78,7 +78,7 @@ function SigninPage() {
                 </button>
               </div>
               <Link 
-                href="/auth/signup"
+                href="/auth/forgetpassword"
                 className="text-base-gray-1 hover:text-brand-black cursor-pointer self-end text-xs sm:text-sm font-medium transition-colors mt-1"
               >
                 Forget Password?
