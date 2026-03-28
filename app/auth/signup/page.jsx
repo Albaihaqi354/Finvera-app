@@ -218,7 +218,7 @@ function SignupPage() {
                 </div>
 
                 {usePreset && (
-                  <div className="space-y-6 max-h-[350px] sm:max-h-[450px] overflow-y-auto pr-2">
+                  <div className="space-y-6 max-h-87.5 sm:max-h-112.5 overflow-y-auto pr-2">
                     <div>
                       <h2 className="text-sm font-bold text-base-gray-1 mb-3">Income Categories</h2>
                       <div className="space-y-2">
