@@ -3,11 +3,11 @@
 :root {
   --background: #F8F8F8;
   --foreground: #000000;
-  
+
   /* Brand Colors */
   --brand-primary: #F9EFE5;
   --brand-black: #000000;
-  
+
   /* Base Colors */
   --base-gray-1: #7F8790;
   --base-gray-2: #8F92A1;
@@ -17,7 +17,7 @@
 @theme inline {
   --color-brand-primary: var(--brand-primary);
   --color-brand-black: var(--brand-black);
-  
+
   --color-base-gray-1: var(--base-gray-1);
   --color-base-gray-2: var(--base-gray-2);
   --color-base-light: var(--base-light);
