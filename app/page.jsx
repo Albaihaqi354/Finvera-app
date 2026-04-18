@@ -22,13 +22,13 @@ export default function Home() {
         </div>
         <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-black text-brand-primary px-5 transition-colors hover:bg-base-gray-1 dark:bg-brand-primary dark:text-brand-black md:w-[158px]"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-black text-brand-primary px-5 transition-colors hover:bg-base-gray-1 dark:bg-brand-primary dark:text-brand-black md:w-39.5"
             href="#"
           >
             Mulai Sekarang
           </a>
           <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-base-gray-1 px-5 transition-colors hover:border-transparent hover:bg-brand-primary dark:border-base-gray-2 dark:hover:bg-brand-black md:w-[158px]"
+            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-base-gray-1 px-5 transition-colors hover:border-transparent hover:bg-brand-primary dark:border-base-gray-2 dark:hover:bg-brand-black md:w-39.5"
             href="#"
           >
             Pelajari Lebih Lanjut
