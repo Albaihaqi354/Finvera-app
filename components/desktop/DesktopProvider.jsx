@@ -1,5 +1,6 @@
 "use client"
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { storageAPI } from '@/lib/storage'
 
 const DesktopContext = createContext()
 
@@ -43,22 +44,22 @@ export function DesktopProvider({ children }) {
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    setAccounts(JSON.parse(localStorage.getItem('finvera_accounts') || 'null') || DEFAULT_ACCOUNTS)
-    setCategories(JSON.parse(localStorage.getItem('finvera_categories') || 'null') || DEFAULT_CATEGORIES)
-    setTags(JSON.parse(localStorage.getItem('finvera_tags') || 'null') || DEFAULT_TAGS)
-    setTransactions(JSON.parse(localStorage.getItem('finvera_transactions') || 'null') || DEFAULT_TRANSACTIONS)
-    const savedVisibility = localStorage.getItem('finvera_balance_visible')
-    if (savedVisibility !== null) setIsBalanceVisible(savedVisibility === 'true')
+    setAccounts(storageAPI.accounts.getAll() || DEFAULT_ACCOUNTS)
+    setCategories(storageAPI.categories.getAll() || DEFAULT_CATEGORIES)
+    setTags(storageAPI.tags.getAll() || DEFAULT_TAGS)
+    setTransactions(storageAPI.transactions.getAll() || DEFAULT_TRANSACTIONS)
+    const savedVisibility = storageAPI.preferences.getBalanceVisible()
+    if (savedVisibility !== null) setIsBalanceVisible(savedVisibility)
     setIsLoaded(true)
   }, [])
 
   useEffect(() => {
     if (!isLoaded) return
-    localStorage.setItem('finvera_accounts', JSON.stringify(accounts))
-    localStorage.setItem('finvera_categories', JSON.stringify(categories))
-    localStorage.setItem('finvera_tags', JSON.stringify(tags))
-    localStorage.setItem('finvera_transactions', JSON.stringify(transactions))
-    localStorage.setItem('finvera_balance_visible', String(isBalanceVisible))
+    storageAPI.accounts.saveAll(accounts)
+    storageAPI.categories.saveAll(categories)
+    storageAPI.tags.saveAll(tags)
+    storageAPI.transactions.saveAll(transactions)
+    storageAPI.preferences.saveBalanceVisible(isBalanceVisible)
   }, [accounts, categories, tags, transactions, isBalanceVisible, isLoaded])
 
   const addAccount = useCallback((account) => {
