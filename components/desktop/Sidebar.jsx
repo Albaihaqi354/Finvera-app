@@ -33,9 +33,8 @@ function SidebarItem({ icon, label, active = false, onClick, action }) {
     <div className="flex items-center gap-1 pr-1">
       <div
         onClick={onClick}
-        className={`flex flex-1 items-center gap-3 px-4 py-2.5 rounded-xl cursor-pointer transition-colors ${
-          active ? 'bg-brand-black/10' : 'hover:bg-brand-black/5'
-        }`}
+        className={`flex flex-1 items-center gap-3 px-4 py-2.5 rounded-xl cursor-pointer transition-colors ${active ? 'bg-brand-black/10' : 'hover:bg-brand-black/5'
+          }`}
       >
         <div className={`transition-colors ${active ? 'text-brand-black/70' : 'text-brand-black/50'}`}>{icon}</div>
         <span className="text-sm font-bold text-brand-black/80">{label}</span>
@@ -60,25 +59,13 @@ export default function Sidebar() {
 
   return (
     <aside className="w-full lg:w-64 shrink-0 bg-[#f9efe5] rounded-4xl pl-2 pr-4 py-6 text-brand-black overflow-y-auto border-r border-brand-black/5 shadow-sm m-2 flex flex-col">
-      <div className="px-4 mb-4 hidden lg:block">
-        <Image
-          src="/image/Finvera-logo.png"
-          alt="Finvera"
-          width={140}
-          height={40}
-          className="h-9 w-auto object-contain"
-          priority
-        />
-      </div>
-
       <div className="space-y-0.5 flex-1">
         <div
           onClick={() => navigateTo('overview')}
-          className={`flex items-center gap-3 px-4 py-3 rounded-r-full -ml-2 pl-6 cursor-pointer transition-all ${
-            isActive('overview')
-              ? 'bg-linear-to-r from-[#8B4513] to-[#D2691E] shadow-md'
-              : 'bg-white/60 hover:bg-white/80'
-          }`}
+          className={`flex items-center gap-3 px-4 py-3 rounded-r-full -ml-2 pl-6 cursor-pointer transition-all ${isActive('overview')
+            ? 'bg-linear-to-r from-[#8B4513] to-[#D2691E] shadow-md'
+            : 'bg-white/60 hover:bg-white/80'
+            }`}
         >
           <Home className={`w-5 h-5 ${isActive('overview') ? 'text-white' : 'text-brand-black/60'}`} />
           <span className={`font-bold text-sm ${isActive('overview') ? 'text-white' : 'text-brand-black/70'}`}>
