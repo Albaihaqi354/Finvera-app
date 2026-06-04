@@ -77,7 +77,7 @@ export default function InsightsPage() {
                 <div className="flex items-center justify-between text-sm font-bold mb-2">
                   <span className="text-brand-black/80">{item.name}</span>
                   <span className="text-brand-black">
-                    $ {item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ({item.percent}%)
+                    Rp {item.amount.toLocaleString('id-ID')} ({item.percent}%)
                   </span>
                 </div>
                 <div className="w-full h-3 bg-[#F8F8F8] rounded-full overflow-hidden">

@@ -63,18 +63,23 @@ export default function OverviewPage() {
     return { months, maxVal }
   }, [getTotalsForRange, now])
 
-  if (!isLoaded) return <div className="p-8 text-center text-brand-black/50">Loading...</div>
+  // Memoised so these only recompute when accounts/transactions change
+  const { totalAssets, totalLiabilities, netAssets } = useMemo(() => ({
+    totalAssets:      accounts.filter(a => a.type === 'asset').reduce((acc, curr) => acc + curr.balance, 0),
+    totalLiabilities: accounts.filter(a => a.type === 'liability').reduce((acc, curr) => acc + Math.abs(curr.balance), 0),
+    netAssets:        accounts.filter(a => a.type === 'asset').reduce((acc, curr) => acc + curr.balance, 0)
+                    - accounts.filter(a => a.type === 'liability').reduce((acc, curr) => acc + Math.abs(curr.balance), 0),
+  }), [accounts])
 
-  const totalAssets = accounts.filter(a => a.type === 'asset').reduce((acc, curr) => acc + curr.balance, 0)
-  const totalLiabilities = accounts.filter(a => a.type === 'liability').reduce((acc, curr) => acc + Math.abs(curr.balance), 0)
-  const netAssets = totalAssets - totalLiabilities
+  const { monthlyIncome, monthlyExpense } = useMemo(() => {
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const { income, expense } = getTotalsForRange(monthStart, endOfDay(now))
+    return { monthlyIncome: income, monthlyExpense: expense }
+  }, [getTotalsForRange, now.getMonth(), now.getFullYear()])
 
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const { income: monthlyIncome, expense: monthlyExpense } = getTotalsForRange(monthStart, endOfDay(now))
-
-  const formatMoney = (amount) => amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const formatMoney = (amount) => amount.toLocaleString('id-ID')
   const monthName = now.toLocaleString('default', { month: 'long' })
-  const mask = (val) => (isBalanceVisible ? `$ ${formatMoney(val)}` : '$ •••••••')
+  const mask = (val) => (isBalanceVisible ? `Rp ${formatMoney(val)}` : 'Rp •••••••')
 
   return (
     <section className="grow space-y-6">

@@ -2,11 +2,13 @@
 import { useMemo, useState } from 'react'
 import { PlusCircle, Search, Trash2, X } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
+import { useDebounce } from '@/hooks/useDebounce'
 
 export default function CategoriesPage() {
   const { categories, addCategory, deleteCategory, isLoaded } = useDesktop()
   const [activeTab, setActiveTab] = useState('expense')
-  const [search, setSearch] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const search = useDebounce(searchInput, 300)
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({ name: '', icon: '📁', parentId: '' })
 
@@ -76,8 +78,8 @@ export default function CategoriesPage() {
               <input
                 type="text"
                 placeholder="Search category"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
                 className="pl-9 pr-4 py-1.5 bg-[#F8F8F8] rounded-lg text-sm focus:outline-none focus:bg-white focus:border-brand-black/20 w-48 sm:w-64"
               />
             </div>

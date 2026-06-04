@@ -19,7 +19,7 @@ export default function AccountsPage() {
   const totalAssets = accounts.filter(a => a.type === 'asset').reduce((s, a) => s + a.balance, 0)
   const totalLiabilities = accounts.filter(a => a.type === 'liability').reduce((s, a) => s + Math.abs(a.balance), 0)
   const netAssets = totalAssets - totalLiabilities
-  const fmt = (n) => (isBalanceVisible ? `$ ${n.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '$ •••••••')
+  const fmt = (n) => (isBalanceVisible ? `Rp ${n.toLocaleString('id-ID')}` : 'Rp •••••••')
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -105,8 +105,8 @@ export default function AccountsPage() {
               <div className="flex items-center gap-4">
                 <span className={`text-sm font-bold ${acc.balance < 0 ? 'text-[#009E9E]' : 'text-brand-black'}`}>
                   {isBalanceVisible
-                    ? `$ ${Math.abs(acc.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
-                    : '$ •••••••'}
+                    ? `Rp ${Math.abs(acc.balance).toLocaleString('id-ID')}`
+                    : 'Rp •••••••'}
                 </span>
                 <button
                   type="button"
