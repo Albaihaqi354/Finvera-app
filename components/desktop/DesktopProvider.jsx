@@ -1,6 +1,7 @@
 "use client"
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { storageAPI } from '@/lib/storage'
+import { storageAPI, PRESET_CATEGORIES_VERSION } from '@/lib/storage'
+import { buildDefaultCategories, getDefaultExpenseCategoryId } from '@/lib/presetCategories'
 
 const DesktopContext = createContext()
 
@@ -10,14 +11,7 @@ const DEFAULT_ACCOUNTS = [
   { id: 'acc3', name: 'Credit Card', balance: -298.92, type: 'liability', category: 'Credit Card', color: '#F14C4C' }
 ]
 
-const DEFAULT_CATEGORIES = [
-  { id: 'cat1', name: 'Food & Dining', type: 'expense', icon: '🍔', parentId: null },
-  { id: 'cat1a', name: 'Groceries', type: 'expense', icon: '🛒', parentId: 'cat1' },
-  { id: 'cat2', name: 'Transportation', type: 'expense', icon: '🚗', parentId: null },
-  { id: 'cat3', name: 'Salary', type: 'income', icon: '💰', parentId: null },
-  { id: 'cat4', name: 'Shopping', type: 'expense', icon: '🛍️', parentId: null },
-  { id: 'cat5', name: 'Internal Transfer', type: 'transfer', icon: '🔄', parentId: null }
-]
+const DEFAULT_CATEGORIES = buildDefaultCategories()
 
 const DEFAULT_TAGS = [
   { id: 'tag1', name: 'Vacation 2026' },
@@ -26,7 +20,16 @@ const DEFAULT_TAGS = [
 ]
 
 const DEFAULT_TRANSACTIONS = [
-  { id: 'tx1', type: 'expense', amount: 45.00, accountId: 'acc2', categoryId: 'cat1', date: new Date().toISOString(), note: 'Lunch', tagIds: [] }
+  {
+    id: 'tx1',
+    type: 'expense',
+    amount: 45.00,
+    accountId: 'acc2',
+    categoryId: getDefaultExpenseCategoryId(DEFAULT_CATEGORIES),
+    date: new Date().toISOString(),
+    note: 'Lunch',
+    tagIds: []
+  }
 ]
 
 function applyBalanceChange(accounts, accountId, delta) {
@@ -45,9 +48,36 @@ export function DesktopProvider({ children }) {
 
   useEffect(() => {
     setAccounts(storageAPI.accounts.getAll() || DEFAULT_ACCOUNTS)
-    setCategories(storageAPI.categories.getAll() || DEFAULT_CATEGORIES)
+
+    const savedCategories = storageAPI.categories.getAll()
+    const categoriesVersion = storageAPI.categories.getVersion()
+    const categoriesMigrated = !savedCategories || categoriesVersion < PRESET_CATEGORIES_VERSION
+
+    if (categoriesMigrated) {
+      setCategories(DEFAULT_CATEGORIES)
+      storageAPI.categories.saveAll(DEFAULT_CATEGORIES)
+      storageAPI.categories.saveVersion(PRESET_CATEGORIES_VERSION)
+    } else {
+      setCategories(savedCategories)
+    }
+
+    const savedTx = storageAPI.transactions.getAll()
+    const activeCategories = categoriesMigrated ? DEFAULT_CATEGORIES : (savedCategories || DEFAULT_CATEGORIES)
+    const validCategoryIds = new Set(activeCategories.map(c => c.id))
+    const defaultExpenseId = getDefaultExpenseCategoryId(activeCategories)
+
+    if (savedTx?.length) {
+      setTransactions(
+        savedTx.map(tx => ({
+          ...tx,
+          categoryId: validCategoryIds.has(tx.categoryId) ? tx.categoryId : defaultExpenseId,
+        }))
+      )
+    } else {
+      setTransactions(DEFAULT_TRANSACTIONS)
+    }
+
     setTags(storageAPI.tags.getAll() || DEFAULT_TAGS)
-    setTransactions(storageAPI.transactions.getAll() || DEFAULT_TRANSACTIONS)
     const savedVisibility = storageAPI.preferences.getBalanceVisible()
     if (savedVisibility !== null) setIsBalanceVisible(savedVisibility)
     setIsLoaded(true)

@@ -35,3 +35,14 @@ body {
   font-family: var(--font-ibm-plex-sans), sans-serif;
   margin: 0;
 }
+
+/* ezBookkeeping-style chart container heights */
+.pie-chart-container {
+  min-height: 460px;
+}
+
+@media (min-width: 600px) {
+  .pie-chart-container {
+    min-height: 520px;
+  }
+}

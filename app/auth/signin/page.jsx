@@ -7,6 +7,7 @@ import { Eye, EyeOff, User, Lock, Globe, AlertCircle } from 'lucide-react'
 
 // ─── Mock User Database ───────────────────────────────────────────────────────
 const MOCK_USERS = [
+  { username: 'demo', email: 'demo@finvera.app', password: 'ezbookkeeping' },
   { username: 'demo', email: 'demo@finvera.app', password: 'Finvera' },
   { username: 'admin', email: 'admin@finvera.app', password: 'admin123' },
 ]
@@ -177,11 +178,11 @@ function SigninPage() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => { setUsername('demo'); setPassword('Finvera'); setError('') }}
+                onClick={() => { setUsername('demo'); setPassword('ezbookkeeping'); setError('') }}
                 className="text-left p-3 rounded-xl bg-[#F8F8F8] hover:bg-brand-black/5 border border-transparent hover:border-brand-black/10 transition-all cursor-pointer"
               >
                 <p className="text-xs font-bold text-brand-black">demo</p>
-                <p className="text-[10px] font-medium text-base-gray-1 mt-0.5">password: Finvera</p>
+                <p className="text-[10px] font-medium text-base-gray-1 mt-0.5">password: ezbookkeeping</p>
               </button>
               <button
                 type="button"

@@ -1,6 +1,9 @@
 "use client"
 import { useMemo, useState } from 'react'
-import { PieChart, BarChart3, ChevronDown, Calendar } from 'lucide-react'
+import MdiIcon from '@/components/icons/MdiIcon'
+import EChart from '@/components/charts/EChart'
+import { buildPieChartOption } from '@/lib/chart/options'
+import { mdiCalendarOutline, mdiChevronDown } from '@/lib/icons/mdi'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 
 function getRangeBounds(range) {
@@ -20,67 +23,35 @@ function getRangeBounds(range) {
   return { start, end }
 }
 
-function CategoryChart({ title, type, transactions, categories, colorClass, borderClass }) {
-  const data = useMemo(() => {
-    const filtered = transactions.filter(t => t.type === type)
-    const map = {}
-    filtered.forEach(tx => {
+function aggregateByCategory(transactions, categories, type) {
+  const map = {}
+  transactions
+    .filter(t => t.type === type)
+    .forEach(tx => {
       const name = categories.find(c => c.id === tx.categoryId)?.name || 'Unknown'
       map[name] = (map[name] || 0) + tx.amount
     })
-    const total = Object.values(map).reduce((s, v) => s + v, 0) || 1
-    return Object.entries(map)
-      .map(([name, amount]) => ({ name, amount, percent: Math.round((amount / total) * 100) }))
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 5)
-  }, [transactions, categories, type])
+  return Object.entries(map)
+    .map(([name, amount]) => ({ name, amount }))
+    .sort((a, b) => b.amount - a.amount)
+}
 
-  const shades = [
-    borderClass,
-    borderClass.replace(']', '/60]'),
-    borderClass.replace(']', '/30]'),
-    borderClass.replace(']', '/20]'),
-    borderClass.replace(']', '/10]')
-  ]
+function CategoryPieCard({ title, items }) {
+  const option = useMemo(() => buildPieChartOption(items), [items])
 
-  if (data.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-brand-black/5">
         <h3 className="text-sm font-bold text-brand-black mb-4">{title}</h3>
-        <p className="text-sm text-brand-black/40 py-8 text-center">No data in this period.</p>
+        <p className="text-sm text-brand-black/40 py-16 text-center">No data in this period.</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-sm border border-brand-black/5">
-      <div className="flex items-center gap-2 mb-4">
-        <div className={`w-8 h-8 rounded-lg ${colorClass} flex items-center justify-center`}>
-          {type === 'income' ? <PieChart className="w-4 h-4" /> : <BarChart3 className="w-4 h-4" />}
-        </div>
-        <h3 className="text-sm font-bold text-brand-black">{title}</h3>
-      </div>
-      <div className="flex items-center gap-8">
-        <div className={`w-40 h-40 rounded-full border-[12px] ${shades[0]} flex items-center justify-center shadow-inner`}>
-          <span className="text-xs font-bold text-brand-black/40">Total</span>
-        </div>
-        <div className="space-y-3 flex-1">
-          {data.map((item, i) => (
-            <div key={item.name}>
-              <div className="flex items-center justify-between text-xs font-bold mb-1">
-                <div className="flex items-center gap-1.5">
-                  <div className={`w-2.5 h-2.5 rounded-full ${colorClass.replace('/10', '').replace('text-', 'bg-')}`} />
-                  <span className="text-brand-black/70">{item.name}</span>
-                </div>
-                <span className="text-brand-black">{item.percent}%</span>
-              </div>
-              <div className="w-full h-1.5 bg-[#F8F8F8] rounded-full overflow-hidden">
-                <div className={colorClass.replace('/10', '').replace('text-', 'bg-')} style={{ width: `${item.percent}%`, height: '100%' }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+    <div className="bg-white rounded-3xl p-4 shadow-sm border border-brand-black/5">
+      <h3 className="text-sm font-bold text-brand-black px-2 pt-2 pb-0">{title}</h3>
+      <EChart option={option} style={{ minHeight: 460 }} />
     </div>
   )
 }
@@ -97,10 +68,19 @@ export default function StatisticsPage() {
     })
   }, [transactions, dateRange])
 
+  const incomeItems = useMemo(
+    () => aggregateByCategory(filteredTx, categories, 'income'),
+    [filteredTx, categories]
+  )
+  const expenseItems = useMemo(
+    () => aggregateByCategory(filteredTx, categories, 'expense'),
+    [filteredTx, categories]
+  )
+
   if (!isLoaded) return <div className="p-8 text-center text-brand-black/50">Loading...</div>
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] space-y-6">
+    <div className="flex flex-col min-h-[calc(100vh-140px)] space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-brand-black">Statistics & Analysis</h2>
         <div className="relative">
@@ -113,28 +93,22 @@ export default function StatisticsPage() {
             <option>This Month</option>
             <option>This Year</option>
           </select>
-          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-black/40 pointer-events-none" />
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-black/40 pointer-events-none" />
+          <MdiIcon
+            path={mdiCalendarOutline}
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-black/40 pointer-events-none"
+          />
+          <MdiIcon
+            path={mdiChevronDown}
+            size={16}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/40 pointer-events-none"
+          />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <CategoryChart
-          title="Income by Category"
-          type="income"
-          transactions={filteredTx}
-          categories={categories}
-          colorClass="bg-[#F14C4C]/10 text-[#F14C4C]"
-          borderClass="border-[#F14C4C]"
-        />
-        <CategoryChart
-          title="Expense by Category"
-          type="expense"
-          transactions={filteredTx}
-          categories={categories}
-          colorClass="bg-[#009E9E]/10 text-[#009E9E]"
-          borderClass="border-[#009E9E]"
-        />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <CategoryPieCard title="Income by Category" items={incomeItems} />
+        <CategoryPieCard title="Expense by Category" items={expenseItems} />
       </div>
     </div>
   )

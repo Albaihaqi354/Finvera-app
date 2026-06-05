@@ -6,7 +6,7 @@ import { useDebounce } from '@/hooks/useDebounce'
 
 export default function CategoriesPage() {
   const { categories, addCategory, deleteCategory, isLoaded } = useDesktop()
-  const [activeTab, setActiveTab] = useState('expense')
+  const [activeTab, setActiveTab] = useState('income')
   const [searchInput, setSearchInput] = useState('')
   const search = useDebounce(searchInput, 300)
   const [showAdd, setShowAdd] = useState(false)
@@ -55,7 +55,7 @@ export default function CategoriesPage() {
 
       <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
         <div className="w-full lg:w-52 shrink-0 space-y-2">
-          {['Expense', 'Income', 'Transfer'].map(tab => (
+          {['Income', 'Expense', 'Transfer'].map(tab => (
             <div
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase())}
@@ -93,14 +93,11 @@ export default function CategoriesPage() {
               <div key={cat.id} className="bg-[#F8F8F8] rounded-2xl border border-brand-black/5 overflow-hidden">
                 <div className="flex items-center justify-between p-4 group">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-xl shadow-sm">
-                      {cat.icon || '📁'}
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm shrink-0 ${cat.colorClass || 'bg-white'}`}>
+                      <span className="text-lg leading-none">{cat.icon || '📁'}</span>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-brand-black">{cat.name}</h4>
-                      <p className="text-[10px] font-semibold text-brand-black/40">
-                        {cat.subCategories.length} sub-categories
-                      </p>
                     </div>
                   </div>
                   <button

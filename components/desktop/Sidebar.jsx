@@ -1,23 +1,23 @@
 "use client"
-import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
+import MdiIcon from '@/components/icons/MdiIcon'
 import {
-  Home,
-  List,
-  PieChart,
-  Compass,
-  CreditCard,
-  LayoutGrid,
-  Tag,
-  ClipboardList,
-  CalendarClock,
-  ArrowLeftRight,
-  Smartphone,
-  Info,
-  Eye,
-  EyeOff,
-  PlusCircle
-} from 'lucide-react'
+  mdiHomeOutline,
+  mdiListBoxOutline,
+  mdiPlusCircle,
+  mdiChartPieOutline,
+  mdiCompassOutline,
+  mdiCreditCardOutline,
+  mdiViewDashboardOutline,
+  mdiTagOutline,
+  mdiClipboardTextOutline,
+  mdiClipboardTextClockOutline,
+  mdiSwapHorizontal,
+  mdiCellphone,
+  mdiInformationOutline,
+  mdiEyeOutline,
+  mdiEyeOffOutline,
+} from '@/lib/icons/mdi'
 import { useDesktop } from './DesktopProvider'
 
 function NavSection({ title }) {
@@ -28,15 +28,20 @@ function NavSection({ title }) {
   )
 }
 
-function SidebarItem({ icon, label, active = false, onClick, action }) {
+function SidebarItem({ path, label, active = false, onClick, action }) {
   return (
     <div className="flex items-center gap-1 pr-1">
       <div
         onClick={onClick}
-        className={`flex flex-1 items-center gap-3 px-4 py-2.5 rounded-xl cursor-pointer transition-colors ${active ? 'bg-brand-black/10' : 'hover:bg-brand-black/5'
-          }`}
+        className={`flex flex-1 items-center gap-3 px-4 py-2.5 rounded-xl cursor-pointer transition-colors ${
+          active ? 'bg-brand-black/10' : 'hover:bg-brand-black/5'
+        }`}
       >
-        <div className={`transition-colors ${active ? 'text-brand-black/70' : 'text-brand-black/50'}`}>{icon}</div>
+        <MdiIcon
+          path={path}
+          size={20}
+          className={active ? 'text-brand-black/70' : 'text-brand-black/50'}
+        />
         <span className="text-sm font-bold text-brand-black/80">{label}</span>
       </div>
       {action}
@@ -62,12 +67,17 @@ export default function Sidebar() {
       <div className="space-y-0.5 flex-1">
         <div
           onClick={() => navigateTo('overview')}
-          className={`flex items-center gap-3 px-4 py-3 rounded-r-full -ml-2 pl-6 cursor-pointer transition-all ${isActive('overview')
-            ? 'bg-linear-to-r from-[#8B4513] to-[#D2691E] shadow-md'
-            : 'bg-white/60 hover:bg-white/80'
-            }`}
+          className={`flex items-center gap-3 px-4 py-3 rounded-r-full -ml-2 pl-6 cursor-pointer transition-all ${
+            isActive('overview')
+              ? 'bg-linear-to-r from-[#8B4513] to-[#D2691E] shadow-md'
+              : 'bg-white/60 hover:bg-white/80'
+          }`}
         >
-          <Home className={`w-5 h-5 ${isActive('overview') ? 'text-white' : 'text-brand-black/60'}`} />
+          <MdiIcon
+            path={mdiHomeOutline}
+            size={20}
+            className={isActive('overview') ? 'text-white' : 'text-brand-black/60'}
+          />
           <span className={`font-bold text-sm ${isActive('overview') ? 'text-white' : 'text-brand-black/70'}`}>
             Overview
           </span>
@@ -79,14 +89,14 @@ export default function Sidebar() {
             onClick={() => setIsBalanceVisible(!isBalanceVisible)}
             className="flex items-center gap-2 text-xs font-semibold text-brand-black/40 hover:text-brand-black/60 transition-colors cursor-pointer"
           >
-            {isBalanceVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            <MdiIcon path={isBalanceVisible ? mdiEyeOffOutline : mdiEyeOutline} size={14} />
             {isBalanceVisible ? 'Hide amounts' : 'Show amounts'}
           </button>
         </div>
 
         <NavSection title="Transaction Data" />
         <SidebarItem
-          icon={<List className="w-5 h-5" />}
+          path={mdiListBoxOutline}
           label="Transaction Details"
           active={isActive('transactions')}
           onClick={() => navigateTo('transactions')}
@@ -97,18 +107,18 @@ export default function Sidebar() {
               className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-brand-black/50 hover:bg-brand-black/10 hover:text-brand-black transition-colors cursor-pointer"
               title="Add Transaction"
             >
-              <PlusCircle className="w-4 h-4" />
+              <MdiIcon path={mdiPlusCircle} size={18} />
             </button>
           }
         />
         <SidebarItem
-          icon={<PieChart className="w-5 h-5" />}
+          path={mdiChartPieOutline}
           label="Statistics & Analysis"
           active={isActive('statistics')}
           onClick={() => navigateTo('statistics')}
         />
         <SidebarItem
-          icon={<Compass className="w-5 h-5" />}
+          path={mdiCompassOutline}
           label="Insights Explorer"
           active={isActive('insights')}
           onClick={() => navigateTo('insights')}
@@ -116,31 +126,31 @@ export default function Sidebar() {
 
         <NavSection title="Basis Data" />
         <SidebarItem
-          icon={<CreditCard className="w-5 h-5" />}
+          path={mdiCreditCardOutline}
           label="Accounts"
           active={isActive('accounts')}
           onClick={() => navigateTo('accounts')}
         />
         <SidebarItem
-          icon={<LayoutGrid className="w-5 h-5" />}
+          path={mdiViewDashboardOutline}
           label="Transaction Categories"
           active={isActive('categories')}
           onClick={() => navigateTo('categories')}
         />
         <SidebarItem
-          icon={<Tag className="w-5 h-5" />}
+          path={mdiTagOutline}
           label="Transaction Tags"
           active={isActive('tags')}
           onClick={() => navigateTo('tags')}
         />
         <SidebarItem
-          icon={<ClipboardList className="w-5 h-5" />}
+          path={mdiClipboardTextOutline}
           label="Transaction Templates"
           active={isActive('templates')}
           onClick={() => navigateTo('templates')}
         />
         <SidebarItem
-          icon={<CalendarClock className="w-5 h-5" />}
+          path={mdiClipboardTextClockOutline}
           label="Scheduled Transactions"
           active={isActive('scheduled')}
           onClick={() => navigateTo('scheduled')}
@@ -148,19 +158,19 @@ export default function Sidebar() {
 
         <NavSection title="Miscellaneous" />
         <SidebarItem
-          icon={<ArrowLeftRight className="w-5 h-5" />}
+          path={mdiSwapHorizontal}
           label="Exchange Rates Data"
           active={isActive('exchange')}
           onClick={() => navigateTo('exchange')}
         />
         <SidebarItem
-          icon={<Smartphone className="w-5 h-5" />}
+          path={mdiCellphone}
           label="Use on Mobile Device"
           active={isActive('mobile')}
           onClick={() => navigateTo('mobile')}
         />
         <SidebarItem
-          icon={<Info className="w-5 h-5" />}
+          path={mdiInformationOutline}
           label="About"
           active={isActive('about')}
           onClick={() => navigateTo('about')}

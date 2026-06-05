@@ -5,6 +5,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
 import { Eye, EyeOff } from 'lucide-react'
+import {
+  PRESET_INCOME_CATEGORIES,
+  PRESET_EXPENSE_CATEGORIES,
+  PRESET_TRANSFER_CATEGORIES,
+} from '@/lib/presetCategories'
 
 const InputField = ({ label, type = "text", placeholder, id }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -222,15 +227,11 @@ function SignupPage() {
                     <div>
                       <h2 className="text-sm font-bold text-base-gray-1 mb-3">Income Categories</h2>
                       <div className="space-y-2">
-                        {[
-                          { name: 'Occupational Earnings', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" /><path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" /></svg> },
-                          { name: 'Finance & Investment', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" /></svg> },
-                          { name: 'Miscellaneous', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg> }
-                        ].map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-4 bg-white border-2 border-brand-black/5 hover:border-[#D68E5A]/30 transition-colors rounded-xl group cursor-pointer">
+                        {PRESET_INCOME_CATEGORIES.map((item) => (
+                          <div key={item.name} className="flex items-center justify-between p-4 bg-white border-2 border-brand-black/5 hover:border-[#D68E5A]/30 transition-colors rounded-xl group cursor-pointer">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 flex items-center justify-center bg-[#D68E5A]/10 text-[#D68E5A] rounded-lg">
-                                {item.icon}
+                              <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${item.colorClass}`}>
+                                <span className="text-base leading-none">{item.icon}</span>
                               </div>
                               <span className="text-sm font-semibold text-brand-black">{item.name}</span>
                             </div>
@@ -243,23 +244,11 @@ function SignupPage() {
                     <div>
                       <h2 className="text-sm font-bold text-base-gray-1 mb-3">Expense Categories</h2>
                       <div className="space-y-2">
-                        {[
-                          { name: 'Food & Drink', colorStyle: 'text-orange-500 bg-orange-50', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zm7-10a1 1 0 01.707.293l2 2a1 1 0 010 1.414l-2 2A1 1 0 0111 7v10a1 1 0 11-2 0V7a1 1 0 01-.293-.707l2-2a1 1 0 011.414 0l.707.707z" clipRule="evenodd" /></svg> },
-                          { name: 'Clothing & Appearance', colorStyle: 'text-purple-500 bg-purple-50', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg> },
-                          { name: 'Housing & Houseware', colorStyle: 'text-gray-600 bg-gray-100', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg> },
-                          { name: 'Transportation', colorStyle: 'text-teal-500 bg-teal-50', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" /><path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z" /></svg> },
-                          { name: 'Communication', colorStyle: 'text-blue-500 bg-blue-50', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.438a1 1 0 01-.328.968l-2.384 2.185a12.032 12.032 0 005.438 5.438l2.185-2.384a1 1 0 01.968-.328l4.438.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg> },
-                          { name: 'Entertainment', colorStyle: 'text-rose-500 bg-rose-50', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" /></svg> },
-                          { name: 'Education & Studying', colorStyle: 'text-lime-500 bg-lime-50', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg> },
-                          { name: 'Gifts & Donations', colorStyle: 'text-green-500 bg-green-50', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 5a3 3 0 015-2.236A3 3 0 0114.83 6H16a2 2 0 110 4h-5V9a1 1 0 10-2 0v1H4a2 2 0 110-4h1.17C5.06 5.687 5 5.35 5 5zm4 1V5a1 1 0 10-1 1h1zm3 0a1 1 0 10-1-1v1h1z" clipRule="evenodd" /><path d="M9 11H3v5a2 2 0 002 2h4v-7zM11 18h4a2 2 0 002-2v-5h-6v7z" /></svg> },
-                          { name: 'Medical & Healthcare', colorStyle: 'text-red-500 bg-red-50', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" /><path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" /></svg> },
-                          { name: 'Finance & Insurance', colorStyle: 'text-amber-500 bg-amber-50', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" /></svg> },
-                          { name: 'Miscellaneous', colorStyle: 'text-gray-500 bg-gray-50', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg> },
-                        ].map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-4 bg-white border-2 border-brand-black/5 hover:border-brand-black/10 transition-colors rounded-xl group cursor-pointer">
+                        {PRESET_EXPENSE_CATEGORIES.map((item) => (
+                          <div key={item.name} className="flex items-center justify-between p-4 bg-white border-2 border-brand-black/5 hover:border-brand-black/10 transition-colors rounded-xl group cursor-pointer">
                             <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${item.colorStyle}`}>
-                                {item.icon}
+                              <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${item.colorClass}`}>
+                                <span className="text-base leading-none">{item.icon}</span>
                               </div>
                               <span className="text-sm font-semibold text-brand-black">{item.name}</span>
                             </div>
@@ -272,15 +261,11 @@ function SignupPage() {
                     <div>
                       <h2 className="text-sm font-bold text-base-gray-1 mb-3">Transfer Categories</h2>
                       <div className="space-y-2">
-                        {[
-                          { name: 'General Transfer', colorStyle: 'text-orange-500 bg-orange-50', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg> },
-                          { name: 'Loan & Debt', colorStyle: 'text-amber-500 bg-amber-50', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" /></svg> },
-                          { name: 'Miscellaneous', colorStyle: 'text-gray-500 bg-gray-50', icon: <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg> },
-                        ].map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-4 bg-white border-2 border-brand-black/5 hover:border-brand-black/10 transition-colors rounded-xl group cursor-pointer">
+                        {PRESET_TRANSFER_CATEGORIES.map((item) => (
+                          <div key={item.name} className="flex items-center justify-between p-4 bg-white border-2 border-brand-black/5 hover:border-brand-black/10 transition-colors rounded-xl group cursor-pointer">
                             <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${item.colorStyle}`}>
-                                {item.icon}
+                              <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${item.colorClass}`}>
+                                <span className="text-base leading-none">{item.icon}</span>
                               </div>
                               <span className="text-sm font-semibold text-brand-black">{item.name}</span>
                             </div>
