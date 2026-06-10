@@ -44,6 +44,8 @@ export function DesktopProvider({ children }) {
   const [categories, setCategories] = useState([])
   const [tags, setTags] = useState([])
   const [transactions, setTransactions] = useState([])
+  const [templates, setTemplates] = useState([])
+  const [scheduled, setScheduled] = useState([])
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
@@ -78,10 +80,89 @@ export function DesktopProvider({ children }) {
     }
 
     setTags(storageAPI.tags.getAll() || DEFAULT_TAGS)
+    setTemplates(storageAPI.templates.getAll() || [])
+    
+    let loadedScheduled = storageAPI.scheduled.getAll() || []
+    
+    // Process scheduled transactions
+    const now = new Date()
+    let newTransactions = []
+    let updatedAccounts = accountsToUse // Wait, we need the initial accounts array to apply balance changes.
+    // Let's defer execution to a separate effect that runs once after initial load.
+
+    setScheduled(loadedScheduled)
+
     const savedVisibility = storageAPI.preferences.getBalanceVisible()
     if (savedVisibility !== null) setIsBalanceVisible(savedVisibility)
     setIsLoaded(true)
   }, [])
+
+  // ── Auto-process scheduled transactions ─────────────────────────────────────
+  useEffect(() => {
+    if (!isLoaded || scheduled.length === 0) return
+
+    const now = new Date()
+    let changesMade = false
+    let currentTxs = [...transactions]
+    let currentAccs = [...accounts]
+    let currentScheds = [...scheduled]
+
+    for (let i = 0; i < currentScheds.length; i++) {
+      let sched = currentScheds[i]
+      if (!sched.nextRun || !sched.isActive) continue
+
+      let nextRunDate = new Date(sched.nextRun)
+      
+      // Process while nextRun is in the past or present
+      while (nextRunDate <= now) {
+        changesMade = true
+        
+        // 1. Create transaction
+        const newTx = {
+          id: 'tx_sch_' + Date.now() + Math.random().toString(36).substring(2, 9),
+          type: sched.type,
+          amount: sched.amount,
+          accountId: sched.accountId,
+          targetAccountId: sched.targetAccountId,
+          categoryId: sched.categoryId,
+          date: nextRunDate.toISOString(),
+          note: sched.note || `Auto-scheduled: ${sched.name}`,
+          tagIds: sched.tagIds || []
+        }
+        currentTxs = [newTx, ...currentTxs]
+
+        // 2. Update account balances
+        if (newTx.type === 'transfer' && newTx.targetAccountId) {
+          currentAccs = applyBalanceChange(
+            applyBalanceChange(currentAccs, newTx.accountId, -newTx.amount),
+            newTx.targetAccountId,
+            newTx.amount
+          )
+        } else {
+          const change = newTx.type === 'expense' ? -newTx.amount : newTx.amount
+          currentAccs = applyBalanceChange(currentAccs, newTx.accountId, change)
+        }
+
+        // 3. Advance nextRunDate
+        if (sched.frequency === 'daily') nextRunDate.setDate(nextRunDate.getDate() + 1)
+        else if (sched.frequency === 'weekly') nextRunDate.setDate(nextRunDate.getDate() + 7)
+        else if (sched.frequency === 'monthly') nextRunDate.setMonth(nextRunDate.getMonth() + 1)
+        else if (sched.frequency === 'yearly') nextRunDate.setFullYear(nextRunDate.getFullYear() + 1)
+        else break // Fallback to prevent infinite loop
+      }
+
+      if (changesMade) {
+        currentScheds[i] = { ...sched, nextRun: nextRunDate.toISOString() }
+      }
+    }
+
+    if (changesMade) {
+      setTransactions(currentTxs)
+      setAccounts(currentAccs)
+      setScheduled(currentScheds)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded])
 
   useEffect(() => {
     if (!isLoaded) return
@@ -89,12 +170,21 @@ export function DesktopProvider({ children }) {
     storageAPI.categories.saveAll(categories)
     storageAPI.tags.saveAll(tags)
     storageAPI.transactions.saveAll(transactions)
+    storageAPI.templates.saveAll(templates)
+    storageAPI.scheduled.saveAll(scheduled)
     storageAPI.preferences.saveBalanceVisible(isBalanceVisible)
-  }, [accounts, categories, tags, transactions, isBalanceVisible, isLoaded])
+  }, [accounts, categories, tags, transactions, templates, scheduled, isBalanceVisible, isLoaded])
 
+  // ── Accounts ──────────────────────────────────────────────────────────────
   const addAccount = useCallback((account) => {
     const newAcc = { ...account, id: 'acc' + Date.now(), balance: parseFloat(account.balance) || 0 }
     setAccounts(prev => [...prev, newAcc])
+  }, [])
+
+  const updateAccount = useCallback((id, updates) => {
+    setAccounts(prev =>
+      prev.map(acc => acc.id === id ? { ...acc, ...updates, balance: parseFloat(updates.balance ?? acc.balance) || 0 } : acc)
+    )
   }, [])
 
   const deleteAccount = useCallback((id) => {
@@ -102,8 +192,15 @@ export function DesktopProvider({ children }) {
     setTransactions(prev => prev.filter(t => t.accountId !== id && t.targetAccountId !== id))
   }, [])
 
+  // ── Categories ────────────────────────────────────────────────────────────
   const addCategory = useCallback((category) => {
     setCategories(prev => [...prev, { ...category, id: 'cat' + Date.now(), parentId: category.parentId || null }])
+  }, [])
+
+  const updateCategory = useCallback((id, updates) => {
+    setCategories(prev =>
+      prev.map(c => c.id === id ? { ...c, ...updates } : c)
+    )
   }, [])
 
   const deleteCategory = useCallback((id) => {
@@ -111,8 +208,13 @@ export function DesktopProvider({ children }) {
     setTransactions(prev => prev.filter(t => t.categoryId !== id))
   }, [])
 
-  const addTag = useCallback((name) => {
-    setTags(prev => [...prev, { id: 'tag' + Date.now(), name }])
+  // ── Tags ──────────────────────────────────────────────────────────────────
+  const addTag = useCallback((name, color) => {
+    setTags(prev => [...prev, { id: 'tag' + Date.now(), name, color: color || '#E6923F' }])
+  }, [])
+
+  const updateTag = useCallback((id, name, color) => {
+    setTags(prev => prev.map(t => t.id === id ? { ...t, name, ...(color ? { color } : {}) } : t))
   }, [])
 
   const deleteTag = useCallback((id) => {
@@ -123,6 +225,7 @@ export function DesktopProvider({ children }) {
     })))
   }, [])
 
+  // ── Transactions ──────────────────────────────────────────────────────────
   const addTransaction = useCallback((tx) => {
     const newTx = { ...tx, id: 'tx' + Date.now(), tagIds: tx.tagIds || [] }
     setTransactions(prev => [newTx, ...prev])
@@ -140,6 +243,37 @@ export function DesktopProvider({ children }) {
 
     const change = tx.type === 'expense' ? -tx.amount : tx.amount
     setAccounts(prev => applyBalanceChange(prev, tx.accountId, change))
+  }, [])
+
+  const updateTransaction = useCallback((id, updates) => {
+    setTransactions(prev => {
+      const oldTx = prev.find(t => t.id === id)
+      if (!oldTx) return prev
+
+      // Revert old balance effect
+      setAccounts(accs => {
+        let reverted = accs
+        if (oldTx.type === 'transfer' && oldTx.targetAccountId) {
+          reverted = applyBalanceChange(applyBalanceChange(reverted, oldTx.accountId, oldTx.amount), oldTx.targetAccountId, -oldTx.amount)
+        } else {
+          const revert = oldTx.type === 'expense' ? oldTx.amount : -oldTx.amount
+          reverted = applyBalanceChange(reverted, oldTx.accountId, revert)
+        }
+
+        // Apply new balance effect
+        const newTx = { ...oldTx, ...updates, amount: parseFloat(updates.amount ?? oldTx.amount) }
+        if (newTx.type === 'transfer' && newTx.targetAccountId) {
+          return applyBalanceChange(applyBalanceChange(reverted, newTx.accountId, -newTx.amount), newTx.targetAccountId, newTx.amount)
+        }
+        const change = newTx.type === 'expense' ? -newTx.amount : newTx.amount
+        return applyBalanceChange(reverted, newTx.accountId, change)
+      })
+
+      return prev.map(t => t.id === id
+        ? { ...t, ...updates, amount: parseFloat(updates.amount ?? t.amount) }
+        : t
+      )
+    })
   }, [])
 
   const deleteTransaction = useCallback((id) => {
@@ -174,13 +308,41 @@ export function DesktopProvider({ children }) {
     return { income, expense }
   }, [transactions])
 
+  // ── Templates ─────────────────────────────────────────────────────────────
+  const addTemplate = useCallback((template) => {
+    setTemplates(prev => [...prev, { ...template, id: 'tpl' + Date.now() }])
+  }, [])
+
+  const updateTemplate = useCallback((id, updates) => {
+    setTemplates(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))
+  }, [])
+
+  const deleteTemplate = useCallback((id) => {
+    setTemplates(prev => prev.filter(t => t.id !== id))
+  }, [])
+
+  // ── Scheduled ─────────────────────────────────────────────────────────────
+  const addScheduled = useCallback((item) => {
+    setScheduled(prev => [...prev, { ...item, id: 'sch' + Date.now() }])
+  }, [])
+
+  const updateScheduled = useCallback((id, updates) => {
+    setScheduled(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
+  }, [])
+
+  const deleteScheduled = useCallback((id) => {
+    setScheduled(prev => prev.filter(s => s.id !== id))
+  }, [])
+
   return (
     <DesktopContext.Provider value={{
       isBalanceVisible, setIsBalanceVisible,
-      accounts, setAccounts, addAccount, deleteAccount,
-      categories, addCategory, deleteCategory,
-      tags, addTag, deleteTag,
-      transactions, addTransaction, deleteTransaction,
+      accounts, setAccounts, addAccount, updateAccount, deleteAccount,
+      categories, addCategory, updateCategory, deleteCategory,
+      tags, addTag, updateTag, deleteTag,
+      transactions, addTransaction, updateTransaction, deleteTransaction,
+      templates, addTemplate, updateTemplate, deleteTemplate,
+      scheduled, addScheduled, updateScheduled, deleteScheduled,
       getTotalsForRange,
       isLoaded
     }}>

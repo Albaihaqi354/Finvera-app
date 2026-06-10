@@ -1,38 +1,226 @@
 "use client"
 import { useState } from 'react'
-import { Landmark, CreditCard, PiggyBank, PlusCircle, MoreVertical, X, Trash2 } from 'lucide-react'
+import { Landmark, CreditCard, PiggyBank, PlusCircle, Pencil, X, Trash2 } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 
-export default function AccountsPage() {
-  const { accounts, addAccount, deleteAccount, isBalanceVisible, isLoaded } = useDesktop()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [form, setForm] = useState({
-    name: '',
-    category: 'Checking',
-    type: 'asset',
-    balance: '0',
-    color: '#E6923F'
+const ACCOUNT_CATEGORIES = ['Cash', 'Checking', 'Savings', 'Credit Card', 'Investment', 'Wallet', 'Other']
+
+const DEFAULT_FORM = { name: '', category: 'Checking', type: 'asset', balance: '0', color: '#E6923F' }
+
+// ── Delete Confirm Modal ──────────────────────────────────────────────────────
+function DeleteAccountModal({ account, onConfirm, onCancel }) {
+  if (!account) return null
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
+        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Trash2 className="w-8 h-8" />
+        </div>
+        <h3 className="text-xl font-bold text-brand-black mb-2">Delete Account</h3>
+        <p className="text-brand-black/60 text-sm mb-1">
+          Are you sure you want to delete <span className="font-bold text-brand-black">{account.name}</span>?
+        </p>
+        <p className="text-xs text-red-400 font-semibold mb-6">All associated transactions will also be removed.</p>
+        <div className="flex items-center gap-3">
+          <button onClick={onCancel}
+            className="flex-1 py-3 px-4 bg-brand-black/5 hover:bg-brand-black/10 text-brand-black font-bold rounded-xl transition-colors cursor-pointer text-sm">
+            Cancel
+          </button>
+          <button onClick={onConfirm}
+            className="flex-1 py-3 px-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-colors cursor-pointer text-sm shadow-lg shadow-red-500/20">
+            Yes, Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Add / Edit Account Modal ──────────────────────────────────────────────────
+function AccountModal({ isOpen, onClose, onSubmit, editAccount = null }) {
+  const isEdit = !!editAccount
+  const [form, setForm] = useState(DEFAULT_FORM)
+
+  // Sync form when modal opens
+  useState(() => {
+    if (isOpen) {
+      setForm(isEdit && editAccount ? {
+        name: editAccount.name,
+        category: editAccount.category || 'Checking',
+        type: editAccount.type,
+        balance: String(editAccount.balance),
+        color: editAccount.color || '#E6923F'
+      } : DEFAULT_FORM)
+    }
   })
 
-  if (!isLoaded) return <div className="p-8 text-center text-brand-black/50">Loading...</div>
+  // Use a key-reset approach via useEffect alternative – just sync on open
+  const handleOpen = (editAcc) => {
+    setForm(editAcc ? {
+      name: editAcc.name,
+      category: editAcc.category || 'Checking',
+      type: editAcc.type,
+      balance: String(editAcc.balance),
+      color: editAcc.color || '#E6923F'
+    } : DEFAULT_FORM)
+  }
 
-  const totalAssets = accounts.filter(a => a.type === 'asset').reduce((s, a) => s + a.balance, 0)
-  const totalLiabilities = accounts.filter(a => a.type === 'liability').reduce((s, a) => s + Math.abs(a.balance), 0)
-  const netAssets = totalAssets - totalLiabilities
-  const fmt = (n) => (isBalanceVisible ? `Rp ${n.toLocaleString('id-ID')}` : 'Rp •••••••')
+  if (!isOpen) return null
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!form.name.trim()) return
-    addAccount({
+    onSubmit({
       name: form.name.trim(),
       category: form.category,
       type: form.type,
       balance: parseFloat(form.balance) || 0,
       color: form.color
     })
-    setIsModalOpen(false)
-    setForm({ name: '', category: 'Checking', type: 'asset', balance: '0', color: '#E6923F' })
+    onClose()
+  }
+
+  const COLOR_PRESETS = ['#E6923F', '#009E9E', '#F14C4C', '#065786', '#713670', '#4dd291', '#2ab4d0', '#fc892c']
+
+  return (
+    <div className="fixed inset-0 bg-brand-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-brand-black/5 flex items-center justify-between bg-[#F8F8F8]">
+          <h3 className="font-bold text-lg text-brand-black">{isEdit ? 'Edit Account' : 'Add Account'}</h3>
+          <button type="button" onClick={onClose} className="cursor-pointer p-1.5 rounded-full hover:bg-brand-black/10 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {/* Preview */}
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-[#F8F8F8]">
+            <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-lg font-bold"
+              style={{ color: form.color }}>
+              {form.name.charAt(0) || '?'}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-brand-black">{form.name || 'Account Name'}</p>
+              <p className="text-xs text-brand-black/50">{form.category} · {form.type}</p>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Account Name</label>
+            <input
+              required
+              value={form.name}
+              onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+              placeholder="e.g. BCA Savings"
+              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border focus:border-brand-black/20 border border-transparent transition-colors"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Category</label>
+              <select
+                value={form.category}
+                onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
+                className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none"
+              >
+                {ACCOUNT_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Type</label>
+              <select
+                value={form.type}
+                onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
+                className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none"
+              >
+                <option value="asset">Asset</option>
+                <option value="liability">Liability</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">
+              {isEdit ? 'Balance (Rp)' : 'Initial Balance (Rp)'}
+            </label>
+            <input
+              type="number" step="0.01"
+              value={form.balance}
+              onChange={e => setForm(p => ({ ...p, balance: e.target.value }))}
+              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-bold outline-none border border-transparent focus:border-brand-black/20"
+            />
+            {isEdit && (
+              <p className="text-[10px] text-brand-black/40 mt-1.5">Note: changing balance won&apos;t retroactively adjust transactions.</p>
+            )}
+          </div>
+
+          {/* Color picker */}
+          <div>
+            <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-2 block">Color</label>
+            <div className="flex items-center gap-2 flex-wrap">
+              {COLOR_PRESETS.map(c => (
+                <button
+                  key={c} type="button"
+                  onClick={() => setForm(p => ({ ...p, color: c }))}
+                  className={`w-8 h-8 rounded-lg transition-transform cursor-pointer ${form.color === c ? 'scale-125 ring-2 ring-offset-1 ring-brand-black/40' : 'hover:scale-110'}`}
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+              <input
+                type="color" value={form.color}
+                onChange={e => setForm(p => ({ ...p, color: e.target.value }))}
+                className="w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent"
+                title="Custom color"
+              />
+            </div>
+          </div>
+
+          <button type="submit" className="w-full bg-brand-black text-brand-primary rounded-xl py-3 text-sm font-bold cursor-pointer hover:bg-brand-black/80 transition-colors">
+            {isEdit ? 'Save Changes' : 'Add Account'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
+export default function AccountsPage() {
+  const { accounts, addAccount, updateAccount, deleteAccount, isBalanceVisible, isLoaded } = useDesktop()
+  const [modalOpen, setModalOpen]           = useState(false)
+  const [editingAccount, setEditingAccount] = useState(null)
+  const [deletingAccount, setDeletingAccount] = useState(null)
+
+  if (!isLoaded) return (
+    <div className="space-y-4 p-6">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="h-20 bg-brand-black/5 rounded-3xl animate-pulse" />
+      ))}
+    </div>
+  )
+
+  const totalAssets      = accounts.filter(a => a.type === 'asset').reduce((s, a) => s + a.balance, 0)
+  const totalLiabilities = accounts.filter(a => a.type === 'liability').reduce((s, a) => s + Math.abs(a.balance), 0)
+  const netAssets        = totalAssets - totalLiabilities
+  const fmt = (n) => (isBalanceVisible ? `Rp ${n.toLocaleString('id-ID')}` : 'Rp •••••••')
+
+  const openAdd = () => { setEditingAccount(null); setModalOpen(true) }
+  const openEdit = (acc) => { setEditingAccount(acc); setModalOpen(true) }
+  const closeModal = () => { setModalOpen(false); setEditingAccount(null) }
+
+  const handleSubmit = (data) => {
+    if (editingAccount) {
+      updateAccount(editingAccount.id, data)
+    } else {
+      addAccount(data)
+    }
+  }
+
+  const confirmDelete = () => {
+    if (deletingAccount) {
+      deleteAccount(deletingAccount.id)
+      setDeletingAccount(null)
+    }
   }
 
   return (
@@ -41,7 +229,7 @@ export default function AccountsPage() {
         <h2 className="text-xl font-bold text-brand-black">Accounts</h2>
         <button
           type="button"
-          onClick={() => setIsModalOpen(true)}
+          onClick={openAdd}
           className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
         >
           <PlusCircle className="w-3.5 h-3.5" />
@@ -49,6 +237,7 @@ export default function AccountsPage() {
         </button>
       </div>
 
+      {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-brand-black/5 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-brand-black/5 flex items-center justify-center text-brand-black/80 border border-brand-black/10">
@@ -60,7 +249,7 @@ export default function AccountsPage() {
           </div>
         </div>
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-brand-black/5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#009E9E]/10 flex items-center justify-center text-[#009E9E] border border-[#009E9E]/20">
+          <div className="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 border border-rose-100">
             <CreditCard className="w-6 h-6" />
           </div>
           <div>
@@ -74,16 +263,20 @@ export default function AccountsPage() {
           </div>
           <div>
             <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider mb-1">Net Assets</p>
-            <p className="text-lg font-bold text-brand-black/90">{fmt(netAssets)}</p>
+            <p className={`text-lg font-bold ${netAssets >= 0 ? 'text-brand-black/90' : 'text-rose-500'}`}>{fmt(netAssets)}</p>
           </div>
         </div>
       </div>
 
+      {/* Account list */}
       <div className="bg-white rounded-3xl shadow-sm border border-brand-black/5 flex-1 p-6 min-h-0 overflow-y-auto">
         <h3 className="text-sm font-bold text-brand-black mb-4">Account List</h3>
         <div className="space-y-3">
           {accounts.length === 0 && (
-            <p className="text-sm text-brand-black/40 text-center py-8">No accounts yet. Add your first account.</p>
+            <div className="text-center py-12">
+              <div className="text-4xl mb-3">🏦</div>
+              <p className="text-sm text-brand-black/40">No accounts yet. Add your first account.</p>
+            </div>
           )}
           {accounts.map(acc => (
             <div
@@ -99,91 +292,53 @@ export default function AccountsPage() {
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-brand-black">{acc.name}</h4>
-                  <p className="text-xs font-medium text-brand-black/50">{acc.category || acc.type}</p>
+                  <p className="text-xs font-medium text-brand-black/50 capitalize">
+                    {acc.category || acc.type} · {acc.type}
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <span className={`text-sm font-bold ${acc.balance < 0 ? 'text-[#009E9E]' : 'text-brand-black'}`}>
+              <div className="flex items-center gap-3">
+                <span className={`text-sm font-bold ${acc.balance < 0 ? 'text-rose-500' : 'text-brand-black'}`}>
                   {isBalanceVisible
                     ? `Rp ${Math.abs(acc.balance).toLocaleString('id-ID')}`
                     : 'Rp •••••••'}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => deleteAccount(acc.id)}
-                  className="opacity-0 group-hover:opacity-100 p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
-                  title="Delete account"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-                <MoreVertical className="w-4 h-4 text-brand-black/30" />
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(acc)}
+                    className="p-1.5 text-brand-black/50 hover:text-brand-black hover:bg-brand-black/10 rounded-lg transition-all cursor-pointer"
+                    title="Edit account"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeletingAccount(acc)}
+                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
+                    title="Delete account"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-brand-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-brand-black/5 flex items-center justify-between bg-[#F8F8F8]">
-              <h3 className="font-bold text-lg text-brand-black">Add Account</h3>
-              <button type="button" onClick={() => setIsModalOpen(false)} className="cursor-pointer p-1 rounded-full hover:bg-brand-black/10">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Account Name</label>
-                <input
-                  required
-                  value={form.name}
-                  onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                  className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border focus:border-brand-black/20"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Category</label>
-                  <select
-                    value={form.category}
-                    onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
-                    className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none"
-                  >
-                    {['Cash', 'Checking', 'Savings', 'Credit Card', 'Investment'].map(c => (
-                      <option key={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Type</label>
-                  <select
-                    value={form.type}
-                    onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
-                    className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none"
-                  >
-                    <option value="asset">Asset</option>
-                    <option value="liability">Liability</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Initial Balance</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.balance}
-                  onChange={e => setForm(p => ({ ...p, balance: e.target.value }))}
-                  className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-bold outline-none"
-                />
-              </div>
-              <button type="submit" className="w-full bg-brand-black text-brand-primary rounded-xl py-3 text-sm font-bold cursor-pointer">
-                Save Account
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Modals */}
+      <AccountModal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        onSubmit={handleSubmit}
+        editAccount={editingAccount}
+      />
+      <DeleteAccountModal
+        account={deletingAccount}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeletingAccount(null)}
+      />
     </div>
   )
 }

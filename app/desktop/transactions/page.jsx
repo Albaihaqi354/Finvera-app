@@ -1,19 +1,19 @@
 "use client"
 import { useState, useMemo, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { PlusCircle, Search, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { PlusCircle, Search, X, Trash2, ChevronLeft, ChevronRight, Pencil } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 import { useDebounce } from '@/hooks/useDebounce'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const amountColor = (type) => {
-  if (type === 'income') return 'text-[#F14C4C]'
-  if (type === 'expense') return 'text-[#009E9E]'
+  if (type === 'income')  return 'text-emerald-500'
+  if (type === 'expense') return 'text-rose-500'
   return 'text-brand-black/70'
 }
 
 // ─── Sub-component: Transaction Row ──────────────────────────────────────────
-function TxRow({ tx, accounts, categories, onDelete }) {
+function TxRow({ tx, accounts, categories, onDelete, onEdit }) {
   const acc = accounts.find(a => a.id === tx.accountId)
   const cat = categories.find(c => c.id === tx.categoryId)
   const isTransfer = tx.type === 'transfer'
@@ -22,26 +22,37 @@ function TxRow({ tx, accounts, categories, onDelete }) {
     : cat?.name || 'Unknown'
 
   return (
-    <div className="grid grid-cols-[100px_1fr_130px_160px_1fr_40px] gap-2 px-5 py-3.5 border-b hover:bg-[#F8F8F8] items-center group">
-      <p className="text-xs font-bold">{tx.time}</p>
+    <div className="grid grid-cols-[100px_1fr_140px_160px_1fr_72px] gap-2 px-5 py-3.5 border-b hover:bg-[#F8F8F8] items-center group transition-colors">
+      <p className="text-xs font-bold text-brand-black/60">{tx.time}</p>
       <div className="flex items-center gap-2 min-w-0">
         {!isTransfer && cat?.icon && (
           <span className="text-base shrink-0">{cat.icon}</span>
         )}
-        <span className="text-xs font-semibold truncate">{label}</span>
+        <span className="text-xs font-semibold truncate text-brand-black/80">{label}</span>
       </div>
       <span className={`text-sm font-bold ${amountColor(tx.type)}`}>
         Rp {tx.amount.toLocaleString('id-ID')}
       </span>
-      <span className="text-xs font-semibold truncate">{acc?.name}</span>
+      <span className="text-xs font-semibold truncate text-brand-black/70">{acc?.name}</span>
       <span className="text-xs text-brand-black/50 truncate">{tx.note}</span>
-      <button
-        type="button"
-        onClick={() => onDelete(tx.id)}
-        className="opacity-0 group-hover:opacity-100 text-red-500 cursor-pointer"
-      >
-        <Trash2 className="w-3.5 h-3.5" />
-      </button>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          type="button"
+          onClick={() => onEdit(tx)}
+          className="p-1.5 text-brand-black/50 hover:text-brand-black hover:bg-brand-black/10 rounded-lg transition-colors cursor-pointer"
+          title="Edit"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onDelete(tx.id)}
+          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+          title="Delete"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   )
 }
@@ -151,55 +162,71 @@ function TransactionCalendar({ calendarMonth, setCalendarMonth, calendarDays, se
   )
 }
 
-// ─── Sub-component: Add Transaction Modal ────────────────────────────────────
-function AddTransactionModal({ isOpen, onClose, accounts, categories, tags, onSubmit }) {
-  const [newTx, setNewTx] = useState({
+// ─── Sub-component: Add / Edit Transaction Modal ──────────────────────────────
+function TransactionModal({ isOpen, onClose, accounts, categories, tags, onSubmit, editTx = null }) {
+  const isEdit = !!editTx
+  const defaultForm = {
     type: 'expense', amount: '', accountId: '', targetAccountId: '',
     categoryId: '', date: new Date().toISOString().slice(0, 16), note: '', tagIds: []
-  })
+  }
+
+  const [form, setForm] = useState(defaultForm)
   const [formError, setFormError] = useState('')
 
+  // Prefill when editing or reset on open
   useEffect(() => {
-    if (accounts.length) {
-      setNewTx(prev => ({
-        ...prev,
-        accountId: prev.accountId || accounts[0]?.id || '',
-        targetAccountId: prev.targetAccountId || accounts[1]?.id || accounts[0]?.id || '',
-        categoryId: prev.categoryId || categories.find(c => c.type === 'expense')?.id || ''
-      }))
+    if (!isOpen) return
+    if (isEdit && editTx) {
+      setForm({
+        type: editTx.type,
+        amount: String(editTx.amount),
+        accountId: editTx.accountId || accounts[0]?.id || '',
+        targetAccountId: editTx.targetAccountId || accounts[1]?.id || accounts[0]?.id || '',
+        categoryId: editTx.categoryId || '',
+        date: editTx.date ? new Date(editTx.date).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
+        note: editTx.note || '',
+        tagIds: editTx.tagIds || []
+      })
+    } else {
+      setForm({
+        ...defaultForm,
+        accountId: accounts[0]?.id || '',
+        targetAccountId: accounts[1]?.id || accounts[0]?.id || '',
+        categoryId: categories.find(c => c.type === 'expense')?.id || ''
+      })
     }
-  }, [accounts, categories])
+    setFormError('')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, isEdit, editTx])
 
   const handleSubmit = (e) => {
     e.preventDefault()
     setFormError('')
-    const amountVal = parseFloat(newTx.amount)
+    const amountVal = parseFloat(form.amount)
     if (isNaN(amountVal) || amountVal <= 0) { setFormError('Amount must be greater than zero.'); return }
-    if (!newTx.accountId) { setFormError('Please select an account.'); return }
-    if (newTx.type === 'transfer' && !newTx.targetAccountId) { setFormError('Please select a destination account for the transfer.'); return }
-    if (newTx.type === 'transfer' && newTx.accountId === newTx.targetAccountId) { setFormError('Source and destination accounts must be different.'); return }
-    if (newTx.type !== 'transfer' && !newTx.categoryId) { setFormError('Please select a category.'); return }
-    if (newTx.note && newTx.note.length > 100) { setFormError('Description cannot exceed 100 characters.'); return }
+    if (!form.accountId) { setFormError('Please select an account.'); return }
+    if (form.type === 'transfer' && !form.targetAccountId) { setFormError('Please select a destination account.'); return }
+    if (form.type === 'transfer' && form.accountId === form.targetAccountId) { setFormError('Source and destination accounts must be different.'); return }
+    if (form.type !== 'transfer' && !form.categoryId) { setFormError('Please select a category.'); return }
+    if (form.note && form.note.length > 200) { setFormError('Description cannot exceed 200 characters.'); return }
 
     onSubmit({
-      type: newTx.type,
-      amount: parseFloat(newTx.amount),
-      accountId: newTx.accountId,
-      targetAccountId: newTx.type === 'transfer' ? newTx.targetAccountId : undefined,
-      categoryId: newTx.type === 'transfer'
-        ? (categories.find(c => c.type === 'transfer')?.id || newTx.categoryId)
-        : newTx.categoryId,
-      date: new Date(newTx.date).toISOString(),
-      note: newTx.note,
-      tagIds: newTx.tagIds
+      type: form.type,
+      amount: parseFloat(form.amount),
+      accountId: form.accountId,
+      targetAccountId: form.type === 'transfer' ? form.targetAccountId : undefined,
+      categoryId: form.type === 'transfer'
+        ? (categories.find(c => c.type === 'transfer')?.id || form.categoryId)
+        : form.categoryId,
+      date: new Date(form.date).toISOString(),
+      note: form.note,
+      tagIds: form.tagIds
     })
-    setNewTx(prev => ({ ...prev, amount: '', note: '', tagIds: [] }))
-    setFormError('')
     onClose()
   }
 
   const toggleTag = (tagId) => {
-    setNewTx(prev => ({
+    setForm(prev => ({
       ...prev,
       tagIds: prev.tagIds.includes(tagId) ? prev.tagIds.filter(id => id !== tagId) : [...prev.tagIds, tagId]
     }))
@@ -207,12 +234,18 @@ function AddTransactionModal({ isOpen, onClose, accounts, categories, tags, onSu
 
   if (!isOpen) return null
 
+  const typeColors = {
+    expense: { border: 'border-rose-400 bg-rose-50 text-rose-600', label: 'text-rose-500' },
+    income:  { border: 'border-emerald-400 bg-emerald-50 text-emerald-600', label: 'text-emerald-500' },
+    transfer: { border: 'border-brand-black/30 bg-brand-black/5 text-brand-black', label: 'text-brand-black' },
+  }
+
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-brand-black/5 flex justify-between items-center bg-[#F8F8F8] sticky top-0">
-          <h3 className="font-bold text-lg">Add Transaction</h3>
-          <button type="button" onClick={onClose} className="cursor-pointer hover:bg-brand-black/10 p-1 rounded-full">
+          <h3 className="font-bold text-lg">{isEdit ? 'Edit Transaction' : 'Add Transaction'}</h3>
+          <button type="button" onClick={onClose} className="cursor-pointer hover:bg-brand-black/10 p-1.5 rounded-full transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -220,45 +253,47 @@ function AddTransactionModal({ isOpen, onClose, accounts, categories, tags, onSu
           {formError && (
             <div className="p-3 rounded-xl bg-red-50 text-red-500 text-xs font-bold border border-red-100">{formError}</div>
           )}
+          {/* Type selector */}
           <div className="grid grid-cols-3 gap-2">
             {['expense', 'income', 'transfer'].map(t => (
               <button
                 key={t} type="button"
-                onClick={() => setNewTx(p => ({
+                onClick={() => setForm(p => ({
                   ...p, type: t,
                   categoryId: categories.find(c => c.type === (t === 'transfer' ? 'transfer' : t))?.id || p.categoryId
                 }))}
-                className={`py-2 rounded-xl text-xs font-bold capitalize border-2 cursor-pointer ${
-                  newTx.type === t
-                    ? t === 'expense' ? 'border-[#009E9E] bg-[#009E9E]/10 text-[#009E9E]'
-                    : t === 'income'  ? 'border-[#F14C4C] bg-[#F14C4C]/10 text-[#F14C4C]'
-                    : 'border-brand-black/30 bg-brand-black/5'
-                    : 'border-transparent bg-[#F8F8F8] text-brand-black/50 hover:bg-brand-black/10'
+                className={`py-2 rounded-xl text-xs font-bold capitalize border-2 cursor-pointer transition-colors ${
+                  form.type === t ? typeColors[t]?.border : 'border-transparent bg-[#F8F8F8] text-brand-black/50 hover:bg-brand-black/10'
                 }`}
               >{t}</button>
             ))}
           </div>
 
-          <input
-            type="number" step="0.01" required
-            value={newTx.amount}
-            onChange={e => setNewTx(p => ({ ...p, amount: e.target.value }))}
-            placeholder="Amount (Rp)"
-            className="w-full bg-[#F8F8F8] rounded-xl px-4 py-3 text-lg font-bold outline-none border border-transparent focus:border-brand-black/20"
-          />
+          {/* Amount */}
+          <div>
+            <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Amount (Rp)</label>
+            <input
+              type="number" step="0.01" required
+              value={form.amount}
+              onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
+              placeholder="0"
+              className={`w-full bg-[#F8F8F8] rounded-xl px-4 py-3 text-xl font-bold outline-none border-2 border-transparent focus:border-brand-black/20 transition-colors ${typeColors[form.type]?.label || ''}`}
+            />
+          </div>
 
-          {newTx.type === 'transfer' ? (
+          {/* Account / Transfer */}
+          {form.type === 'transfer' ? (
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">From</label>
-                <select value={newTx.accountId} onChange={e => setNewTx(p => ({ ...p, accountId: e.target.value }))}
+                <select value={form.accountId} onChange={e => setForm(p => ({ ...p, accountId: e.target.value }))}
                   className="w-full bg-[#F8F8F8] rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">To</label>
-                <select value={newTx.targetAccountId} onChange={e => setNewTx(p => ({ ...p, targetAccountId: e.target.value }))}
+                <select value={form.targetAccountId} onChange={e => setForm(p => ({ ...p, targetAccountId: e.target.value }))}
                   className="w-full bg-[#F8F8F8] rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
@@ -268,16 +303,16 @@ function AddTransactionModal({ isOpen, onClose, accounts, categories, tags, onSu
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">Account</label>
-                <select value={newTx.accountId} onChange={e => setNewTx(p => ({ ...p, accountId: e.target.value }))}
+                <select value={form.accountId} onChange={e => setForm(p => ({ ...p, accountId: e.target.value }))}
                   className="w-full bg-[#F8F8F8] rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">Category</label>
-                <select value={newTx.categoryId} onChange={e => setNewTx(p => ({ ...p, categoryId: e.target.value }))}
+                <select value={form.categoryId} onChange={e => setForm(p => ({ ...p, categoryId: e.target.value }))}
                   className="w-full bg-[#F8F8F8] rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
-                  {categories.filter(c => c.type === newTx.type && !c.parentId).map(c => (
+                  {categories.filter(c => c.type === form.type && !c.parentId).map(c => (
                     <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
                   ))}
                 </select>
@@ -285,30 +320,41 @@ function AddTransactionModal({ isOpen, onClose, accounts, categories, tags, onSu
             </div>
           )}
 
-          <input
-            type="datetime-local" required
-            value={newTx.date}
-            onChange={e => setNewTx(p => ({ ...p, date: e.target.value }))}
-            className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold outline-none cursor-pointer border border-transparent focus:border-brand-black/20"
-          />
+          {/* Date */}
+          <div>
+            <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Date & Time</label>
+            <input
+              type="datetime-local" required
+              value={form.date}
+              onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
+              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold outline-none cursor-pointer border border-transparent focus:border-brand-black/20"
+            />
+          </div>
 
-          <input
-            type="text"
-            value={newTx.note}
-            onChange={e => setNewTx(p => ({ ...p, note: e.target.value }))}
-            placeholder="Description (optional)"
-            maxLength={100}
-            className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm outline-none border border-transparent focus:border-brand-black/20"
-          />
+          {/* Note */}
+          <div>
+            <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">
+              Description <span className="normal-case font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={form.note}
+              onChange={e => setForm(p => ({ ...p, note: e.target.value }))}
+              placeholder="Add a note..."
+              maxLength={200}
+              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm outline-none border border-transparent focus:border-brand-black/20"
+            />
+          </div>
 
+          {/* Tags */}
           {tags.length > 0 && (
             <div>
               <p className="text-[10px] font-bold text-brand-black/40 uppercase mb-2">Tags</p>
               <div className="flex flex-wrap gap-2">
                 {tags.map(tag => (
                   <button key={tag.id} type="button" onClick={() => toggleTag(tag.id)}
-                    className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer ${
-                      newTx.tagIds.includes(tag.id) ? 'bg-brand-black text-brand-primary' : 'bg-[#F8F8F8] text-brand-black/60'
+                    className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer transition-colors ${
+                      form.tagIds.includes(tag.id) ? 'bg-brand-black text-brand-primary' : 'bg-[#F8F8F8] text-brand-black/60 hover:bg-brand-black/10'
                     }`}>
                     {tag.name}
                   </button>
@@ -317,8 +363,8 @@ function AddTransactionModal({ isOpen, onClose, accounts, categories, tags, onSu
             </div>
           )}
 
-          <button type="submit" className="w-full bg-brand-black text-brand-primary rounded-xl py-3.5 text-sm font-bold cursor-pointer">
-            Save Transaction
+          <button type="submit" className="w-full bg-brand-black text-brand-primary rounded-xl py-3.5 text-sm font-bold cursor-pointer hover:bg-brand-black/80 transition-colors">
+            {isEdit ? 'Save Changes' : 'Save Transaction'}
           </button>
         </form>
       </div>
@@ -331,7 +377,7 @@ function DeleteModal({ isOpen, onConfirm, onCancel }) {
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center animate-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
         <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
           <Trash2 className="w-8 h-8" />
         </div>
@@ -355,35 +401,61 @@ function DeleteModal({ isOpen, onConfirm, onCancel }) {
 // ─── Main Content Component ───────────────────────────────────────────────────
 function TransactionsContent() {
   const searchParams = useSearchParams()
-  const { transactions, accounts, categories, tags, addTransaction, deleteTransaction, isLoaded } = useDesktop()
+  const { transactions, accounts, categories, tags, addTransaction, updateTransaction, deleteTransaction, isLoaded } = useDesktop()
 
-  const [searchInput, setSearchInput]     = useState('')
-  const [typeFilter, setTypeFilter]       = useState('All Types')
-  const [accountFilter, setAccountFilter] = useState('All Accounts')
-  const [activeSubTab, setActiveSubTab]   = useState('Transaction List')
-  const [calendarMonth, setCalendarMonth] = useState(() => new Date())
-  const [selectedDay, setSelectedDay]     = useState(null)
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [searchInput, setSearchInput]       = useState('')
+  const [typeFilter, setTypeFilter]         = useState('All Types')
+  const [accountFilter, setAccountFilter]   = useState('All Accounts')
+  const [activeSubTab, setActiveSubTab]     = useState('Transaction List')
+  const [calendarMonth, setCalendarMonth]   = useState(() => new Date())
+  const [selectedDay, setSelectedDay]       = useState(null)
+  const [isModalOpen, setIsModalOpen]       = useState(false)
+  const [editingTx, setEditingTx]           = useState(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
-  const [txToDelete, setTxToDelete]       = useState(null)
+  const [txToDelete, setTxToDelete]         = useState(null)
 
-  // Debounce search — only re-filter 300ms after the user stops typing
   const search = useDebounce(searchInput, 300)
 
   useEffect(() => {
-    if (searchParams.get('add') === '1') setIsAddModalOpen(true)
+    if (searchParams.get('add') === '1') setIsModalOpen(true)
   }, [searchParams])
+
+  // ── Handlers ────────────────────────────────────────────────────────────────
+  const openAdd = useCallback(() => { setEditingTx(null); setIsModalOpen(true) }, [])
+  const openEdit = useCallback((tx) => { setEditingTx(tx); setIsModalOpen(true) }, [])
+  const closeModal = useCallback(() => { setIsModalOpen(false); setEditingTx(null) }, [])
+
+  const handleSubmit = useCallback((data) => {
+    if (editingTx) {
+      updateTransaction(editingTx.id, data)
+    } else {
+      addTransaction(data)
+    }
+  }, [editingTx, updateTransaction, addTransaction])
+
+  const handleDeleteClick = useCallback((id) => { setTxToDelete(id); setDeleteModalOpen(true) }, [])
+  const confirmDelete = useCallback(() => {
+    if (txToDelete) { deleteTransaction(txToDelete); setTxToDelete(null); setDeleteModalOpen(false) }
+  }, [txToDelete, deleteTransaction])
 
   // ── Memoised derivations ────────────────────────────────────────────────────
   const filteredTransactions = useMemo(() => {
     let list = transactions
-    if (search) list = list.filter(t => t.note?.toLowerCase().includes(search.toLowerCase()))
+    if (search) {
+      const q = search.toLowerCase()
+      list = list.filter(t =>
+        t.note?.toLowerCase().includes(q) ||
+        categories.find(c => c.id === t.categoryId)?.name?.toLowerCase().includes(q) ||
+        accounts.find(a => a.id === t.accountId)?.name?.toLowerCase().includes(q) ||
+        String(t.amount).includes(q)
+      )
+    }
     if (typeFilter !== 'All Types') list = list.filter(t => t.type === typeFilter.toLowerCase())
     if (accountFilter !== 'All Accounts') {
       list = list.filter(t => t.accountId === accountFilter || t.targetAccountId === accountFilter)
     }
     return list
-  }, [transactions, search, typeFilter, accountFilter])
+  }, [transactions, search, typeFilter, accountFilter, categories, accounts])
 
   const { totalIncome, totalExpense } = useMemo(() => ({
     totalIncome:  filteredTransactions.filter(t => t.type === 'income').reduce((a, t) => a + t.amount, 0),
@@ -427,13 +499,13 @@ function TransactionsContent() {
     return filteredTransactions.filter(t => new Date(t.date).toDateString() === selectedDay.toDateString())
   }, [selectedDay, filteredTransactions])
 
-  // ── Handlers ────────────────────────────────────────────────────────────────
-  const handleDeleteClick = useCallback((id) => { setTxToDelete(id); setDeleteModalOpen(true) }, [])
-  const confirmDelete = useCallback(() => {
-    if (txToDelete) { deleteTransaction(txToDelete); setTxToDelete(null); setDeleteModalOpen(false) }
-  }, [txToDelete, deleteTransaction])
-
-  if (!isLoaded) return <div className="p-8 text-center text-brand-black/50">Loading...</div>
+  if (!isLoaded) return (
+    <div className="space-y-3 p-6">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="h-12 bg-brand-black/5 rounded-xl animate-pulse" />
+      ))}
+    </div>
+  )
 
   return (
     <div className="flex h-[calc(100vh-140px)] bg-white rounded-3xl p-6 shadow-sm border border-brand-black/5 relative">
@@ -466,8 +538,8 @@ function TransactionsContent() {
               {activeSubTab === 'Transaction List' ? 'Transaction List' : 'Transaction Calendar'}
             </h2>
             <button
-              type="button" onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-4 py-2 rounded-xl text-xs font-bold cursor-pointer"
+              type="button" onClick={openAdd}
+              className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors"
             >
               <PlusCircle className="w-3.5 h-3.5" /> Add
             </button>
@@ -476,23 +548,30 @@ function TransactionsContent() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-black/40" />
             <input
               type="text"
-              placeholder="Search transaction description"
+              placeholder="Search by description, category, account..."
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-[#F8F8F8] rounded-xl text-sm focus:outline-none focus:bg-white focus:border focus:border-brand-black/20 w-72"
+              className="pl-9 pr-4 py-2 bg-[#F8F8F8] rounded-xl text-sm focus:outline-none focus:bg-white focus:border focus:border-brand-black/20 w-80"
             />
+            {searchInput && (
+              <button onClick={() => setSearchInput('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/40 hover:text-brand-black cursor-pointer">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
         {/* Summary bar */}
         <div className="flex items-center justify-between bg-[#F8F8F8] rounded-2xl px-5 py-3 mb-4">
-          <span className="text-xs font-bold text-brand-black/40">Date Range: All Time</span>
-          <div className="flex items-center gap-4">
+          <span className="text-xs font-bold text-brand-black/40">
+            {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
+          </span>
+          <div className="flex items-center gap-6">
             <span className="text-xs font-bold text-brand-black/50">
-              Total Income <span className="text-[#F14C4C]">Rp {totalIncome.toLocaleString('id-ID')}</span>
+              Income <span className="text-emerald-500">Rp {totalIncome.toLocaleString('id-ID')}</span>
             </span>
             <span className="text-xs font-bold text-brand-black/50">
-              Total Expense <span className="text-[#009E9E]">Rp {totalExpense.toLocaleString('id-ID')}</span>
+              Expense <span className="text-rose-500">Rp {totalExpense.toLocaleString('id-ID')}</span>
             </span>
           </div>
         </div>
@@ -500,18 +579,22 @@ function TransactionsContent() {
         {/* Content */}
         {activeSubTab === 'Transaction List' ? (
           <div className="bg-white rounded-2xl border border-brand-black/5 flex-1 flex flex-col min-h-0 overflow-hidden">
-            <div className="grid grid-cols-[100px_1fr_130px_160px_1fr_40px] gap-2 px-5 py-3 border-b bg-[#F8F8F8]">
+            <div className="grid grid-cols-[100px_1fr_140px_160px_1fr_72px] gap-2 px-5 py-3 border-b bg-[#F8F8F8]">
               {['TIME', 'CATEGORY', 'AMOUNT', 'ACCOUNT', 'DESCRIPTION', ''].map(label => (
                 <span key={label} className="text-[10px] font-bold text-brand-black/40 uppercase">{label}</span>
               ))}
             </div>
             <div className="overflow-y-auto flex-1">
               {groupedTransactions.length === 0 && (
-                <p className="p-8 text-center text-brand-black/40 text-sm">No transactions found.</p>
+                <div className="py-16 text-center">
+                  <div className="text-4xl mb-3">🔍</div>
+                  <p className="text-brand-black/40 text-sm font-medium">No transactions found.</p>
+                  {searchInput && <p className="text-brand-black/30 text-xs mt-1">Try a different search term.</p>}
+                </div>
               )}
               {groupedTransactions.map(group => (
                 <div key={group.date}>
-                  <div className="flex items-center gap-3 px-5 py-2.5 bg-[#F8F8F8]/50 border-b">
+                  <div className="flex items-center gap-3 px-5 py-2.5 bg-[#F8F8F8]/50 border-b sticky top-0 z-10">
                     <span className="text-xs font-bold">{group.date}</span>
                     <span className="text-[10px] font-bold text-brand-black/40 bg-brand-black/5 px-2 py-0.5 rounded-full">{group.day}</span>
                   </div>
@@ -522,6 +605,7 @@ function TransactionsContent() {
                       accounts={accounts}
                       categories={categories}
                       onDelete={handleDeleteClick}
+                      onEdit={openEdit}
                     />
                   ))}
                 </div>
@@ -541,13 +625,14 @@ function TransactionsContent() {
       </div>
 
       {/* ── Modals ── */}
-      <AddTransactionModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+      <TransactionModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
         accounts={accounts}
         categories={categories}
         tags={tags}
-        onSubmit={addTransaction}
+        onSubmit={handleSubmit}
+        editTx={editingTx}
       />
       <DeleteModal
         isOpen={deleteModalOpen}
