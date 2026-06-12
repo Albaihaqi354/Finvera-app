@@ -39,31 +39,13 @@ function DeleteAccountModal({ account, onConfirm, onCancel }) {
 // ── Add / Edit Account Modal ──────────────────────────────────────────────────
 function AccountModal({ isOpen, onClose, onSubmit, editAccount = null }) {
   const isEdit = !!editAccount
-  const [form, setForm] = useState(DEFAULT_FORM)
-
-  // Sync form when modal opens
-  useState(() => {
-    if (isOpen) {
-      setForm(isEdit && editAccount ? {
-        name: editAccount.name,
-        category: editAccount.category || 'Checking',
-        type: editAccount.type,
-        balance: String(editAccount.balance),
-        color: editAccount.color || '#E6923F'
-      } : DEFAULT_FORM)
-    }
-  })
-
-  // Use a key-reset approach via useEffect alternative – just sync on open
-  const handleOpen = (editAcc) => {
-    setForm(editAcc ? {
-      name: editAcc.name,
-      category: editAcc.category || 'Checking',
-      type: editAcc.type,
-      balance: String(editAcc.balance),
-      color: editAcc.color || '#E6923F'
-    } : DEFAULT_FORM)
-  }
+  const [form, setForm] = useState(editAccount ? {
+    name: editAccount.name,
+    category: editAccount.category || 'Checking',
+    type: editAccount.type,
+    balance: String(editAccount.balance),
+    color: editAccount.color || '#E6923F'
+  } : DEFAULT_FORM)
 
   if (!isOpen) return null
 
@@ -328,12 +310,13 @@ export default function AccountsPage() {
       </div>
 
       {/* Modals */}
-      <AccountModal
-        isOpen={modalOpen}
-        onClose={closeModal}
-        onSubmit={handleSubmit}
-        editAccount={editingAccount}
-      />
+      {modalOpen && (
+        <AccountModal
+          onClose={closeModal}
+          onSubmit={handleSubmit}
+          editAccount={editingAccount}
+        />
+      )}
       <DeleteAccountModal
         account={deletingAccount}
         onConfirm={confirmDelete}

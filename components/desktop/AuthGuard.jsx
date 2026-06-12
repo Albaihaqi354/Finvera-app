@@ -12,6 +12,7 @@ export default function AuthGuard({ children }) {
       router.replace('/auth/signin')
       return
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setReady(true)
   }, [router])
 

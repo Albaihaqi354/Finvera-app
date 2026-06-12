@@ -163,21 +163,12 @@ function TransactionCalendar({ calendarMonth, setCalendarMonth, calendarDays, se
 }
 
 // ─── Sub-component: Add / Edit Transaction Modal ──────────────────────────────
-function TransactionModal({ isOpen, onClose, accounts, categories, tags, onSubmit, editTx = null }) {
+function TransactionModal({ onClose, accounts, categories, tags, onSubmit, editTx = null }) {
   const isEdit = !!editTx
-  const defaultForm = {
-    type: 'expense', amount: '', accountId: '', targetAccountId: '',
-    categoryId: '', date: new Date().toISOString().slice(0, 16), note: '', tagIds: []
-  }
 
-  const [form, setForm] = useState(defaultForm)
-  const [formError, setFormError] = useState('')
-
-  // Prefill when editing or reset on open
-  useEffect(() => {
-    if (!isOpen) return
+  const [form, setForm] = useState(() => {
     if (isEdit && editTx) {
-      setForm({
+      return {
         type: editTx.type,
         amount: String(editTx.amount),
         accountId: editTx.accountId || accounts[0]?.id || '',
@@ -186,18 +177,20 @@ function TransactionModal({ isOpen, onClose, accounts, categories, tags, onSubmi
         date: editTx.date ? new Date(editTx.date).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
         note: editTx.note || '',
         tagIds: editTx.tagIds || []
-      })
-    } else {
-      setForm({
-        ...defaultForm,
-        accountId: accounts[0]?.id || '',
-        targetAccountId: accounts[1]?.id || accounts[0]?.id || '',
-        categoryId: categories.find(c => c.type === 'expense')?.id || ''
-      })
+      }
     }
-    setFormError('')
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, isEdit, editTx])
+    return {
+      type: 'expense',
+      amount: '',
+      accountId: accounts[0]?.id || '',
+      targetAccountId: accounts[1]?.id || accounts[0]?.id || '',
+      categoryId: categories.find(c => c.type === 'expense')?.id || '',
+      date: new Date().toISOString().slice(0, 16),
+      note: '',
+      tagIds: []
+    }
+  })
+  const [formError, setFormError] = useState('')
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -231,8 +224,6 @@ function TransactionModal({ isOpen, onClose, accounts, categories, tags, onSubmi
       tagIds: prev.tagIds.includes(tagId) ? prev.tagIds.filter(id => id !== tagId) : [...prev.tagIds, tagId]
     }))
   }
-
-  if (!isOpen) return null
 
   const typeColors = {
     expense: { border: 'border-rose-400 bg-rose-50 text-rose-600', label: 'text-rose-500' },
@@ -625,15 +616,16 @@ function TransactionsContent() {
       </div>
 
       {/* ── Modals ── */}
-      <TransactionModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        accounts={accounts}
-        categories={categories}
-        tags={tags}
-        onSubmit={handleSubmit}
-        editTx={editingTx}
-      />
+      {isModalOpen && (
+        <TransactionModal
+          onClose={closeModal}
+          accounts={accounts}
+          categories={categories}
+          tags={tags}
+          onSubmit={handleSubmit}
+          editTx={editingTx}
+        />
+      )}
       <DeleteModal
         isOpen={deleteModalOpen}
         onConfirm={confirmDelete}

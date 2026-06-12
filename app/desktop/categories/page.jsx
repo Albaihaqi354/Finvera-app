@@ -7,20 +7,14 @@ import { useDebounce } from '@/hooks/useDebounce'
 const EMOJI_SUGGESTIONS = ['🍔','🚗','🏠','💊','📚','✈️','🎮','👕','💡','🏋️','🛒','💰','🎁','🎵','🍕','☕','🚌','💳','💼','🌱']
 
 // ── Edit/Add Category Modal ────────────────────────────────────────────────────
-function CategoryModal({ isOpen, onClose, onSubmit, editCategory = null, parentOptions = [], activeTab }) {
+function CategoryModal({ onClose, onSubmit, editCategory = null, parentOptions = [], activeTab }) {
   const isEdit = !!editCategory
-  const [form, setForm] = useState({ name: '', icon: '📁', parentId: '' })
-
-  useEffect(() => {
-    if (!isOpen) return
+  const [form, setForm] = useState(() => {
     if (isEdit && editCategory) {
-      setForm({ name: editCategory.name, icon: editCategory.icon || '📁', parentId: editCategory.parentId || '' })
-    } else {
-      setForm({ name: '', icon: '📁', parentId: '' })
+      return { name: editCategory.name, icon: editCategory.icon || '📁', parentId: editCategory.parentId || '' }
     }
-  }, [isOpen, isEdit, editCategory])
-
-  if (!isOpen) return null
+    return { name: '', icon: '📁', parentId: '' }
+  })
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -346,14 +340,15 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      <CategoryModal
-        isOpen={modalOpen}
-        onClose={closeModal}
-        onSubmit={handleSubmit}
-        editCategory={editingCategory}
-        parentOptions={parentOptions}
-        activeTab={activeTab}
-      />
+      {modalOpen && (
+        <CategoryModal
+          onClose={closeModal}
+          onSubmit={handleSubmit}
+          editCategory={editingCategory}
+          parentOptions={parentOptions}
+          activeTab={activeTab}
+        />
+      )}
       <DeleteCategoryModal
         category={deletingCategory}
         subCount={deletingCategory ? subCountOf(deletingCategory) : 0}

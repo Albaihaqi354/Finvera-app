@@ -17,21 +17,12 @@ const FREQUENCIES = [
   { value: 'yearly', label: 'Yearly' },
 ]
 
-function ScheduledModal({ isOpen, onClose, accounts, categories, tags, onSubmit, editItem = null }) {
+function ScheduledModal({ onClose, accounts, categories, tags, onSubmit, editItem = null }) {
   const isEdit = !!editItem
-  const defaultForm = {
-    name: '', type: 'expense', amount: '', accountId: '', targetAccountId: '',
-    categoryId: '', note: '', tagIds: [], frequency: 'monthly',
-    nextRun: new Date().toISOString().slice(0, 16), isActive: true
-  }
 
-  const [form, setForm] = useState(defaultForm)
-  const [formError, setFormError] = useState('')
-
-  useMemo(() => {
-    if (!isOpen) return
+  const [form, setForm] = useState(() => {
     if (isEdit && editItem) {
-      setForm({
+      return {
         name: editItem.name || '',
         type: editItem.type,
         amount: String(editItem.amount),
@@ -43,17 +34,18 @@ function ScheduledModal({ isOpen, onClose, accounts, categories, tags, onSubmit,
         frequency: editItem.frequency || 'monthly',
         nextRun: editItem.nextRun ? new Date(editItem.nextRun).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
         isActive: editItem.isActive ?? true
-      })
-    } else {
-      setForm({
-        ...defaultForm,
-        accountId: accounts[0]?.id || '',
-        targetAccountId: accounts[1]?.id || accounts[0]?.id || '',
-        categoryId: categories.find(c => c.type === 'expense')?.id || ''
-      })
+      }
     }
-    setFormError('')
-  }, [isOpen, isEdit, editItem, accounts, categories])
+    return {
+      name: '', type: 'expense', amount: '',
+      accountId: accounts[0]?.id || '',
+      targetAccountId: accounts[1]?.id || accounts[0]?.id || '',
+      categoryId: categories.find(c => c.type === 'expense')?.id || '',
+      note: '', tagIds: [], frequency: 'monthly',
+      nextRun: new Date().toISOString().slice(0, 16), isActive: true
+    }
+  })
+  const [formError, setFormError] = useState('')
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -90,8 +82,6 @@ function ScheduledModal({ isOpen, onClose, accounts, categories, tags, onSubmit,
       tagIds: prev.tagIds.includes(tagId) ? prev.tagIds.filter(id => id !== tagId) : [...prev.tagIds, tagId]
     }))
   }
-
-  if (!isOpen) return null
 
   const typeColors = {
     expense: { border: 'border-rose-400 bg-rose-50 text-rose-600', label: 'text-rose-500' },
@@ -428,11 +418,13 @@ export default function ScheduledPage() {
         </div>
       </div>
 
-      <ScheduledModal
-        isOpen={isModalOpen} onClose={closeModal}
-        accounts={accounts} categories={categories} tags={tags}
-        onSubmit={handleSubmit} editItem={editingItem}
-      />
+      {isModalOpen && (
+        <ScheduledModal
+          onClose={closeModal}
+          accounts={accounts} categories={categories} tags={tags}
+          onSubmit={handleSubmit} editItem={editingItem}
+        />
+      )}
       <DeleteModal
         isOpen={deleteModalOpen}
         onConfirm={confirmDelete}

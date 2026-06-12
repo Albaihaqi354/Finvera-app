@@ -84,11 +84,7 @@ export function DesktopProvider({ children }) {
     
     let loadedScheduled = storageAPI.scheduled.getAll() || []
     
-    // Process scheduled transactions
-    const now = new Date()
-    let newTransactions = []
-    let updatedAccounts = accountsToUse // Wait, we need the initial accounts array to apply balance changes.
-    // Let's defer execution to a separate effect that runs once after initial load.
+
 
     setScheduled(loadedScheduled)
 

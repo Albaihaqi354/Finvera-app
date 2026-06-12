@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { PlusCircle, Search, Pencil, Trash2, Tag as TagIcon, X, Check } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 
@@ -45,23 +45,10 @@ function TagCard({ tag, onEdit, onDelete }) {
   )
 }
 
-function TagModal({ isOpen, onClose, onSubmit, editTag = null }) {
+function TagModal({ onClose, onSubmit, editTag = null }) {
   const isEdit = !!editTag
-  const [name, setName] = useState('')
-  const [color, setColor] = useState('#E6923F')
-
-  useEffect(() => {
-    if (!isOpen) return
-    if (isEdit && editTag) {
-      setName(editTag.name)
-      setColor(editTag.color || '#E6923F')
-    } else {
-      setName('')
-      setColor('#E6923F')
-    }
-  }, [isOpen, isEdit, editTag])
-
-  if (!isOpen) return null
+  const [name, setName] = useState(editTag?.name || '')
+  const [color, setColor] = useState(editTag?.color || '#E6923F')
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -247,12 +234,13 @@ export default function TagsPage() {
         </div>
       </div>
 
-      <TagModal
-        isOpen={modalOpen}
-        onClose={closeModal}
-        onSubmit={handleSubmit}
-        editTag={editingTag}
-      />
+      {modalOpen && (
+        <TagModal
+          onClose={closeModal}
+          onSubmit={handleSubmit}
+          editTag={editingTag}
+        />
+      )}
       <DeleteTagModal
         tag={deletingTag}
         onConfirm={() => { deleteTag(deletingTag.id); setDeletingTag(null) }}

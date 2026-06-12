@@ -27,7 +27,7 @@ function SkeletonBlock({ className }) {
 
 export default function OverviewPage() {
   const { isBalanceVisible, accounts, getTotalsForRange, isLoaded } = useDesktop()
-  const now = new Date()
+  const now = useMemo(() => new Date(), [])
   // Toggle hero card between income/expense/net
   const [heroMode, setHeroMode] = useState('expense')
 
@@ -50,7 +50,7 @@ export default function OverviewPage() {
       { title: 'This Month', icon: mdiCalendarOutline, ...getTotalsForRange(monthStart, todayEnd),             date: fmtRange(monthStart, now)         },
       { title: 'This Year',  icon: mdiLayers,          ...getTotalsForRange(yearStart, todayEnd),              date: String(now.getFullYear())          },
     ]
-  }, [getTotalsForRange])
+  }, [getTotalsForRange, now])
 
   const monthlyTrend = useMemo(() => {
     const months = []
@@ -62,7 +62,7 @@ export default function OverviewPage() {
       months.push({ label: d.toLocaleString('default', { month: 'short' }), income, expense })
     }
     return months
-  }, [getTotalsForRange])
+  }, [getTotalsForRange, now])
 
   const trendOption = useMemo(() => buildTrendBarOption(monthlyTrend), [monthlyTrend])
 
@@ -76,7 +76,7 @@ export default function OverviewPage() {
   const { income: monthlyIncome, expense: monthlyExpense } = useMemo(() => {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     return getTotalsForRange(monthStart, endOfDay(now))
-  }, [getTotalsForRange])
+  }, [getTotalsForRange, now])
 
   const monthName = now.toLocaleString('default', { month: 'long' })
   const formatMoney = (n) => n.toLocaleString('id-ID')

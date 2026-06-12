@@ -10,20 +10,12 @@ const amountColor = (type) => {
   return 'text-brand-black/70'
 }
 
-function TemplateModal({ isOpen, onClose, accounts, categories, tags, onSubmit, editTpl = null }) {
+function TemplateModal({ onClose, accounts, categories, tags, onSubmit, editTpl = null }) {
   const isEdit = !!editTpl
-  const defaultForm = {
-    templateName: '', type: 'expense', amount: '', accountId: '', targetAccountId: '',
-    categoryId: '', note: '', tagIds: []
-  }
 
-  const [form, setForm] = useState(defaultForm)
-  const [formError, setFormError] = useState('')
-
-  useMemo(() => {
-    if (!isOpen) return
+  const [form, setForm] = useState(() => {
     if (isEdit && editTpl) {
-      setForm({
+      return {
         templateName: editTpl.templateName || '',
         type: editTpl.type,
         amount: editTpl.amount ? String(editTpl.amount) : '',
@@ -32,17 +24,17 @@ function TemplateModal({ isOpen, onClose, accounts, categories, tags, onSubmit, 
         categoryId: editTpl.categoryId || '',
         note: editTpl.note || '',
         tagIds: editTpl.tagIds || []
-      })
-    } else {
-      setForm({
-        ...defaultForm,
-        accountId: accounts[0]?.id || '',
-        targetAccountId: accounts[1]?.id || accounts[0]?.id || '',
-        categoryId: categories.find(c => c.type === 'expense')?.id || ''
-      })
+      }
     }
-    setFormError('')
-  }, [isOpen, isEdit, editTpl, accounts, categories])
+    return {
+      templateName: '', type: 'expense', amount: '',
+      accountId: accounts[0]?.id || '',
+      targetAccountId: accounts[1]?.id || accounts[0]?.id || '',
+      categoryId: categories.find(c => c.type === 'expense')?.id || '',
+      note: '', tagIds: []
+    }
+  })
+  const [formError, setFormError] = useState('')
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -76,8 +68,6 @@ function TemplateModal({ isOpen, onClose, accounts, categories, tags, onSubmit, 
       tagIds: prev.tagIds.includes(tagId) ? prev.tagIds.filter(id => id !== tagId) : [...prev.tagIds, tagId]
     }))
   }
-
-  if (!isOpen) return null
 
   const typeColors = {
     expense: { border: 'border-rose-400 bg-rose-50 text-rose-600', label: 'text-rose-500' },
@@ -397,11 +387,13 @@ export default function TemplatesPage() {
         </div>
       </div>
 
-      <TemplateModal
-        isOpen={isModalOpen} onClose={closeModal}
-        accounts={accounts} categories={categories} tags={tags}
-        onSubmit={handleSubmit} editTpl={editingTpl}
-      />
+      {isModalOpen && (
+        <TemplateModal
+          onClose={closeModal}
+          accounts={accounts} categories={categories} tags={tags}
+          onSubmit={handleSubmit} editTpl={editingTpl}
+        />
+      )}
       <DeleteModal
         isOpen={deleteModalOpen}
         onConfirm={confirmDelete}

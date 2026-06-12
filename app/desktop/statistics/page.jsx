@@ -1,10 +1,10 @@
 "use client"
 import { useMemo, useState } from 'react'
-import MdiIcon from '@/components/icons/MdiIcon'
+
 import EChart from '@/components/charts/EChart'
 import { buildPieChartOption, buildGroupedBarOption } from '@/lib/chart/options'
 import { EZ_EXPENSE_COLOR, EZ_INCOME_COLOR } from '@/lib/chart/colors'
-import { mdiCalendarOutline, mdiChevronDown } from '@/lib/icons/mdi'
+
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 
 const QUICK_RANGES = ['Today', 'This Week', 'This Month', 'This Year', 'All Time', 'Custom']

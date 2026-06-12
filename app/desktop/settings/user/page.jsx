@@ -9,6 +9,7 @@ export default function UserSettingsPage() {
     const raw = localStorage.getItem('finvera_user')
     if (raw) {
       const u = JSON.parse(raw)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProfile({ username: u.username || '', email: u.email || '' })
     }
   }, [])
