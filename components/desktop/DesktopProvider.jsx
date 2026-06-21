@@ -1,40 +1,12 @@
 "use client"
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { storageAPI, PRESET_CATEGORIES_VERSION } from '@/lib/storage'
-import { buildDefaultCategories, getDefaultExpenseCategoryId } from '@/lib/presetCategories'
+import { api } from '@/lib/api/client'
 
 const DesktopContext = createContext()
 
-const DEFAULT_ACCOUNTS = [
-  { id: 'acc1', name: 'Cash', balance: 500.00, type: 'asset', category: 'Cash', color: '#009E9E' },
-  { id: 'acc2', name: 'Bank Account', balance: 3500.00, type: 'asset', category: 'Checking', color: '#E6923F' },
-  { id: 'acc3', name: 'Credit Card', balance: -298.92, type: 'liability', category: 'Credit Card', color: '#F14C4C' }
-]
-
-const DEFAULT_CATEGORIES = buildDefaultCategories()
-
-const DEFAULT_TAGS = [
-  { id: 'tag1', name: 'Vacation 2026' },
-  { id: 'tag2', name: 'Business Trip' },
-  { id: 'tag3', name: 'Tax Deductible' }
-]
-
-const DEFAULT_TRANSACTIONS = [
-  {
-    id: 'tx1',
-    type: 'expense',
-    amount: 45.00,
-    accountId: 'acc2',
-    categoryId: getDefaultExpenseCategoryId(DEFAULT_CATEGORIES),
-    date: new Date().toISOString(),
-    note: 'Lunch',
-    tagIds: []
-  }
-]
-
 function applyBalanceChange(accounts, accountId, delta) {
   return accounts.map(acc =>
-    acc.id === accountId ? { ...acc, balance: acc.balance + delta } : acc
+    acc.id === accountId ? { ...acc, balance: (parseFloat(acc.balance) || 0) + delta } : acc
   )
 }
 
@@ -48,250 +20,227 @@ export function DesktopProvider({ children }) {
   const [scheduled, setScheduled] = useState([])
   const [isLoaded, setIsLoaded] = useState(false)
 
-  useEffect(() => {
-    setAccounts(storageAPI.accounts.getAll() || DEFAULT_ACCOUNTS)
+  // Fetch all initial data
+  const loadData = useCallback(async () => {
+    try {
+      const [
+        accountsData,
+        categoriesData,
+        tagsData,
+        transactionsData,
+        scheduledData
+      ] = await Promise.all([
+        api.accounts.getAll().catch(() => []),
+        api.categories.getAll().catch(() => []),
+        api.tags.getAll().catch(() => []),
+        api.transactions.getAll().catch(() => ({ data: [] })),
+        api.scheduled.getAll().catch(() => [])
+      ])
 
-    const savedCategories = storageAPI.categories.getAll()
-    const categoriesVersion = storageAPI.categories.getVersion()
-    const categoriesMigrated = !savedCategories || categoriesVersion < PRESET_CATEGORIES_VERSION
-
-    if (categoriesMigrated) {
-      setCategories(DEFAULT_CATEGORIES)
-      storageAPI.categories.saveAll(DEFAULT_CATEGORIES)
-      storageAPI.categories.saveVersion(PRESET_CATEGORIES_VERSION)
-    } else {
-      setCategories(savedCategories)
+      setAccounts(Array.isArray(accountsData) ? accountsData : (accountsData.data || []))
+      setCategories(Array.isArray(categoriesData) ? categoriesData : (categoriesData.data || []))
+      setTags(Array.isArray(tagsData) ? tagsData : (tagsData.data || []))
+      
+      const txs = Array.isArray(transactionsData) ? transactionsData : (transactionsData.data || []);
+      setTransactions(txs)
+      
+      setScheduled(Array.isArray(scheduledData) ? scheduledData : (scheduledData.data || []))
+      
+      const savedVisibility = localStorage.getItem('finvera_balance_visible')
+      if (savedVisibility !== null) setIsBalanceVisible(savedVisibility === 'true')
+      
+      setIsLoaded(true)
+    } catch (err) {
+      console.error('Failed to load data from API:', err)
+      setIsLoaded(true)
     }
-
-    const savedTx = storageAPI.transactions.getAll()
-    const activeCategories = categoriesMigrated ? DEFAULT_CATEGORIES : (savedCategories || DEFAULT_CATEGORIES)
-    const validCategoryIds = new Set(activeCategories.map(c => c.id))
-    const defaultExpenseId = getDefaultExpenseCategoryId(activeCategories)
-
-    if (savedTx?.length) {
-      setTransactions(
-        savedTx.map(tx => ({
-          ...tx,
-          categoryId: validCategoryIds.has(tx.categoryId) ? tx.categoryId : defaultExpenseId,
-        }))
-      )
-    } else {
-      setTransactions(DEFAULT_TRANSACTIONS)
-    }
-
-    setTags(storageAPI.tags.getAll() || DEFAULT_TAGS)
-    setTemplates(storageAPI.templates.getAll() || [])
-    
-    let loadedScheduled = storageAPI.scheduled.getAll() || []
-    
-
-
-    setScheduled(loadedScheduled)
-
-    const savedVisibility = storageAPI.preferences.getBalanceVisible()
-    if (savedVisibility !== null) setIsBalanceVisible(savedVisibility)
-    setIsLoaded(true)
   }, [])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('finvera_balance_visible', String(isBalanceVisible))
+    }
+  }, [isBalanceVisible, isLoaded])
 
   // ── Auto-process scheduled transactions ─────────────────────────────────────
-  useEffect(() => {
-    if (!isLoaded || scheduled.length === 0) return
-
-    const now = new Date()
-    let changesMade = false
-    let currentTxs = [...transactions]
-    let currentAccs = [...accounts]
-    let currentScheds = [...scheduled]
-
-    for (let i = 0; i < currentScheds.length; i++) {
-      let sched = currentScheds[i]
-      if (!sched.nextRun || !sched.isActive) continue
-
-      let nextRunDate = new Date(sched.nextRun)
-      
-      // Process while nextRun is in the past or present
-      while (nextRunDate <= now) {
-        changesMade = true
-        
-        // 1. Create transaction
-        const newTx = {
-          id: 'tx_sch_' + Date.now() + Math.random().toString(36).substring(2, 9),
-          type: sched.type,
-          amount: sched.amount,
-          accountId: sched.accountId,
-          targetAccountId: sched.targetAccountId,
-          categoryId: sched.categoryId,
-          date: nextRunDate.toISOString(),
-          note: sched.note || `Auto-scheduled: ${sched.name}`,
-          tagIds: sched.tagIds || []
-        }
-        currentTxs = [newTx, ...currentTxs]
-
-        // 2. Update account balances
-        if (newTx.type === 'transfer' && newTx.targetAccountId) {
-          currentAccs = applyBalanceChange(
-            applyBalanceChange(currentAccs, newTx.accountId, -newTx.amount),
-            newTx.targetAccountId,
-            newTx.amount
-          )
-        } else {
-          const change = newTx.type === 'expense' ? -newTx.amount : newTx.amount
-          currentAccs = applyBalanceChange(currentAccs, newTx.accountId, change)
-        }
-
-        // 3. Advance nextRunDate
-        if (sched.frequency === 'daily') nextRunDate.setDate(nextRunDate.getDate() + 1)
-        else if (sched.frequency === 'weekly') nextRunDate.setDate(nextRunDate.getDate() + 7)
-        else if (sched.frequency === 'monthly') nextRunDate.setMonth(nextRunDate.getMonth() + 1)
-        else if (sched.frequency === 'yearly') nextRunDate.setFullYear(nextRunDate.getFullYear() + 1)
-        else break // Fallback to prevent infinite loop
-      }
-
-      if (changesMade) {
-        currentScheds[i] = { ...sched, nextRun: nextRunDate.toISOString() }
-      }
-    }
-
-    if (changesMade) {
-      setTransactions(currentTxs)
-      setAccounts(currentAccs)
-      setScheduled(currentScheds)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded])
-
-  useEffect(() => {
-    if (!isLoaded) return
-    storageAPI.accounts.saveAll(accounts)
-    storageAPI.categories.saveAll(categories)
-    storageAPI.tags.saveAll(tags)
-    storageAPI.transactions.saveAll(transactions)
-    storageAPI.templates.saveAll(templates)
-    storageAPI.scheduled.saveAll(scheduled)
-    storageAPI.preferences.saveBalanceVisible(isBalanceVisible)
-  }, [accounts, categories, tags, transactions, templates, scheduled, isBalanceVisible, isLoaded])
+  // Simplified for now, let backend handle actual cron processing.
+  // Ideally, backend cron job handles this.
 
   // ── Accounts ──────────────────────────────────────────────────────────────
-  const addAccount = useCallback((account) => {
-    const newAcc = { ...account, id: 'acc' + Date.now(), balance: parseFloat(account.balance) || 0 }
-    setAccounts(prev => [...prev, newAcc])
+  const addAccount = useCallback(async (account) => {
+    try {
+      const res = await api.accounts.create(account)
+      const newAcc = { ...account, ...res, balance: parseFloat(account.initial_balance) || 0 }
+      setAccounts(prev => [...prev, newAcc])
+      return newAcc
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }, [])
 
-  const updateAccount = useCallback((id, updates) => {
-    setAccounts(prev =>
-      prev.map(acc => acc.id === id ? { ...acc, ...updates, balance: parseFloat(updates.balance ?? acc.balance) || 0 } : acc)
-    )
+  const updateAccount = useCallback(async (id, updates) => {
+    try {
+      await api.accounts.update(id, updates)
+      setAccounts(prev =>
+        prev.map(acc => acc.id === id ? { ...acc, ...updates } : acc)
+      )
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }, [])
 
-  const deleteAccount = useCallback((id) => {
-    setAccounts(prev => prev.filter(a => a.id !== id))
-    setTransactions(prev => prev.filter(t => t.accountId !== id && t.targetAccountId !== id))
+  const deleteAccount = useCallback(async (id) => {
+    try {
+      await api.accounts.delete(id)
+      setAccounts(prev => prev.filter(a => a.id !== id))
+      setTransactions(prev => prev.filter(t => t.accountId !== id && t.targetAccountId !== id))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }, [])
 
   // ── Categories ────────────────────────────────────────────────────────────
-  const addCategory = useCallback((category) => {
-    setCategories(prev => [...prev, { ...category, id: 'cat' + Date.now(), parentId: category.parentId || null }])
+  const addCategory = useCallback(async (category) => {
+    try {
+      const res = await api.categories.create({ ...category, parent_id: category.parentId || undefined })
+      setCategories(prev => [...prev, { ...category, ...res }])
+      return res
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }, [])
 
-  const updateCategory = useCallback((id, updates) => {
-    setCategories(prev =>
-      prev.map(c => c.id === id ? { ...c, ...updates } : c)
-    )
+  const updateCategory = useCallback(async (id, updates) => {
+    try {
+      await api.categories.update(id, { ...updates, parent_id: updates.parentId || undefined })
+      setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }, [])
 
-  const deleteCategory = useCallback((id) => {
-    setCategories(prev => prev.filter(c => c.id !== id && c.parentId !== id))
-    setTransactions(prev => prev.filter(t => t.categoryId !== id))
+  const deleteCategory = useCallback(async (id) => {
+    try {
+      await api.categories.delete(id)
+      setCategories(prev => prev.filter(c => c.id !== id && c.parentId !== id))
+      setTransactions(prev => prev.filter(t => t.categoryId !== id))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }, [])
 
   // ── Tags ──────────────────────────────────────────────────────────────────
-  const addTag = useCallback((name, color) => {
-    setTags(prev => [...prev, { id: 'tag' + Date.now(), name, color: color || '#E6923F' }])
+  const addTag = useCallback(async (name, color) => {
+    try {
+      const res = await api.tags.create({ name, color: color || '#E6923F' })
+      setTags(prev => [...prev, res])
+      return res
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }, [])
 
-  const updateTag = useCallback((id, name, color) => {
-    setTags(prev => prev.map(t => t.id === id ? { ...t, name, ...(color ? { color } : {}) } : t))
+  const updateTag = useCallback(async (id, name, color) => {
+    try {
+      await api.tags.update(id, { name, color })
+      setTags(prev => prev.map(t => t.id === id ? { ...t, name, ...(color ? { color } : {}) } : t))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }, [])
 
-  const deleteTag = useCallback((id) => {
-    setTags(prev => prev.filter(t => t.id !== id))
-    setTransactions(prev => prev.map(tx => ({
-      ...tx,
-      tagIds: (tx.tagIds || []).filter(tid => tid !== id)
-    })))
+  const deleteTag = useCallback(async (id) => {
+    try {
+      await api.tags.delete(id)
+      setTags(prev => prev.filter(t => t.id !== id))
+      setTransactions(prev => prev.map(tx => ({
+        ...tx,
+        tagIds: (tx.tagIds || []).filter(tid => tid !== id)
+      })))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }, [])
 
   // ── Transactions ──────────────────────────────────────────────────────────
-  const addTransaction = useCallback((tx) => {
-    const newTx = { ...tx, id: 'tx' + Date.now(), tagIds: tx.tagIds || [] }
-    setTransactions(prev => [newTx, ...prev])
-
-    if (tx.type === 'transfer' && tx.targetAccountId) {
-      setAccounts(prev =>
-        applyBalanceChange(
-          applyBalanceChange(prev, tx.accountId, -tx.amount),
-          tx.targetAccountId,
-          tx.amount
-        )
-      )
-      return
-    }
-
-    const change = tx.type === 'expense' ? -tx.amount : tx.amount
-    setAccounts(prev => applyBalanceChange(prev, tx.accountId, change))
-  }, [])
-
-  const updateTransaction = useCallback((id, updates) => {
-    setTransactions(prev => {
-      const oldTx = prev.find(t => t.id === id)
-      if (!oldTx) return prev
-
-      // Revert old balance effect
-      setAccounts(accs => {
-        let reverted = accs
-        if (oldTx.type === 'transfer' && oldTx.targetAccountId) {
-          reverted = applyBalanceChange(applyBalanceChange(reverted, oldTx.accountId, oldTx.amount), oldTx.targetAccountId, -oldTx.amount)
-        } else {
-          const revert = oldTx.type === 'expense' ? oldTx.amount : -oldTx.amount
-          reverted = applyBalanceChange(reverted, oldTx.accountId, revert)
-        }
-
-        // Apply new balance effect
-        const newTx = { ...oldTx, ...updates, amount: parseFloat(updates.amount ?? oldTx.amount) }
-        if (newTx.type === 'transfer' && newTx.targetAccountId) {
-          return applyBalanceChange(applyBalanceChange(reverted, newTx.accountId, -newTx.amount), newTx.targetAccountId, newTx.amount)
-        }
-        const change = newTx.type === 'expense' ? -newTx.amount : newTx.amount
-        return applyBalanceChange(reverted, newTx.accountId, change)
-      })
-
-      return prev.map(t => t.id === id
-        ? { ...t, ...updates, amount: parseFloat(updates.amount ?? t.amount) }
-        : t
-      )
-    })
-  }, [])
-
-  const deleteTransaction = useCallback((id) => {
-    setTransactions(prev => {
-      const tx = prev.find(t => t.id === id)
-      if (!tx) return prev
-
-      if (tx.type === 'transfer' && tx.targetAccountId) {
-        setAccounts(accs =>
-          applyBalanceChange(
-            applyBalanceChange(accs, tx.accountId, tx.amount),
-            tx.targetAccountId,
-            -tx.amount
-          )
-        )
-      } else {
-        const change = tx.type === 'expense' ? tx.amount : -tx.amount
-        setAccounts(accs => applyBalanceChange(accs, tx.accountId, change))
+  const addTransaction = useCallback(async (tx) => {
+    try {
+      // Backend expects account_id, category_id, etc. 
+      // The API wrapper or component might pass camelCase.
+      const payload = {
+        type: tx.type,
+        amount: parseFloat(tx.amount),
+        account_id: tx.accountId || tx.account_id,
+        target_account_id: tx.targetAccountId || tx.target_account_id,
+        category_id: tx.categoryId || tx.category_id,
+        date: tx.date,
+        note: tx.note,
+        tag_ids: tx.tagIds || tx.tag_ids || []
       }
+      const res = await api.transactions.create(payload)
+      const newTx = { ...tx, ...res }
+      setTransactions(prev => [newTx, ...prev])
 
-      return prev.filter(t => t.id !== id)
-    })
+      // Re-fetch accounts to get updated balances from server
+      const accountsData = await api.accounts.getAll()
+      setAccounts(Array.isArray(accountsData) ? accountsData : (accountsData.data || []))
+      return newTx
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [])
+
+  const updateTransaction = useCallback(async (id, updates) => {
+    try {
+      const payload = {
+        type: updates.type,
+        amount: parseFloat(updates.amount),
+        account_id: updates.accountId || updates.account_id,
+        target_account_id: updates.targetAccountId || updates.target_account_id,
+        category_id: updates.categoryId || updates.category_id,
+        date: updates.date,
+        note: updates.note,
+        tag_ids: updates.tagIds || updates.tag_ids || []
+      }
+      await api.transactions.update(id, payload)
+      
+      setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))
+      
+      // Re-fetch accounts to get updated balances from server
+      const accountsData = await api.accounts.getAll()
+      setAccounts(Array.isArray(accountsData) ? accountsData : (accountsData.data || []))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [])
+
+  const deleteTransaction = useCallback(async (id) => {
+    try {
+      await api.transactions.delete(id)
+      setTransactions(prev => prev.filter(t => t.id !== id))
+      
+      // Re-fetch accounts to get updated balances from server
+      const accountsData = await api.accounts.getAll()
+      setAccounts(Array.isArray(accountsData) ? accountsData : (accountsData.data || []))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }, [])
 
   const getTotalsForRange = useCallback((start, end) => {
@@ -299,35 +248,80 @@ export function DesktopProvider({ children }) {
       const d = new Date(t.date)
       return d >= start && d <= end && t.type !== 'transfer'
     })
-    const income = filtered.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-    const expense = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+    const income = filtered.filter(t => t.type === 'income').reduce((s, t) => s + parseFloat(t.amount), 0)
+    const expense = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0)
     return { income, expense }
   }, [transactions])
 
-  // ── Templates ─────────────────────────────────────────────────────────────
+  // ── Templates (Mocked for now as backend doesn't have it fully yet) ─────────
   const addTemplate = useCallback((template) => {
     setTemplates(prev => [...prev, { ...template, id: 'tpl' + Date.now() }])
   }, [])
-
   const updateTemplate = useCallback((id, updates) => {
     setTemplates(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))
   }, [])
-
   const deleteTemplate = useCallback((id) => {
     setTemplates(prev => prev.filter(t => t.id !== id))
   }, [])
 
   // ── Scheduled ─────────────────────────────────────────────────────────────
-  const addScheduled = useCallback((item) => {
-    setScheduled(prev => [...prev, { ...item, id: 'sch' + Date.now() }])
+  const addScheduled = useCallback(async (item) => {
+    try {
+      const payload = {
+        name: item.name,
+        type: item.type,
+        amount: parseFloat(item.amount),
+        account_id: item.accountId || item.account_id,
+        target_account_id: item.targetAccountId || item.target_account_id,
+        category_id: item.categoryId || item.category_id,
+        frequency: item.frequency,
+        next_run: item.nextRun || item.next_run,
+        end_date: item.endDate || item.end_date,
+        note: item.note,
+        tag_ids: item.tagIds || item.tag_ids || [],
+        is_active: item.isActive ?? true
+      }
+      const res = await api.scheduled.create(payload)
+      setScheduled(prev => [...prev, { ...item, ...res }])
+      return res
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }, [])
 
-  const updateScheduled = useCallback((id, updates) => {
-    setScheduled(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
+  const updateScheduled = useCallback(async (id, updates) => {
+    try {
+      const payload = {
+        name: updates.name,
+        type: updates.type,
+        amount: parseFloat(updates.amount),
+        account_id: updates.accountId || updates.account_id,
+        target_account_id: updates.targetAccountId || updates.target_account_id,
+        category_id: updates.categoryId || updates.category_id,
+        frequency: updates.frequency,
+        next_run: updates.nextRun || updates.next_run,
+        end_date: updates.endDate || updates.end_date,
+        note: updates.note,
+        tag_ids: updates.tagIds || updates.tag_ids || [],
+        is_active: updates.isActive
+      }
+      await api.scheduled.update(id, payload)
+      setScheduled(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }, [])
 
-  const deleteScheduled = useCallback((id) => {
-    setScheduled(prev => prev.filter(s => s.id !== id))
+  const deleteScheduled = useCallback(async (id) => {
+    try {
+      await api.scheduled.delete(id)
+      setScheduled(prev => prev.filter(s => s.id !== id))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
   }, [])
 
   return (
