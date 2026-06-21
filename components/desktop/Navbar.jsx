@@ -1,6 +1,7 @@
 "use client"
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { api, removeToken } from '@/lib/api/client'
 import Image from 'next/image'
 import MdiIcon from '@/components/icons/MdiIcon'
 import {
@@ -38,9 +39,15 @@ export default function Navbar({ onMenuClick }) {
     setIsLogoutModalOpen(true)
   }
 
-  const confirmLogout = () => {
-    localStorage.removeItem('finvera_user')
-    router.push('/auth/signin')
+  const confirmLogout = async () => {
+    try {
+      await api.auth.logout()
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      removeToken()
+      router.push('/auth/signin')
+    }
   }
 
   const userStr = typeof window !== 'undefined' ? localStorage.getItem('finvera_user') : null
