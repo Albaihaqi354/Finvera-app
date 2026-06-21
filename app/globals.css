@@ -46,3 +46,10 @@ body {
     min-height: 520px;
   }
 }
+
+/* Fix text disappearing in disabled inputs (WebKit bug) */
+input:disabled {
+  -webkit-text-fill-color: var(--brand-black) !important;
+  color: var(--brand-black) !important;
+  opacity: 0.5;
+}
