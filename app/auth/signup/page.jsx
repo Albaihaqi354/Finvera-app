@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Logo from '@/components/Logo'
 import { Eye, EyeOff } from 'lucide-react'
+import { api, setToken } from '@/lib/api/client'
 import {
   PRESET_INCOME_CATEGORIES,
   PRESET_EXPENSE_CATEGORIES,
@@ -87,8 +89,41 @@ const SelectField = ({ label, value, addon, options }) => {
 };
 
 function SignupPage() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [usePreset, setUsePreset] = useState(true);
+  
+  // Form states
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleRegister = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      await api.auth.register({ username, email, password });
+      
+      // Setup preset categories logic here if needed later...
+      
+      // Auto login after register
+      const loginRes = await api.auth.login({ username, password });
+      if (loginRes && loginRes.token) {
+        setToken(loginRes.token);
+        localStorage.setItem('finvera_user', JSON.stringify({
+          username,
+          loggedInAt: new Date().toISOString()
+        }));
+        router.push('/desktop/overview');
+      }
+    } catch (err) {
+      setError(err.message || 'Registration failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-[#F9EFE5] dark:bg-[#F9EFE5] font-ibm p-4 sm:p-8 lg:p-12 overflow-x-hidden">
@@ -145,21 +180,29 @@ function SignupPage() {
           {step === 1 ? (
             <>
               <h1 className="text-2xl sm:text-3xl font-bold text-brand-black mb-2">Basic Information</h1>
-              <p className="text-sm sm:text-base text-base-gray-1 leading-relaxed mb-8">
+              <p className="text-sm sm:text-base text-base-gray-1 leading-relaxed mb-4">
                 Already have an account? <Link href="/auth/signin" className="text-brand-black font-bold hover:text-base-gray-1 transition-colors">Click here to log in</Link>
               </p>
+              
+              {error && <p className="text-red-500 mb-4">{error}</p>}
 
               <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); setStep(2); }}>
                 <div className="flex flex-col sm:flex-row gap-5">
-                  <InputField label="Username" placeholder="Enter username" />
-                  <InputField label="Nickname" placeholder="Enter nickname" />
+                  <div className="flex flex-col gap-2 w-full">
+                    <label className="text-sm font-semibold text-brand-black">Username</label>
+                    <input value={username} onChange={e=>setUsername(e.target.value)} required className="w-full border-2 border-brand-black/10 focus:border-brand-black outline-none py-3 px-4 rounded-xl" placeholder="Enter username" />
+                  </div>
+                  <div className="flex flex-col gap-2 w-full">
+                    <label className="text-sm font-semibold text-brand-black">E-mail</label>
+                    <input type="email" value={email} onChange={e=>setEmail(e.target.value)} required className="w-full border-2 border-brand-black/10 focus:border-brand-black outline-none py-3 px-4 rounded-xl" placeholder="Enter your e-mail" />
+                  </div>
                 </div>
-                
-                <InputField label="E-mail" type="email" placeholder="Enter your e-mail address" />
 
                 <div className="flex flex-col sm:flex-row gap-5">
-                  <InputField label="Password" type="password" placeholder="Enter your Password" />
-                  <InputField label="Confirm Password" type="password" placeholder="Confirm your Password" />
+                  <div className="flex flex-col gap-2 w-full">
+                    <label className="text-sm font-semibold text-brand-black">Password</label>
+                    <input type="password" value={password} onChange={e=>setPassword(e.target.value)} required className="w-full border-2 border-brand-black/10 focus:border-brand-black outline-none py-3 px-4 rounded-xl" placeholder="Enter your password" />
+                  </div>
                 </div>
 
                 <SelectField label="Language" value="English" />
@@ -282,8 +325,8 @@ function SignupPage() {
                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                      <span className="inline">Previous</span>
                   </button>
-                  <button type="button" className="cursor-pointer w-full sm:w-auto flex-1 sm:flex-none px-8 py-3.5 sm:py-4 rounded-xl bg-brand-black border-2 border-transparent hover:bg-transparent hover:border-brand-black hover:text-brand-black text-white text-sm sm:text-base font-semibold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-none">
-                    Submit ✓
+                  <button onClick={handleRegister} disabled={isLoading} type="button" className="cursor-pointer w-full sm:w-auto flex-1 sm:flex-none px-8 py-3.5 sm:py-4 rounded-xl bg-brand-black border-2 border-transparent hover:bg-transparent hover:border-brand-black hover:text-brand-black text-white text-sm sm:text-base font-semibold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-none">
+                    {isLoading ? 'Loading...' : 'Submit ✓'}
                   </button>
                 </div>
               </div>
