@@ -3,6 +3,7 @@
 :root {
   --background: #F8F8F8;
   --foreground: #000000;
+  --surface: #FFFFFF;
 
   /* Brand Colors */
   --brand-primary: #F9EFE5;
@@ -12,6 +13,18 @@
   --base-gray-1: #7F8790;
   --base-gray-2: #8F92A1;
   --base-light: #F8F8F8;
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --surface: #1e293b;
+
+  /* Invert brand colors for dark mode */
+  --brand-primary: #1e293b;
+  --brand-black: #f8fafc;
+
+  --base-light: #1e293b;
 }
 
 @theme inline {

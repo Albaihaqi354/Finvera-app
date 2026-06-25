@@ -109,9 +109,9 @@ export default function OverviewPage() {
     <section className="grow space-y-6">
       <div className="grid grid-cols-12 gap-6">
         {/* ── Hero Card ── */}
-        <div className="col-span-12 lg:col-span-5 bg-white rounded-4xl p-7 text-brand-black relative overflow-hidden shadow-sm border border-brand-black/5">
+        <div className="col-span-12 lg:col-span-5 bg-white rounded-3xl p-5 text-brand-black relative overflow-hidden shadow-sm border border-brand-black/5">
           {/* Toggle pills */}
-          <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center gap-2 mb-4">
             <span className="text-lg font-bold">{monthName}</span>
             <div className="flex items-center gap-1 bg-brand-black/5 rounded-lg p-1 ml-2">
               {HERO_MODES.map(m => (
@@ -128,9 +128,9 @@ export default function OverviewPage() {
           </div>
 
           {/* Main value */}
-          <div className="space-y-1 mb-6">
+          <div className="space-y-1 mb-4">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold" style={{ color: activeHero.color }}>
+              <span className="text-3xl font-bold" style={{ color: activeHero.color }}>
                 {mask(activeHero.value)}
               </span>
             </div>
@@ -158,47 +158,47 @@ export default function OverviewPage() {
           </Link>
 
           {/* Decorative icon */}
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
-            <div className="w-24 h-24 bg-[#E6923F]/10 rounded-3xl flex items-center justify-center rotate-12">
-              <div className="w-16 h-16 bg-[#E6923F]/20 rounded-2xl flex items-center justify-center -rotate-12">
-                <MdiIcon path={mdiPencilOutline} size={32} className="text-[#E6923F]" />
+          <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <div className="w-18 h-18 bg-[#E6923F]/10 rounded-3xl flex items-center justify-center rotate-12">
+              <div className="w-12 h-12 bg-[#E6923F]/20 rounded-2xl flex items-center justify-center -rotate-12">
+                <MdiIcon path={mdiPencilOutline} size={24} className="text-[#E6923F]" />
               </div>
             </div>
           </div>
         </div>
 
         {/* ── Asset Summary ── */}
-        <div className="col-span-12 lg:col-span-7 bg-white rounded-4xl p-7 shadow-sm border border-brand-black/5">
-          <h3 className="text-lg font-bold mb-1">Asset Summary</h3>
-          <p className="text-xs font-medium text-brand-black/40 mb-8">
+        <div className="col-span-12 lg:col-span-7 bg-white rounded-3xl p-5 shadow-sm border border-brand-black/5">
+          <h3 className="text-base font-bold mb-0.5">Asset Summary</h3>
+          <p className="text-xs font-medium text-brand-black/40 mb-5">
             {accounts.length} account{accounts.length !== 1 ? 's' : ''} recorded
           </p>
-          <div className="flex flex-wrap items-center gap-8 md:gap-10">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-brand-black/5 flex items-center justify-center border border-brand-black/10">
-                <MdiIcon path={mdiBankOutline} size={24} className="text-brand-black/80" />
+          <div className="flex flex-wrap items-center gap-5 md:gap-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-black/5 flex items-center justify-center border border-brand-black/10">
+                <MdiIcon path={mdiBankOutline} size={20} className="text-brand-black/80" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider mb-1">Total Assets</p>
-                <p className="text-lg font-bold">{mask(totalAssets)}</p>
+                <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider mb-0.5">Total Assets</p>
+                <p className="text-base font-bold">{mask(totalAssets)}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 border border-rose-100">
-                <MdiIcon path={mdiCreditCardOutline} size={24} />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 border border-rose-100">
+                <MdiIcon path={mdiCreditCardOutline} size={20} />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider mb-1">Liabilities</p>
-                <p className="text-lg font-bold text-rose-500">{mask(totalLiabilities)}</p>
+                <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider mb-0.5">Liabilities</p>
+                <p className="text-base font-bold text-rose-500">{mask(totalLiabilities)}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-[#E6923F]/10 flex items-center justify-center text-[#E6923F] border border-[#E6923F]/20">
-                <MdiIcon path={mdiPiggyBankOutline} size={24} />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#E6923F]/10 flex items-center justify-center text-[#E6923F] border border-[#E6923F]/20">
+                <MdiIcon path={mdiPiggyBankOutline} size={20} />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider mb-1">Net Assets</p>
-                <p className={`text-lg font-bold ${netAssets >= 0 ? 'text-brand-black' : 'text-rose-500'}`}>{mask(netAssets)}</p>
+                <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider mb-0.5">Net Assets</p>
+                <p className={`text-base font-bold ${netAssets >= 0 ? 'text-brand-black' : 'text-rose-500'}`}>{mask(netAssets)}</p>
               </div>
             </div>
           </div>
@@ -225,20 +225,20 @@ export default function OverviewPage() {
 
       <div className="grid grid-cols-12 gap-6">
         {/* ── Period Cards ── */}
-        <div className="col-span-12 lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="col-span-12 lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {periodCards.map((item) => (
-            <div key={item.title} className="bg-white rounded-3xl p-5 border border-brand-black/5 shadow-sm">
-              <div className="w-9 h-9 rounded-full bg-brand-black/5 flex items-center justify-center text-brand-black/60 mb-4">
-                <MdiIcon path={item.icon} size={20} />
+            <div key={item.title} className="bg-white rounded-2xl p-4 border border-brand-black/5 shadow-sm">
+              <div className="w-7 h-7 rounded-full bg-brand-black/5 flex items-center justify-center text-brand-black/60 mb-2.5">
+                <MdiIcon path={item.icon} size={16} />
               </div>
-              <p className="text-xs font-bold text-brand-black/60 mb-3">{item.title}</p>
-              <div className="space-y-1.5 mb-4">
+              <p className="text-xs font-bold text-brand-black/60 mb-2">{item.title}</p>
+              <div className="space-y-1 mb-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: EZ_INCOME_COLOR }} />
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: EZ_INCOME_COLOR }} />
                   <p className="text-sm font-bold" style={{ color: EZ_INCOME_COLOR }}>{mask(item.income)}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: EZ_EXPENSE_COLOR }} />
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: EZ_EXPENSE_COLOR }} />
                   <p className="text-sm font-bold" style={{ color: EZ_EXPENSE_COLOR }}>{mask(item.expense)}</p>
                 </div>
               </div>
@@ -248,17 +248,17 @@ export default function OverviewPage() {
         </div>
 
         {/* ── 12-Month Trend ── */}
-        <div className="col-span-12 lg:col-span-7 bg-white rounded-4xl p-6 shadow-sm border border-brand-black/5">
-          <h3 className="text-lg font-bold mb-1">Income & Expense Trends</h3>
+        <div className="col-span-12 lg:col-span-7 bg-white rounded-3xl p-5 shadow-sm border border-brand-black/5">
+          <h3 className="text-base font-bold mb-0.5">Income &amp; Expense Trends</h3>
           <p className="text-xs text-brand-black/40 mb-2">12-month view</p>
-          <EChart option={trendOption} style={{ minHeight: 380 }} className="pie-chart-container" />
-          <div className="flex items-center justify-center gap-6 -mt-2">
+          <EChart option={trendOption} style={{ minHeight: 280 }} className="pie-chart-container" />
+          <div className="flex items-center justify-center gap-6 -mt-1">
             {[
               { label: 'Income',  color: EZ_INCOME_COLOR },
               { label: 'Expense', color: EZ_EXPENSE_COLOR },
             ].map(l => (
               <div key={l.label} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: l.color }} />
+                <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: l.color }} />
                 <span className="text-xs font-bold text-brand-black/60">{l.label}</span>
               </div>
             ))}

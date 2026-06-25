@@ -42,7 +42,14 @@ export function DesktopProvider({ children }) {
       setTags(Array.isArray(tagsData) ? tagsData : (tagsData.data || []))
       
       const txs = Array.isArray(transactionsData) ? transactionsData : (transactionsData.data || []);
-      setTransactions(txs)
+      const normalizedTxs = txs.map(tx => ({
+        ...tx,
+        accountId: tx.account?.id || tx.accountId,
+        targetAccountId: tx.targetAccount?.id || tx.targetAccountId,
+        categoryId: tx.category?.id || tx.categoryId,
+        tagIds: tx.tags?.map(t => t.id) || tx.tagIds || []
+      }))
+      setTransactions(normalizedTxs)
       
       setScheduled(Array.isArray(scheduledData) ? scheduledData : (scheduledData.data || []))
       
@@ -66,17 +73,14 @@ export function DesktopProvider({ children }) {
     }
   }, [isBalanceVisible, isLoaded])
 
-  // ── Auto-process scheduled transactions ─────────────────────────────────────
-  // Simplified for now, let backend handle actual cron processing.
-  // Ideally, backend cron job handles this.
 
   // ── Accounts ──────────────────────────────────────────────────────────────
   const addAccount = useCallback(async (account) => {
     try {
       const res = await api.accounts.create(account)
-      const newAcc = { ...account, ...res, balance: parseFloat(account.initial_balance) || 0 }
-      setAccounts(prev => [...prev, newAcc])
-      return newAcc
+      // res is the complete account object from backend
+      setAccounts(prev => [...prev, res])
+      return res
     } catch (err) {
       console.error(err)
       throw err
@@ -191,7 +195,13 @@ export function DesktopProvider({ children }) {
         tag_ids: tx.tagIds || tx.tag_ids || []
       }
       const res = await api.transactions.create(payload)
-      const newTx = { ...tx, ...res }
+      const newTx = {
+        ...res,
+        accountId: res.account?.id || res.accountId,
+        targetAccountId: res.targetAccount?.id || res.targetAccountId,
+        categoryId: res.category?.id || res.categoryId,
+        tagIds: res.tags?.map(t => t.id) || res.tagIds || []
+      }
       setTransactions(prev => [newTx, ...prev])
 
       // Re-fetch accounts to get updated balances from server
@@ -216,9 +226,16 @@ export function DesktopProvider({ children }) {
         note: updates.note,
         tag_ids: updates.tagIds || updates.tag_ids || []
       }
-      await api.transactions.update(id, payload)
+      const res = await api.transactions.update(id, payload)
       
-      setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))
+      const newTx = {
+        ...res,
+        accountId: res.account?.id || res.accountId,
+        targetAccountId: res.targetAccount?.id || res.targetAccountId,
+        categoryId: res.category?.id || res.categoryId,
+        tagIds: res.tags?.map(t => t.id) || res.tagIds || []
+      }
+      setTransactions(prev => prev.map(t => t.id === id ? newTx : t))
       
       // Re-fetch accounts to get updated balances from server
       const accountsData = await api.accounts.getAll()

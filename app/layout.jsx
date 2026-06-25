@@ -1,4 +1,5 @@
 import { IBM_Plex_Sans, Roboto } from "next/font/google";
+import { ThemeProvider } from "@/components/desktop/ThemeProvider";
 import "./globals.css";
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -20,9 +21,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${ibmPlexSans.variable} ${roboto.variable} antialiased`}>
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

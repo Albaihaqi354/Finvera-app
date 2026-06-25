@@ -1,7 +1,8 @@
 "use client"
 import { useState, useMemo, useEffect, useCallback, Suspense } from 'react'
+import { api } from '@/lib/api/client'
 import { useSearchParams } from 'next/navigation'
-import { PlusCircle, Search, X, Trash2, ChevronLeft, ChevronRight, Pencil } from 'lucide-react'
+import { PlusCircle, Search, X, Trash2, ChevronLeft, ChevronRight, Pencil, Download } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 import { useDebounce } from '@/hooks/useDebounce'
 
@@ -405,11 +406,53 @@ function TransactionsContent() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [txToDelete, setTxToDelete]         = useState(null)
 
+  const [page, setPage]                     = useState(1)
+  const limit = 50
+  const [serverTxs, setServerTxs]           = useState([])
+  const [totalTxs, setTotalTxs]             = useState(0)
+  const [isLoadingServer, setIsLoadingServer] = useState(false)
+
   const search = useDebounce(searchInput, 300)
 
   useEffect(() => {
     if (searchParams.get('add') === '1') setIsModalOpen(true)
   }, [searchParams])
+
+  const fetchTransactions = useCallback(async () => {
+    if (!isLoaded) return
+    setIsLoadingServer(true)
+    try {
+      const res = await api.transactions.getAll({
+        page,
+        limit,
+        type: typeFilter === 'All Types' ? '' : typeFilter.toLowerCase(),
+        accountId: accountFilter === 'All Accounts' ? '' : accountFilter,
+        search: search
+      })
+      
+      const txs = Array.isArray(res) ? res : (res.data || [])
+      const total = res.meta?.total || 0
+      
+      const normalizedTxs = txs.map(tx => ({
+        ...tx,
+        accountId: tx.account?.id || tx.accountId,
+        targetAccountId: tx.targetAccount?.id || tx.targetAccountId,
+        categoryId: tx.category?.id || tx.categoryId,
+        tagIds: tx.tags?.map(t => t.id) || tx.tagIds || []
+      }))
+      
+      setServerTxs(normalizedTxs)
+      setTotalTxs(total)
+    } catch (err) {
+      console.error('Failed to fetch transactions:', err)
+    } finally {
+      setIsLoadingServer(false)
+    }
+  }, [page, limit, typeFilter, accountFilter, search, isLoaded])
+
+  useEffect(() => {
+    fetchTransactions()
+  }, [fetchTransactions])
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   const openAdd = useCallback(() => { setEditingTx(null); setIsModalOpen(true) }, [])
@@ -430,23 +473,37 @@ function TransactionsContent() {
   }, [txToDelete, deleteTransaction])
 
   // ── Memoised derivations ────────────────────────────────────────────────────
-  const filteredTransactions = useMemo(() => {
-    let list = transactions
-    if (search) {
-      const q = search.toLowerCase()
-      list = list.filter(t =>
-        t.note?.toLowerCase().includes(q) ||
-        categories.find(c => c.id === t.categoryId)?.name?.toLowerCase().includes(q) ||
-        accounts.find(a => a.id === t.accountId)?.name?.toLowerCase().includes(q) ||
-        String(t.amount).includes(q)
-      )
+  // We now use serverTxs for the list, but for Calendar we might still need all
+  // For simplicity, we just use serverTxs for both. Calendar will show the current page's txs.
+  const filteredTransactions = serverTxs
+
+  const handleExportCSV = useCallback(() => {
+    if (filteredTransactions.length === 0) return
+    const headers = ['Date', 'Time', 'Type', 'Category', 'Amount', 'Account', 'Destination', 'Note']
+    const csvRows = [headers.join(',')]
+    for (const tx of filteredTransactions) {
+      const d = new Date(tx.date)
+      const dateStr = d.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })
+      const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+      const cat = categories.find(c => c.id === tx.categoryId)?.name || ''
+      const acc = accounts.find(a => a.id === tx.accountId)?.name || ''
+      const targetAcc = accounts.find(a => a.id === tx.targetAccountId)?.name || ''
+      const row = [
+        `"${dateStr}"`, `"${timeStr}"`, `"${tx.type}"`, `"${cat}"`,
+        `"${tx.amount}"`, `"${acc}"`, `"${targetAcc}"`,
+        `"${(tx.note || '').replace(/"/g, '""')}"`
+      ]
+      csvRows.push(row.join(','))
     }
-    if (typeFilter !== 'All Types') list = list.filter(t => t.type === typeFilter.toLowerCase())
-    if (accountFilter !== 'All Accounts') {
-      list = list.filter(t => t.accountId === accountFilter || t.targetAccountId === accountFilter)
-    }
-    return list
-  }, [transactions, search, typeFilter, accountFilter, categories, accounts])
+    const csvString = csvRows.join('\n')
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `transactions_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [filteredTransactions, categories, accounts])
 
   const { totalIncome, totalExpense } = useMemo(() => ({
     totalIncome:  filteredTransactions.filter(t => t.type === 'income').reduce((a, t) => a + t.amount, 0),
@@ -499,7 +556,7 @@ function TransactionsContent() {
   )
 
   return (
-    <div className="flex h-[calc(100vh-140px)] bg-white rounded-3xl p-6 shadow-sm border border-brand-black/5 relative">
+    <div className="flex h-[calc(100vh-140px)] bg-white rounded-2xl p-4 shadow-sm border border-brand-black/5 relative">
       {/* ── Sidebar ── */}
       <div className="w-52 shrink-0 pr-4 space-y-6 overflow-y-auto">
         <div className="space-y-1">
@@ -528,12 +585,21 @@ function TransactionsContent() {
             <h2 className="text-xl font-bold text-brand-black">
               {activeSubTab === 'Transaction List' ? 'Transaction List' : 'Transaction Calendar'}
             </h2>
-            <button
-              type="button" onClick={openAdd}
-              className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors"
-            >
-              <PlusCircle className="w-3.5 h-3.5" /> Add
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button" onClick={handleExportCSV}
+                className="flex items-center gap-1.5 bg-[#F8F8F8] hover:bg-brand-black/5 text-brand-black/70 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors border border-brand-black/5"
+                title="Export current view to CSV"
+              >
+                <Download className="w-3.5 h-3.5" /> Export CSV
+              </button>
+              <button
+                type="button" onClick={openAdd}
+                className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors"
+              >
+                <PlusCircle className="w-3.5 h-3.5" /> Add
+              </button>
+            </div>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-black/40" />
@@ -575,33 +641,53 @@ function TransactionsContent() {
                 <span key={label} className="text-[10px] font-bold text-brand-black/40 uppercase">{label}</span>
               ))}
             </div>
-            <div className="overflow-y-auto flex-1">
-              {groupedTransactions.length === 0 && (
-                <div className="py-16 text-center">
-                  <div className="text-4xl mb-3">🔍</div>
-                  <p className="text-brand-black/40 text-sm font-medium">No transactions found.</p>
-                  {searchInput && <p className="text-brand-black/30 text-xs mt-1">Try a different search term.</p>}
+            
+            <div className="flex-1 overflow-y-auto min-h-0 bg-white rounded-t-xl pb-4">
+              {isLoadingServer ? (
+                <div className="flex items-center justify-center h-full text-brand-black/40 text-sm font-bold animate-pulse">
+                  Loading transactions...
                 </div>
-              )}
-              {groupedTransactions.map(group => (
-                <div key={group.date}>
-                  <div className="flex items-center gap-3 px-5 py-2.5 bg-[#F8F8F8]/50 border-b sticky top-0 z-10">
-                    <span className="text-xs font-bold">{group.date}</span>
-                    <span className="text-[10px] font-bold text-brand-black/40 bg-brand-black/5 px-2 py-0.5 rounded-full">{group.day}</span>
-                  </div>
-                  {group.items.map(tx => (
+              ) : filteredTransactions.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-brand-black/40 text-sm font-bold">
+                  No transactions found.
+                </div>
+              ) : (
+                <div className="flex flex-col">
+                  {filteredTransactions.map(tx => (
                     <TxRow
-                      key={tx.id}
-                      tx={tx}
-                      accounts={accounts}
-                      categories={categories}
-                      onDelete={handleDeleteClick}
-                      onEdit={openEdit}
+                      key={tx.id} tx={tx}
+                      accounts={accounts} categories={categories}
+                      onDelete={handleDeleteClick} onEdit={openEdit}
                     />
                   ))}
                 </div>
-              ))}
+              )}
             </div>
+
+            {/* Pagination Controls */}
+            {totalTxs > limit && (
+              <div className="flex items-center justify-between border-t border-brand-black/5 pt-4 pb-4 px-5">
+                <span className="text-xs font-bold text-brand-black/40">
+                  Showing {Math.min((page - 1) * limit + 1, totalTxs)} to {Math.min(page * limit, totalTxs)} of {totalTxs}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1 || isLoadingServer}
+                    className="px-3 py-1.5 rounded-lg bg-[#F8F8F8] text-brand-black/70 font-bold text-xs hover:bg-brand-black/5 disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={page * limit >= totalTxs || isLoadingServer}
+                    className="px-3 py-1.5 rounded-lg bg-[#F8F8F8] text-brand-black/70 font-bold text-xs hover:bg-brand-black/5 disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <TransactionCalendar

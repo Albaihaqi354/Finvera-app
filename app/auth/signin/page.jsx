@@ -46,22 +46,22 @@ function SigninPage() {
         <span className="text-sm font-medium">English</span>
       </div>
 
-      <div className="w-full max-w-md z-10 flex flex-col items-center -mt-12 sm:-mt-20">
+      <div className="w-full max-w-sm z-10 flex flex-col items-center -mt-12 sm:-mt-20">
         {/* Centered Logo outside card */}
         <div className="mb-0 relative z-20">
           <Image
             src="/image/Finvera-logo.png"
             alt="Finvera Logo"
-            width={500}
-            height={100}
-            className="h-32 sm:h-44 w-auto object-contain"
+            width={400}
+            height={80}
+            className="h-24 sm:h-32 w-auto object-contain"
             priority
           />
         </div>
 
         {/* Card */}
-        <section className="bg-white p-8 sm:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-black/5 w-full relative z-10 -mt-6 sm:-mt-8">
-          <div className="flex items-center justify-between mb-8">
+        <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-black/5 w-full relative z-10 -mt-6 sm:-mt-8">
+          <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-brand-black">
               Log In
             </h1>

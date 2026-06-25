@@ -2,22 +2,44 @@
 import { useEffect, useState } from 'react'
 import { Save, User, Mail, Lock, Shield } from 'lucide-react'
 
+import { api } from '@/lib/api/client'
+
 export default function UserSettingsPage() {
   const [profile, setProfile] = useState({ username: '', email: '' })
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    const raw = localStorage.getItem('finvera_user')
-    if (raw) {
-      const u = JSON.parse(raw)
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setProfile({ username: u.username || '', email: u.email || '' })
+    const fetchProfile = async () => {
+      try {
+        const res = await api.users.getProfile()
+        setProfile({ username: res.username || '', email: res.email || '' })
+      } catch (err) {
+        console.error('Failed to load profile:', err)
+        // Fallback to local storage if API fails
+        const raw = localStorage.getItem('finvera_user')
+        if (raw) {
+          const u = JSON.parse(raw)
+          setProfile({ username: u.username || '', email: u.email || '' })
+        }
+      }
     }
+    fetchProfile()
   }, [])
 
-  const saveProfile = () => {
-    const raw = localStorage.getItem('finvera_user')
-    const prev = raw ? JSON.parse(raw) : {}
-    localStorage.setItem('finvera_user', JSON.stringify({ ...prev, ...profile }))
+  const saveProfile = async () => {
+    try {
+      setIsLoading(true)
+      await api.users.updateProfile(profile)
+      // Update local storage too for fallback/other UI parts
+      const raw = localStorage.getItem('finvera_user')
+      const prev = raw ? JSON.parse(raw) : {}
+      localStorage.setItem('finvera_user', JSON.stringify({ ...prev, ...profile }))
+      alert('Profile saved successfully!')
+    } catch (err) {
+      alert(err.message || 'Failed to save profile')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -28,10 +50,11 @@ export default function UserSettingsPage() {
         <button
           type="button"
           onClick={saveProfile}
-          className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+          disabled={isLoading}
+          className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
         >
           <Save className="w-3.5 h-3.5" />
-          Save Profile
+          {isLoading ? 'Saving...' : 'Save Profile'}
         </button>
       </div>
 

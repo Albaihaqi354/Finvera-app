@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -88,11 +88,76 @@ const SelectField = ({ label, value, addon, options }) => {
   );
 };
 
+/** Single accordion category group item */
+function CategoryGroupItem({ item, isExpanded, onToggle, accentColor }) {
+  const hasChildren = item.children && item.children.length > 0;
+
+  return (
+    <div className="rounded-xl border-2 border-brand-black/5 overflow-hidden transition-all">
+      {/* Group header — clickable */}
+      <button
+        type="button"
+        id={`category-group-${item.name.replace(/\s+/g, '-').toLowerCase()}`}
+        onClick={() => hasChildren && onToggle(item.name)}
+        className={`w-full flex items-center justify-between p-4 bg-white transition-colors group ${
+          hasChildren ? 'cursor-pointer hover:bg-brand-black/[0.02]' : 'cursor-default'
+        } ${isExpanded ? 'border-b-2 border-brand-black/5' : ''}`}
+      >
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${item.colorClass}`}>
+            <span className="text-base leading-none">{item.icon}</span>
+          </div>
+          <span className="text-sm font-semibold text-brand-black">{item.name}</span>
+          {hasChildren && (
+            <span className="text-[10px] font-medium text-brand-black/30 ml-1">
+              ({item.children.length})
+            </span>
+          )}
+        </div>
+        {hasChildren && (
+          <svg
+            className={`w-5 h-5 transition-transform duration-200 ${
+              isExpanded ? 'rotate-180' : 'rotate-0'
+            }`}
+            style={{ color: isExpanded ? accentColor : undefined }}
+            fill="none"
+            stroke={isExpanded ? accentColor : 'currentColor'}
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
+      </button>
+
+      {/* Sub-items dropdown */}
+      {hasChildren && isExpanded && (
+        <div className="divide-y divide-brand-black/5 bg-brand-black/[0.01]">
+          {item.children.map((child, idx) => (
+            <div
+              key={idx}
+              className="flex items-center gap-3 px-5 py-3 hover:bg-brand-black/[0.03] transition-colors"
+            >
+              <div className={`w-6 h-6 flex items-center justify-center rounded-md ${child.colorClass} opacity-80`}>
+                <span className="text-xs leading-none">{child.icon}</span>
+              </div>
+              <span className="text-sm text-brand-black/80 font-medium">{child.name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SignupPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [usePreset, setUsePreset] = useState(true);
-  
+  const [expandedGroups, setExpandedGroups] = useState({});
+  const [presetData, setPresetData] = useState(null);
+  const [isLoadingPreset, setIsLoadingPreset] = useState(false);
+
   // Form states
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -100,13 +165,51 @@ function SignupPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Fetch preset categories from API when step 2 loads
+  useEffect(() => {
+    if (step === 2 && !presetData) {
+      setIsLoadingPreset(true);
+      api.presetCategories.getAll()
+        .then((data) => {
+          if (data && Array.isArray(data)) {
+            // Transform flat API data into grouped structure
+            const parents = data.filter(c => !c.parentId);
+            const grouped = parents.map(parent => ({
+              ...parent,
+              children: data.filter(c => c.parentId === parent.id),
+            }));
+            const income = grouped.filter(c => c.type === 'income');
+            const expense = grouped.filter(c => c.type === 'expense');
+            const transfer = grouped.filter(c => c.type === 'transfer');
+            setPresetData({ income, expense, transfer });
+          } else {
+            throw new Error('Invalid data format');
+          }
+        })
+        .catch(() => {
+          // Fallback to hardcoded data if API is unavailable
+          setPresetData({
+            income: PRESET_INCOME_CATEGORIES,
+            expense: PRESET_EXPENSE_CATEGORIES,
+            transfer: PRESET_TRANSFER_CATEGORIES,
+          });
+        })
+        .finally(() => setIsLoadingPreset(false));
+    }
+  }, [step]);
+
+  const toggleGroup = (groupName) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupName]: !prev[groupName],
+    }));
+  };
+
   const handleRegister = async () => {
     try {
       setIsLoading(true);
       setError('');
       await api.auth.register({ username, email, password });
-      
-      // Setup preset categories logic here if needed later...
       
       // Auto login after register
       const loginRes = await api.auth.login({ username, password });
@@ -125,27 +228,33 @@ function SignupPage() {
     }
   };
 
-  return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[#F9EFE5] dark:bg-[#F9EFE5] font-ibm p-4 sm:p-8 lg:p-12 overflow-x-hidden">
-      {/* Logo Container */}
-      <Logo />
+  const incomeCategories = presetData?.income ?? PRESET_INCOME_CATEGORIES;
+  const expenseCategories = presetData?.expense ?? PRESET_EXPENSE_CATEGORIES;
+  const transferCategories = presetData?.transfer ?? PRESET_TRANSFER_CATEGORIES;
 
-      <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16 max-w-7xl w-full z-10 pt-16 sm:pt-20 lg:pt-0">
-        
-        {/* Left Side: Image Illustration */}
-        <section className="hidden lg:flex w-full lg:w-2/5 justify-center items-center">
-          <Image 
-            src="/image/man-taking-photo.svg" 
-            alt="Signup Illustration" 
-            width={700} 
-            height={700}
-            className="w-[120%] lg:w-[130%] max-w-175 h-auto object-contain drop-shadow-lg scale-110 xl:scale-125 transition-transform"
+  return (
+    <div className="relative flex min-h-screen items-center justify-center bg-brand-primary font-ibm p-4 sm:p-6 overflow-hidden">
+      
+      {/* Background Shapes */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-white/10 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full bg-[#E6923F]/20 blur-[120px] pointer-events-none" />
+
+      {/* Main Container */}
+      <div className="w-full max-w-4xl z-10 flex flex-col items-center">
+        {/* Centered Logo */}
+        <div className="mb-4 relative z-20">
+          <Image
+            src="/image/Finvera-logo.png"
+            alt="Finvera Logo"
+            width={400}
+            height={80}
+            className="h-20 sm:h-28 w-auto object-contain"
             priority
           />
-        </section>
+        </div>
 
-        {/* Right Side: Form */}
-        <section className="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-sm border border-base-gray-1/10 max-w-2xl w-full">
+        {/* Card */}
+        <section className="bg-[#fcf8f4] p-4 sm:p-6 rounded-3xl shadow-2xl border border-brand-black/5 w-full relative z-10 flex flex-col md:flex-row gap-6 md:gap-8">
           {/* Progress Stepper */}
           <div className="flex items-center text-sm mb-10 overflow-x-auto whitespace-nowrap pb-2 scrollbar-none border-b border-brand-black/5">
             {/* Step 1 */}
@@ -255,6 +364,7 @@ function SignupPage() {
                   <div className="flex items-center gap-3">
                     <button 
                       type="button" 
+                      id="toggle-preset-categories"
                       onClick={() => setUsePreset(!usePreset)}
                       className={`cursor-pointer relative flex items-center w-12 h-6 rounded-full transition-colors ${usePreset ? 'bg-[#D68E5A]' : 'bg-gray-200'}`}
                     >
@@ -266,67 +376,101 @@ function SignupPage() {
                 </div>
 
                 {usePreset && (
-                  <div className="space-y-6 max-h-87.5 sm:max-h-112.5 overflow-y-auto pr-2">
-                    <div>
-                      <h2 className="text-sm font-bold text-base-gray-1 mb-3">Income Categories</h2>
-                      <div className="space-y-2">
-                        {PRESET_INCOME_CATEGORIES.map((item) => (
-                          <div key={item.name} className="flex items-center justify-between p-4 bg-white border-2 border-brand-black/5 hover:border-[#D68E5A]/30 transition-colors rounded-xl group cursor-pointer">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${item.colorClass}`}>
-                                <span className="text-base leading-none">{item.icon}</span>
-                              </div>
-                              <span className="text-sm font-semibold text-brand-black">{item.name}</span>
-                            </div>
-                            <svg className="w-5 h-5 text-base-gray-1/30 group-hover:text-[#D68E5A] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                          </div>
-                        ))}
+                  <div className="space-y-6 max-h-[350px] sm:max-h-[450px] overflow-y-auto pr-2 scrollbar-thin">
+                    {isLoadingPreset ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="w-6 h-6 border-2 border-[#D68E5A] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="ml-3 text-sm text-base-gray-1">Loading categories...</span>
                       </div>
-                    </div>
+                    ) : (
+                      <>
+                        {/* Income Categories */}
+                        <div>
+                          <h2 className="text-xs font-bold text-base-gray-1 uppercase tracking-wider mb-3">
+                            Income Categories
+                            <span className="ml-2 text-[#D68E5A] font-semibold normal-case tracking-normal">
+                              ({incomeCategories.length} groups)
+                            </span>
+                          </h2>
+                          <div className="space-y-2">
+                            {incomeCategories.map((item) => (
+                              <CategoryGroupItem
+                                key={item.name}
+                                item={item}
+                                isExpanded={!!expandedGroups[item.name]}
+                                onToggle={toggleGroup}
+                                accentColor="#D68E5A"
+                              />
+                            ))}
+                          </div>
+                        </div>
 
-                    <div>
-                      <h2 className="text-sm font-bold text-base-gray-1 mb-3">Expense Categories</h2>
-                      <div className="space-y-2">
-                        {PRESET_EXPENSE_CATEGORIES.map((item) => (
-                          <div key={item.name} className="flex items-center justify-between p-4 bg-white border-2 border-brand-black/5 hover:border-brand-black/10 transition-colors rounded-xl group cursor-pointer">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${item.colorClass}`}>
-                                <span className="text-base leading-none">{item.icon}</span>
-                              </div>
-                              <span className="text-sm font-semibold text-brand-black">{item.name}</span>
-                            </div>
-                            <svg className="w-5 h-5 text-base-gray-1/30 group-hover:text-brand-black/50 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                        {/* Expense Categories */}
+                        <div>
+                          <h2 className="text-xs font-bold text-base-gray-1 uppercase tracking-wider mb-3">
+                            Expense Categories
+                            <span className="ml-2 text-brand-black/50 font-semibold normal-case tracking-normal">
+                              ({expenseCategories.length} groups)
+                            </span>
+                          </h2>
+                          <div className="space-y-2">
+                            {expenseCategories.map((item) => (
+                              <CategoryGroupItem
+                                key={item.name}
+                                item={item}
+                                isExpanded={!!expandedGroups[item.name]}
+                                onToggle={toggleGroup}
+                                accentColor="#374151"
+                              />
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                        </div>
 
-                    <div>
-                      <h2 className="text-sm font-bold text-base-gray-1 mb-3">Transfer Categories</h2>
-                      <div className="space-y-2">
-                        {PRESET_TRANSFER_CATEGORIES.map((item) => (
-                          <div key={item.name} className="flex items-center justify-between p-4 bg-white border-2 border-brand-black/5 hover:border-brand-black/10 transition-colors rounded-xl group cursor-pointer">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${item.colorClass}`}>
-                                <span className="text-base leading-none">{item.icon}</span>
-                              </div>
-                              <span className="text-sm font-semibold text-brand-black">{item.name}</span>
-                            </div>
-                            <svg className="w-5 h-5 text-base-gray-1/30 group-hover:text-brand-black/50 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                        {/* Transfer Categories */}
+                        <div>
+                          <h2 className="text-xs font-bold text-base-gray-1 uppercase tracking-wider mb-3">
+                            Transfer Categories
+                            <span className="ml-2 text-brand-black/50 font-semibold normal-case tracking-normal">
+                              ({transferCategories.length} groups)
+                            </span>
+                          </h2>
+                          <div className="space-y-2">
+                            {transferCategories.map((item) => (
+                              <CategoryGroupItem
+                                key={item.name}
+                                item={item}
+                                isExpanded={!!expandedGroups[item.name]}
+                                onToggle={toggleGroup}
+                                accentColor="#374151"
+                              />
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
+
+                {error && <p className="text-red-500 text-sm">{error}</p>}
 
                 <div className="flex flex-col-reverse sm:flex-row justify-between items-center pt-6 bg-white gap-4 w-full">
                   <button onClick={() => setStep(1)} type="button" className="cursor-pointer px-6 py-3.5 sm:py-4 rounded-xl border-2 border-transparent bg-[#D68E5A]/10 text-[#D68E5A] hover:bg-[#D68E5A]/20 text-sm sm:text-base font-semibold flex items-center justify-center gap-2 transition-all w-full sm:w-auto">
                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                      <span className="inline">Previous</span>
                   </button>
-                  <button onClick={handleRegister} disabled={isLoading} type="button" className="cursor-pointer w-full sm:w-auto flex-1 sm:flex-none px-8 py-3.5 sm:py-4 rounded-xl bg-brand-black border-2 border-transparent hover:bg-transparent hover:border-brand-black hover:text-brand-black text-white text-sm sm:text-base font-semibold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-none">
-                    {isLoading ? 'Loading...' : 'Submit ✓'}
+                  <button
+                    id="submit-registration"
+                    onClick={handleRegister}
+                    disabled={isLoading}
+                    type="button"
+                    className="cursor-pointer w-full sm:w-auto flex-1 sm:flex-none px-8 py-3.5 sm:py-4 rounded-xl bg-brand-black border-2 border-transparent hover:bg-transparent hover:border-brand-black hover:text-brand-black text-white text-sm sm:text-base font-semibold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Registering...</span>
+                      </>
+                    ) : 'Submit ✓'}
                   </button>
                 </div>
               </div>
@@ -346,3 +490,4 @@ function SignupPage() {
 }
 
 export default SignupPage
+

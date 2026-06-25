@@ -37,15 +37,16 @@ function DeleteAccountModal({ account, onConfirm, onCancel }) {
 }
 
 // ── Add / Edit Account Modal ──────────────────────────────────────────────────
-function AccountModal({ isOpen, onClose, onSubmit, editAccount = null }) {
+function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts = [] }) {
   const isEdit = !!editAccount
   const [form, setForm] = useState(editAccount ? {
     name: editAccount.name,
     category: editAccount.category || 'Checking',
     type: editAccount.type,
     balance: String(editAccount.balance),
-    color: editAccount.color || '#E6923F'
-  } : DEFAULT_FORM)
+    color: editAccount.color || '#E6923F',
+    parentId: editAccount.parentId || ''
+  } : { ...DEFAULT_FORM, parentId: '' })
 
   if (!isOpen) return null
 
@@ -57,7 +58,8 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null }) {
       category: form.category,
       type: form.type,
       balance: parseFloat(form.balance) || 0,
-      color: form.color
+      color: form.color,
+      parentId: form.parentId || null
     })
     onClose()
   }
@@ -122,6 +124,20 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null }) {
           </div>
 
           <div>
+            <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Parent Account (Optional)</label>
+            <select
+              value={form.parentId}
+              onChange={e => setForm(p => ({ ...p, parentId: e.target.value }))}
+              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none focus:bg-white focus:border focus:border-brand-black/20 border border-transparent transition-colors"
+            >
+              <option value="">-- None (Top Level) --</option>
+              {accounts.filter(a => a.id !== editAccount?.id && !a.parentId).map(a => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">
               {isEdit ? 'Balance (Rp)' : 'Initial Balance (Rp)'}
             </label>
@@ -166,6 +182,52 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null }) {
   )
 }
 
+// ── Sub-component: Account Row ────────────────────────────────────────────────
+function AccountRow({ acc, isBalanceVisible, openEdit, setDeletingAccount }) {
+  const fmt = (n) => (isBalanceVisible ? `Rp ${Math.abs(n).toLocaleString('id-ID')}` : 'Rp •••••••')
+  return (
+    <div className="flex items-center justify-between p-4 rounded-2xl bg-[#F8F8F8] hover:bg-brand-black/5 transition-colors border border-transparent hover:border-brand-black/10 group">
+      <div className="flex items-center gap-4">
+        <div
+          className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-sm font-bold"
+          style={{ color: acc.color || '#E6923F' }}
+        >
+          {acc.name.charAt(0)}
+        </div>
+        <div>
+          <h4 className="text-sm font-bold text-brand-black">{acc.name}</h4>
+          <p className="text-xs font-medium text-brand-black/50 capitalize">
+            {acc.category || acc.type} · {acc.type}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className={`text-sm font-bold ${acc.balance < 0 ? 'text-rose-500' : 'text-brand-black'}`}>
+          {fmt(acc.balance)}
+        </span>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            type="button"
+            onClick={() => openEdit(acc)}
+            className="p-1.5 text-brand-black/50 hover:text-brand-black hover:bg-brand-black/10 rounded-lg transition-all cursor-pointer"
+            title="Edit account"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setDeletingAccount(acc)}
+            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
+            title="Delete account"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AccountsPage() {
   const { accounts, addAccount, updateAccount, deleteAccount, isBalanceVisible, isLoaded } = useDesktop()
@@ -205,6 +267,9 @@ export default function AccountsPage() {
     }
   }
 
+  const topLevelAccounts = accounts.filter(a => !a.parentId)
+  const getChildren = (parentId) => accounts.filter(a => a.parentId === parentId)
+
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] space-y-6">
       <div className="flex items-center justify-between">
@@ -221,7 +286,7 @@ export default function AccountsPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-brand-black/5 flex items-center gap-4">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-brand-black/5 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-brand-black/5 flex items-center justify-center text-brand-black/80 border border-brand-black/10">
             <Landmark className="w-6 h-6" />
           </div>
@@ -230,7 +295,7 @@ export default function AccountsPage() {
             <p className="text-lg font-bold text-brand-black/90">{fmt(totalAssets)}</p>
           </div>
         </div>
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-brand-black/5 flex items-center gap-4">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-brand-black/5 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 border border-rose-100">
             <CreditCard className="w-6 h-6" />
           </div>
@@ -239,7 +304,7 @@ export default function AccountsPage() {
             <p className="text-lg font-bold text-brand-black/90">{fmt(totalLiabilities)}</p>
           </div>
         </div>
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-brand-black/5 flex items-center gap-4">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-brand-black/5 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-[#E6923F]/10 flex items-center justify-center text-[#E6923F] border border-[#E6923F]/20">
             <PiggyBank className="w-6 h-6" />
           </div>
@@ -253,57 +318,27 @@ export default function AccountsPage() {
       {/* Account list */}
       <div className="bg-white rounded-3xl shadow-sm border border-brand-black/5 flex-1 p-6 min-h-0 overflow-y-auto">
         <h3 className="text-sm font-bold text-brand-black mb-4">Account List</h3>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {accounts.length === 0 && (
             <div className="text-center py-12">
               <div className="text-4xl mb-3">🏦</div>
               <p className="text-sm text-brand-black/40">No accounts yet. Add your first account.</p>
             </div>
           )}
-          {accounts.map(acc => (
-            <div
-              key={acc.id}
-              className="flex items-center justify-between p-4 rounded-2xl bg-[#F8F8F8] hover:bg-brand-black/5 transition-colors border border-transparent hover:border-brand-black/10 group"
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-sm font-bold"
-                  style={{ color: acc.color || '#E6923F' }}
-                >
-                  {acc.name.charAt(0)}
+          {topLevelAccounts.map(acc => (
+            <div key={acc.id} className="space-y-2">
+              <AccountRow acc={acc} isBalanceVisible={isBalanceVisible} openEdit={openEdit} setDeletingAccount={setDeletingAccount} />
+              
+              {getChildren(acc.id).length > 0 && (
+                <div className="ml-6 pl-4 border-l-2 border-brand-black/5 space-y-2 relative">
+                  {getChildren(acc.id).map(child => (
+                    <div key={child.id} className="relative">
+                      <div className="absolute top-1/2 -left-[18px] w-4 border-t-2 border-brand-black/5 -translate-y-1/2" />
+                      <AccountRow acc={child} isBalanceVisible={isBalanceVisible} openEdit={openEdit} setDeletingAccount={setDeletingAccount} />
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-brand-black">{acc.name}</h4>
-                  <p className="text-xs font-medium text-brand-black/50 capitalize">
-                    {acc.category || acc.type} · {acc.type}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className={`text-sm font-bold ${acc.balance < 0 ? 'text-rose-500' : 'text-brand-black'}`}>
-                  {isBalanceVisible
-                    ? `Rp ${Math.abs(acc.balance).toLocaleString('id-ID')}`
-                    : 'Rp •••••••'}
-                </span>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(acc)}
-                    className="p-1.5 text-brand-black/50 hover:text-brand-black hover:bg-brand-black/10 rounded-lg transition-all cursor-pointer"
-                    title="Edit account"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeletingAccount(acc)}
-                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
-                    title="Delete account"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
           ))}
         </div>
@@ -312,9 +347,11 @@ export default function AccountsPage() {
       {/* Modals */}
       {modalOpen && (
         <AccountModal
+          isOpen={modalOpen}
           onClose={closeModal}
           onSubmit={handleSubmit}
           editAccount={editingAccount}
+          accounts={accounts}
         />
       )}
       <DeleteAccountModal

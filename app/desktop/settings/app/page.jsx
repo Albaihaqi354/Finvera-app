@@ -2,8 +2,11 @@
 import { useRef, useState } from 'react'
 import { Save, Globe, Clock, Palette, CreditCard, AlertTriangle } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
+import { useTheme } from '@/components/desktop/ThemeProvider'
 
 export default function AppSettingsPage() {
+  const { theme, setTheme } = useTheme()
+
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] space-y-6">
       {/* Header */}
@@ -59,10 +62,14 @@ export default function AppSettingsPage() {
                   <Palette className="w-4 h-4 text-brand-black/40" />
                   Theme
                 </label>
-                <select className="w-full appearance-none bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all">
-                  <option>Light (Finvera Style)</option>
-                  <option>Dark Mode</option>
-                  <option>System Default</option>
+                <select 
+                  value={theme}
+                  onChange={e => setTheme(e.target.value)}
+                  className="w-full appearance-none bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all"
+                >
+                  <option value="light">Light (Finvera Style)</option>
+                  <option value="dark">Dark Mode</option>
+                  <option value="system">System Default</option>
                 </select>
               </div>
 
