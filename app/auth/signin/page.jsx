@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Logo from '@/components/Logo'
 import { Eye, EyeOff, User, Lock, Globe, AlertCircle } from 'lucide-react'
 import { api, setToken } from '@/lib/api/client'
 
@@ -39,6 +40,8 @@ function SigninPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-brand-primary font-ibm p-4 sm:p-8 overflow-hidden">
+      
+      <Logo />
 
       {/* Top right language switcher */}
       <div className="absolute top-6 right-6 sm:top-8 sm:right-8 flex items-center gap-2 text-brand-black/50 hover:text-brand-black cursor-pointer transition-colors z-20">
@@ -46,21 +49,9 @@ function SigninPage() {
         <span className="text-sm font-medium">English</span>
       </div>
 
-      <div className="w-full max-w-sm z-10 flex flex-col items-center -mt-12 sm:-mt-20">
-        {/* Centered Logo outside card */}
-        <div className="mb-0 relative z-20">
-          <Image
-            src="/image/Finvera-logo.png"
-            alt="Finvera Logo"
-            width={400}
-            height={80}
-            className="h-24 sm:h-32 w-auto object-contain"
-            priority
-          />
-        </div>
-
+      <div className="w-full max-w-sm z-10 flex flex-col items-center">
         {/* Card */}
-        <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-black/5 w-full relative z-10 -mt-6 sm:-mt-8">
+        <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-black/5 w-full relative z-10 mt-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-brand-black">
               Log In
