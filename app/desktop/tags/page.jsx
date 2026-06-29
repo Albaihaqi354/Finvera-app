@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { PlusCircle, Search, Pencil, Trash2, Tag as TagIcon, X, Check } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
+import { useToast } from '@/components/ui/Toast'
 
 const TAG_COLORS = [
   '#E6923F', '#F14C4C', '#009E9E', '#065786', '#713670',
@@ -152,6 +153,8 @@ function DeleteTagModal({ tag, onConfirm, onCancel }) {
 
 export default function TagsPage() {
   const { tags, addTag, updateTag, deleteTag, isLoaded } = useDesktop()
+  const toast = useToast()
+  
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTag, setEditingTag] = useState(null)
@@ -171,11 +174,30 @@ export default function TagsPage() {
   const openEdit = (tag) => { setEditingTag(tag); setModalOpen(true) }
   const closeModal = () => { setModalOpen(false); setEditingTag(null) }
 
-  const handleSubmit = ({ name, color }) => {
-    if (editingTag) {
-      updateTag(editingTag.id, name, color)
-    } else {
-      addTag(name, color)
+  const handleSubmit = async ({ name, color }) => {
+    try {
+      if (editingTag) {
+        await updateTag(editingTag.id, name, color)
+        toast.success('Tag updated successfully')
+      } else {
+        await addTag(name, color)
+        toast.success('Tag added successfully')
+      }
+      closeModal()
+    } catch (err) {
+      toast.error(err.message || 'Failed to save tag')
+    }
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (deletingTag) {
+      try {
+        await deleteTag(deletingTag.id)
+        toast.success('Tag deleted successfully')
+        setDeletingTag(null)
+      } catch (err) {
+        toast.error(err.message || 'Failed to delete tag')
+      }
     }
   }
 
@@ -243,7 +265,7 @@ export default function TagsPage() {
       )}
       <DeleteTagModal
         tag={deletingTag}
-        onConfirm={() => { deleteTag(deletingTag.id); setDeletingTag(null) }}
+        onConfirm={handleDeleteConfirm}
         onCancel={() => setDeletingTag(null)}
       />
     </div>

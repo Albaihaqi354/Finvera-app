@@ -5,6 +5,9 @@ import { useSearchParams } from 'next/navigation'
 import { PlusCircle, Search, X, Trash2, ChevronLeft, ChevronRight, Pencil, Download } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 import { useDebounce } from '@/hooks/useDebounce'
+import CurrencyInput from '@/components/ui/CurrencyInput'
+import { formatCurrency } from '@/lib/currency'
+import { useToast } from '@/components/ui/Toast'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const amountColor = (type) => {
@@ -14,7 +17,7 @@ const amountColor = (type) => {
 }
 
 // ─── Sub-component: Transaction Row ──────────────────────────────────────────
-function TxRow({ tx, accounts, categories, onDelete, onEdit }) {
+function TxRow({ tx, accounts, categories, onDelete, onEdit, currency = 'IDR' }) {
   const acc = accounts.find(a => a.id === tx.accountId)
   const cat = categories.find(c => c.id === tx.categoryId)
   const isTransfer = tx.type === 'transfer'
@@ -32,7 +35,7 @@ function TxRow({ tx, accounts, categories, onDelete, onEdit }) {
         <span className="text-xs font-semibold truncate text-brand-black/80">{label}</span>
       </div>
       <span className={`text-sm font-bold ${amountColor(tx.type)}`}>
-        Rp {tx.amount.toLocaleString('id-ID')}
+        {formatCurrency(tx.amount, currency)}
       </span>
       <span className="text-xs font-semibold truncate text-brand-black/70">{acc?.name}</span>
       <span className="text-xs text-brand-black/50 truncate">{tx.note}</span>
@@ -92,7 +95,7 @@ function TransactionFilters({ typeFilter, setTypeFilter, accountFilter, setAccou
 }
 
 // ─── Sub-component: Transaction Calendar ─────────────────────────────────────
-function TransactionCalendar({ calendarMonth, setCalendarMonth, calendarDays, selectedDay, setSelectedDay, selectedDayTx }) {
+function TransactionCalendar({ calendarMonth, setCalendarMonth, calendarDays, selectedDay, setSelectedDay, selectedDayTx, currency = 'IDR' }) {
   return (
     <div className="flex-1 flex flex-col min-h-0 gap-4">
       <div className="flex items-center justify-between">
@@ -153,7 +156,7 @@ function TransactionCalendar({ calendarMonth, setCalendarMonth, calendarDays, se
             selectedDayTx.map(tx => (
               <div key={tx.id} className="flex justify-between py-1.5 text-xs">
                 <span>{tx.note || tx.type}</span>
-                <span className={`font-bold ${amountColor(tx.type)}`}>Rp {tx.amount.toLocaleString('id-ID')}</span>
+                <span className={`font-bold ${amountColor(tx.type)}`}>{formatCurrency(tx.amount, currency)}</span>
               </div>
             ))
           )}
@@ -164,14 +167,14 @@ function TransactionCalendar({ calendarMonth, setCalendarMonth, calendarDays, se
 }
 
 // ─── Sub-component: Add / Edit Transaction Modal ──────────────────────────────
-function TransactionModal({ onClose, accounts, categories, tags, onSubmit, editTx = null }) {
+function TransactionModal({ onClose, accounts, categories, tags, onSubmit, editTx = null, currency = 'IDR' }) {
   const isEdit = !!editTx
 
   const [form, setForm] = useState(() => {
     if (isEdit && editTx) {
       return {
         type: editTx.type,
-        amount: String(editTx.amount),
+        amount: editTx.amount,
         accountId: editTx.accountId || accounts[0]?.id || '',
         targetAccountId: editTx.targetAccountId || accounts[1]?.id || accounts[0]?.id || '',
         categoryId: editTx.categoryId || '',
@@ -263,11 +266,12 @@ function TransactionModal({ onClose, accounts, categories, tags, onSubmit, editT
 
           {/* Amount */}
           <div>
-            <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Amount (Rp)</label>
-            <input
-              type="number" step="0.01" required
+            <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Amount</label>
+            <CurrencyInput
+              currency={currency}
+              required
               value={form.amount}
-              onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
+              onChange={val => setForm(p => ({ ...p, amount: val }))}
               placeholder="0"
               className={`w-full bg-[#F8F8F8] rounded-xl px-4 py-3 text-xl font-bold outline-none border-2 border-transparent focus:border-brand-black/20 transition-colors ${typeColors[form.type]?.label || ''}`}
             />
@@ -393,7 +397,8 @@ function DeleteModal({ isOpen, onConfirm, onCancel }) {
 // ─── Main Content Component ───────────────────────────────────────────────────
 function TransactionsContent() {
   const searchParams = useSearchParams()
-  const { transactions, accounts, categories, tags, addTransaction, updateTransaction, deleteTransaction, isLoaded } = useDesktop()
+  const { transactions, accounts, categories, tags, addTransaction, updateTransaction, deleteTransaction, isLoaded, currency } = useDesktop()
+  const toast = useToast()
 
   const [searchInput, setSearchInput]       = useState('')
   const [typeFilter, setTypeFilter]         = useState('All Types')
@@ -459,18 +464,45 @@ function TransactionsContent() {
   const openEdit = useCallback((tx) => { setEditingTx(tx); setIsModalOpen(true) }, [])
   const closeModal = useCallback(() => { setIsModalOpen(false); setEditingTx(null) }, [])
 
-  const handleSubmit = useCallback((data) => {
-    if (editingTx) {
-      updateTransaction(editingTx.id, data)
-    } else {
-      addTransaction(data)
+  const handleAddSubmit = async (data) => {
+    try {
+      if (editingTx) {
+        await updateTransaction(editingTx.id, data)
+        toast.success('Transaction updated successfully')
+      } else {
+        await addTransaction(data)
+        toast.success('Transaction added successfully')
+      }
+      setIsModalOpen(false)
+      setEditingTx(null)
+      fetchTransactions()
+    } catch (err) {
+      toast.error(err.message || 'Failed to save transaction')
     }
-  }, [editingTx, updateTransaction, addTransaction])
+  }
 
-  const handleDeleteClick = useCallback((id) => { setTxToDelete(id); setDeleteModalOpen(true) }, [])
-  const confirmDelete = useCallback(() => {
-    if (txToDelete) { deleteTransaction(txToDelete); setTxToDelete(null); setDeleteModalOpen(false) }
-  }, [txToDelete, deleteTransaction])
+  const handleDeleteConfirm = async () => {
+    if (txToDelete) {
+      try {
+        await deleteTransaction(txToDelete)
+        toast.success('Transaction deleted successfully')
+        setDeleteModalOpen(false)
+        setTxToDelete(null)
+        fetchTransactions()
+      } catch (err) {
+        toast.error(err.message || 'Failed to delete transaction')
+      }
+    }
+  }
+
+  const handleOpenAddModal = () => {
+    if (accounts.length === 0 || categories.length === 0) {
+      toast.warning('Please create at least one Account and Category first to add transactions.')
+      return
+    }
+    setEditingTx(null)
+    setIsModalOpen(true)
+  }
 
   // ── Memoised derivations ────────────────────────────────────────────────────
   // We now use serverTxs for the list, but for Calendar we might still need all
@@ -594,7 +626,7 @@ function TransactionsContent() {
                 <Download className="w-3.5 h-3.5" /> Export CSV
               </button>
               <button
-                type="button" onClick={openAdd}
+                type="button" onClick={handleOpenAddModal}
                 className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors"
               >
                 <PlusCircle className="w-3.5 h-3.5" /> Add
@@ -625,10 +657,10 @@ function TransactionsContent() {
           </span>
           <div className="flex items-center gap-6">
             <span className="text-xs font-bold text-brand-black/50">
-              Income <span className="text-emerald-500">Rp {totalIncome.toLocaleString('id-ID')}</span>
+              Income <span className="text-emerald-500">{formatCurrency(totalIncome, currency)}</span>
             </span>
             <span className="text-xs font-bold text-brand-black/50">
-              Expense <span className="text-rose-500">Rp {totalExpense.toLocaleString('id-ID')}</span>
+              Expense <span className="text-rose-500">{formatCurrency(totalExpense, currency)}</span>
             </span>
           </div>
         </div>
@@ -657,7 +689,8 @@ function TransactionsContent() {
                     <TxRow
                       key={tx.id} tx={tx}
                       accounts={accounts} categories={categories}
-                      onDelete={handleDeleteClick} onEdit={openEdit}
+                      onDelete={(id) => { setTxToDelete(id); setDeleteModalOpen(true) }} onEdit={openEdit}
+                      currency={currency}
                     />
                   ))}
                 </div>
@@ -697,24 +730,26 @@ function TransactionsContent() {
             selectedDay={selectedDay}
             setSelectedDay={setSelectedDay}
             selectedDayTx={selectedDayTx}
+            currency={currency}
           />
         )}
       </div>
 
-      {/* ── Modals ── */}
       {isModalOpen && (
         <TransactionModal
           onClose={closeModal}
           accounts={accounts}
           categories={categories}
           tags={tags}
-          onSubmit={handleSubmit}
+          onSubmit={handleAddSubmit}
           editTx={editingTx}
+          currency={currency}
         />
       )}
+
       <DeleteModal
         isOpen={deleteModalOpen}
-        onConfirm={confirmDelete}
+        onConfirm={handleDeleteConfirm}
         onCancel={() => { setDeleteModalOpen(false); setTxToDelete(null) }}
       />
     </div>

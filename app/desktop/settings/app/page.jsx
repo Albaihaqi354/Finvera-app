@@ -3,18 +3,31 @@ import { useRef, useState } from 'react'
 import { Save, Globe, Clock, Palette, CreditCard, AlertTriangle } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 import { useTheme } from '@/components/desktop/ThemeProvider'
+import { useI18n } from '@/lib/i18n'
+import { CURRENCIES } from '@/lib/currency'
+import { useToast } from '@/components/ui/Toast'
 
 export default function AppSettingsPage() {
   const { theme, setTheme } = useTheme()
+  const { lang, setLang, t } = useI18n()
+  const { currency, setCurrency } = useDesktop()
+  const toast = useToast()
+
+  const handleSave = () => {
+    toast.success(t('settings_saved') || 'Settings saved successfully.')
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-brand-black">Application Settings</h2>
-        <button className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer">
+        <h2 className="text-xl font-bold text-brand-black">{t('app_settings')}</h2>
+        <button 
+          onClick={handleSave}
+          className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+        >
           <Save className="w-3.5 h-3.5" />
-          Save Settings
+          {t('save_settings')}
         </button>
       </div>
 
@@ -29,12 +42,15 @@ export default function AppSettingsPage() {
               <div className="space-y-2">
                 <label className="text-xs font-bold text-brand-black/60 flex items-center gap-2">
                   <Globe className="w-4 h-4 text-brand-black/40" />
-                  Language
+                  {t('language')}
                 </label>
-                <select className="w-full appearance-none bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all">
-                  <option>English (United States)</option>
-                  <option>Bahasa Indonesia</option>
-                  <option>中文 (Simplified Chinese)</option>
+                <select 
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value)}
+                  className="w-full appearance-none bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all"
+                >
+                  <option value="en">English</option>
+                  <option value="id">Bahasa Indonesia</option>
                 </select>
               </div>
 
@@ -76,12 +92,16 @@ export default function AppSettingsPage() {
               <div className="space-y-2">
                 <label className="text-xs font-bold text-brand-black/60 flex items-center gap-2">
                   <CreditCard className="w-4 h-4 text-brand-black/40" />
-                  Default Currency
+                  {t('default_currency')}
                 </label>
-                <select className="w-full appearance-none bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all">
-                  <option>IDR - Indonesian Rupiah</option>
-                  <option>USD - US Dollar</option>
-                  <option>EUR - Euro</option>
+                <select 
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="w-full appearance-none bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all"
+                >
+                  {CURRENCIES.map(c => (
+                    <option key={c.code} value={c.code}>{c.label}</option>
+                  ))}
                 </select>
               </div>
             </div>

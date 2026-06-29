@@ -3,6 +3,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { PlusCircle, Search, Pencil, Trash2, X, Check } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useToast } from '@/components/ui/Toast'
 
 const EMOJI_SUGGESTIONS = ['🍔','🚗','🏠','💊','📚','✈️','🎮','👕','💡','🏋️','🛒','💰','🎁','🎵','🍕','☕','🚌','💳','💼','🌱']
 
@@ -25,8 +26,8 @@ function CategoryModal({ onClose, onSubmit, editCategory = null, parentOptions =
 
   return (
     <div className="fixed inset-0 bg-brand-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-brand-black/5 flex items-center justify-between bg-[#F8F8F8]">
+      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="px-6 py-4 border-b border-brand-black/5 flex items-center justify-between bg-[#F8F8F8] shrink-0">
           <h3 className="font-bold text-lg text-brand-black capitalize">
             {isEdit ? 'Edit Category' : `Add ${activeTab} Category`}
           </h3>
@@ -34,7 +35,7 @@ function CategoryModal({ onClose, onSubmit, editCategory = null, parentOptions =
             <X className="w-4 h-4" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto min-h-0">
           {/* Preview */}
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#F8F8F8]">
             <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl">
@@ -148,6 +149,8 @@ function DeleteCategoryModal({ category, subCount, onConfirm, onCancel }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function CategoriesPage() {
   const { categories, addCategory, updateCategory, deleteCategory, isLoaded } = useDesktop()
+  const toast = useToast()
+  
   const [activeTab, setActiveTab] = useState('expense')
   const [searchInput, setSearchInput] = useState('')
   const search = useDebounce(searchInput, 300)
@@ -182,18 +185,30 @@ export default function CategoriesPage() {
   const openEdit = (cat) => { setEditingCategory(cat); setModalOpen(true) }
   const closeModal = () => { setModalOpen(false); setEditingCategory(null) }
 
-  const handleSubmit = ({ name, icon, parentId }) => {
-    if (editingCategory) {
-      updateCategory(editingCategory.id, { name, icon })
-    } else {
-      addCategory({ name, type: activeTab, icon, parentId: parentId || null })
+  const handleSubmit = async ({ name, icon, parentId }) => {
+    try {
+      if (editingCategory) {
+        await updateCategory(editingCategory.id, { name, icon })
+        toast.success('Category updated successfully')
+      } else {
+        await addCategory({ name, type: activeTab, icon, parentId: parentId || null })
+        toast.success('Category added successfully')
+      }
+      closeModal()
+    } catch (err) {
+      toast.error(err.message || 'Failed to save category')
     }
   }
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (deletingCategory) {
-      deleteCategory(deletingCategory.id)
-      setDeletingCategory(null)
+      try {
+        await deleteCategory(deletingCategory.id)
+        toast.success('Category deleted successfully')
+        setDeletingCategory(null)
+      } catch (err) {
+        toast.error(err.message || 'Failed to delete category')
+      }
     }
   }
 

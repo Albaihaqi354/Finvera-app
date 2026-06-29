@@ -22,6 +22,7 @@ import {
   mdiChevronRight,
 } from '@/lib/icons/mdi'
 import { useDesktop } from './DesktopProvider'
+import { useToast } from '@/components/ui/Toast'
 
 function NavSection({ title, collapsed }) {
   if (collapsed) return <div className="my-2 border-t border-brand-black/10 mx-2" />
@@ -59,7 +60,8 @@ function SidebarItem({ path, label, active = false, onClick, action, collapsed, 
 export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { isBalanceVisible, setIsBalanceVisible } = useDesktop()
+  const { isBalanceVisible, setIsBalanceVisible, accounts, categories } = useDesktop()
+  const toast = useToast()
 
   const navigateTo = (path) => {
     router.push(`/desktop/${path}`)
@@ -69,6 +71,10 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
 
   const openAddTransaction = (e) => {
     e.stopPropagation()
+    if (accounts.length === 0 || categories.length === 0) {
+      toast.warning('Please create at least one Account and Category first to add transactions.')
+      return
+    }
     router.push('/desktop/transactions?add=1')
     onClose?.()
   }

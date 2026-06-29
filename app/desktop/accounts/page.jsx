@@ -2,6 +2,9 @@
 import { useState } from 'react'
 import { Landmark, CreditCard, PiggyBank, PlusCircle, Pencil, X, Trash2 } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
+import CurrencyInput from '@/components/ui/CurrencyInput'
+import { formatCurrency } from '@/lib/currency'
+import { useToast } from '@/components/ui/Toast'
 
 const ACCOUNT_CATEGORIES = ['Cash', 'Checking', 'Savings', 'Credit Card', 'Investment', 'Wallet', 'Other']
 
@@ -37,7 +40,7 @@ function DeleteAccountModal({ account, onConfirm, onCancel }) {
 }
 
 // ── Add / Edit Account Modal ──────────────────────────────────────────────────
-function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts = [] }) {
+function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts = [], currency = 'IDR' }) {
   const isEdit = !!editAccount
   const [form, setForm] = useState(editAccount ? {
     name: editAccount.name,
@@ -68,14 +71,14 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts 
 
   return (
     <div className="fixed inset-0 bg-brand-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-brand-black/5 flex items-center justify-between bg-[#F8F8F8]">
+      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="px-6 py-4 border-b border-brand-black/5 flex items-center justify-between bg-[#F8F8F8] shrink-0">
           <h3 className="font-bold text-lg text-brand-black">{isEdit ? 'Edit Account' : 'Add Account'}</h3>
           <button type="button" onClick={onClose} className="cursor-pointer p-1.5 rounded-full hover:bg-brand-black/10 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto min-h-0">
           {/* Preview */}
           <div className="flex items-center gap-3 p-4 rounded-2xl bg-[#F8F8F8]">
             <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-lg font-bold"
@@ -139,12 +142,12 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts 
 
           <div>
             <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">
-              {isEdit ? 'Balance (Rp)' : 'Initial Balance (Rp)'}
+              {isEdit ? 'Balance' : 'Initial Balance'}
             </label>
-            <input
-              type="number" step="0.01"
+            <CurrencyInput
+              currency={currency}
               value={form.balance}
-              onChange={e => setForm(p => ({ ...p, balance: e.target.value }))}
+              onChange={val => setForm(p => ({ ...p, balance: val }))}
               className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-bold outline-none border border-transparent focus:border-brand-black/20"
             />
             {isEdit && (
@@ -183,8 +186,8 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts 
 }
 
 // ── Sub-component: Account Row ────────────────────────────────────────────────
-function AccountRow({ acc, isBalanceVisible, openEdit, setDeletingAccount }) {
-  const fmt = (n) => (isBalanceVisible ? `Rp ${Math.abs(n).toLocaleString('id-ID')}` : 'Rp •••••••')
+function AccountRow({ acc, isBalanceVisible, openEdit, setDeletingAccount, currency = 'IDR' }) {
+  const fmt = (n) => (isBalanceVisible ? formatCurrency(Math.abs(n), currency) : formatCurrency(0, currency).replace(/0([.,]0+)?/, '•••••••'))
   return (
     <div className="flex items-center justify-between p-4 rounded-2xl bg-[#F8F8F8] hover:bg-brand-black/5 transition-colors border border-transparent hover:border-brand-black/10 group">
       <div className="flex items-center gap-4">
@@ -230,7 +233,9 @@ function AccountRow({ acc, isBalanceVisible, openEdit, setDeletingAccount }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AccountsPage() {
-  const { accounts, addAccount, updateAccount, deleteAccount, isBalanceVisible, isLoaded } = useDesktop()
+  const { accounts, addAccount, updateAccount, deleteAccount, isBalanceVisible, isLoaded, currency } = useDesktop()
+  const toast = useToast()
+  
   const [modalOpen, setModalOpen]           = useState(false)
   const [editingAccount, setEditingAccount] = useState(null)
   const [deletingAccount, setDeletingAccount] = useState(null)
@@ -246,24 +251,36 @@ export default function AccountsPage() {
   const totalAssets      = accounts.filter(a => a.type === 'asset').reduce((s, a) => s + a.balance, 0)
   const totalLiabilities = accounts.filter(a => a.type === 'liability').reduce((s, a) => s + Math.abs(a.balance), 0)
   const netAssets        = totalAssets - totalLiabilities
-  const fmt = (n) => (isBalanceVisible ? `Rp ${n.toLocaleString('id-ID')}` : 'Rp •••••••')
+  const fmt = (n) => (isBalanceVisible ? formatCurrency(n, currency) : formatCurrency(0, currency).replace(/0([.,]0+)?/, '•••••••'))
 
   const openAdd = () => { setEditingAccount(null); setModalOpen(true) }
   const openEdit = (acc) => { setEditingAccount(acc); setModalOpen(true) }
   const closeModal = () => { setModalOpen(false); setEditingAccount(null) }
 
-  const handleSubmit = (data) => {
-    if (editingAccount) {
-      updateAccount(editingAccount.id, data)
-    } else {
-      addAccount(data)
+  const handleSubmit = async (data) => {
+    try {
+      if (editingAccount) {
+        await updateAccount(editingAccount.id, data)
+        toast.success('Account updated successfully')
+      } else {
+        await addAccount(data)
+        toast.success('Account added successfully')
+      }
+      closeModal()
+    } catch (err) {
+      toast.error(err.message || 'Failed to save account')
     }
   }
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deletingAccount) {
-      deleteAccount(deletingAccount.id)
-      setDeletingAccount(null)
+      try {
+        await deleteAccount(deletingAccount.id)
+        toast.success('Account deleted successfully')
+        setDeletingAccount(null)
+      } catch (err) {
+        toast.error(err.message || 'Failed to delete account')
+      }
     }
   }
 
@@ -327,14 +344,14 @@ export default function AccountsPage() {
           )}
           {topLevelAccounts.map(acc => (
             <div key={acc.id} className="space-y-2">
-              <AccountRow acc={acc} isBalanceVisible={isBalanceVisible} openEdit={openEdit} setDeletingAccount={setDeletingAccount} />
+              <AccountRow acc={acc} isBalanceVisible={isBalanceVisible} openEdit={openEdit} setDeletingAccount={setDeletingAccount} currency={currency} />
               
               {getChildren(acc.id).length > 0 && (
                 <div className="ml-6 pl-4 border-l-2 border-brand-black/5 space-y-2 relative">
                   {getChildren(acc.id).map(child => (
                     <div key={child.id} className="relative">
                       <div className="absolute top-1/2 -left-[18px] w-4 border-t-2 border-brand-black/5 -translate-y-1/2" />
-                      <AccountRow acc={child} isBalanceVisible={isBalanceVisible} openEdit={openEdit} setDeletingAccount={setDeletingAccount} />
+                      <AccountRow acc={child} isBalanceVisible={isBalanceVisible} openEdit={openEdit} setDeletingAccount={setDeletingAccount} currency={currency} />
                     </div>
                   ))}
                 </div>
@@ -352,6 +369,7 @@ export default function AccountsPage() {
           onSubmit={handleSubmit}
           editAccount={editingAccount}
           accounts={accounts}
+          currency={currency}
         />
       )}
       <DeleteAccountModal

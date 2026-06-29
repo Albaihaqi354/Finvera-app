@@ -6,9 +6,14 @@ import { useRouter } from 'next/navigation'
 import Logo from '@/components/Logo'
 import { Eye, EyeOff, User, Lock, Globe, AlertCircle } from 'lucide-react'
 import { api, setToken } from '@/lib/api/client'
+import { useToast } from '@/components/ui/Toast'
+import { useI18n } from '@/lib/i18n'
 
 function SigninPage() {
   const router = useRouter()
+  const toast = useToast()
+  const { t, lang, setLang } = useI18n()
+  
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [username, setUsername] = useState('')
@@ -19,6 +24,16 @@ function SigninPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    
+    if (!username.trim()) {
+      setError(t('username_required'))
+      return
+    }
+    if (!password.trim()) {
+      setError(t('password_required'))
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -29,10 +44,13 @@ function SigninPage() {
           username,
           loggedInAt: new Date().toISOString()
         }))
+        toast.success(`Welcome back, ${username}!`)
         router.push('/desktop/overview')
       }
     } catch (err) {
-      setError(err.message || 'Username/email atau password salah. Coba lagi.')
+      const msg = err.message || t('something_went_wrong')
+      setError(msg)
+      toast.error(msg)
     } finally {
       setIsLoading(false)
     }
@@ -44,9 +62,12 @@ function SigninPage() {
       <Logo />
 
       {/* Top right language switcher */}
-      <div className="absolute top-6 right-6 sm:top-8 sm:right-8 flex items-center gap-2 text-brand-black/50 hover:text-brand-black cursor-pointer transition-colors z-20">
+      <div 
+        onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
+        className="absolute top-6 right-6 sm:top-8 sm:right-8 flex items-center gap-2 text-brand-black/50 hover:text-brand-black cursor-pointer transition-colors z-20"
+      >
         <Globe size={20} />
-        <span className="text-sm font-medium">English</span>
+        <span className="text-sm font-medium">{lang === 'en' ? 'English' : 'Bahasa Indonesia'}</span>
       </div>
 
       <div className="w-full max-w-sm z-10 flex flex-col items-center">
@@ -54,13 +75,13 @@ function SigninPage() {
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-black/5 w-full relative z-10 mt-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-brand-black">
-              Log In
+              {t('log_in')}
             </h1>
             <Link
               href="/auth/signup"
               className="text-sm font-medium text-brand-black hover:text-base-gray-1 transition-colors"
             >
-              Sign Up
+              {t('sign_up')}
             </Link>
           </div>
 
@@ -82,9 +103,14 @@ function SigninPage() {
                 id="username"
                 type="text"
                 value={username}
-                onChange={e => setUsername(e.target.value)}
-                className="w-full bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 outline-none py-3.5 pl-12 pr-4 rounded-xl transition-all placeholder:text-base-gray-2 text-sm sm:text-base text-brand-black"
-                placeholder="Username atau Email"
+                onChange={e => {
+                  setUsername(e.target.value)
+                  if (error) setError('')
+                }}
+                className={`w-full bg-[#F8F8F8] border focus:bg-white outline-none py-3.5 pl-12 pr-4 rounded-xl transition-all placeholder:text-base-gray-2 text-sm sm:text-base text-brand-black ${
+                  error && !username.trim() ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-brand-black/20'
+                }`}
+                placeholder={t('username_or_email')}
                 required
                 disabled={isLoading}
               />
@@ -99,9 +125,14 @@ function SigninPage() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 outline-none py-3.5 pl-12 pr-12 rounded-xl transition-all placeholder:text-base-gray-2 text-sm sm:text-base text-brand-black"
-                placeholder="Password"
+                onChange={e => {
+                  setPassword(e.target.value)
+                  if (error) setError('')
+                }}
+                className={`w-full bg-[#F8F8F8] border focus:bg-white outline-none py-3.5 pl-12 pr-12 rounded-xl transition-all placeholder:text-base-gray-2 text-sm sm:text-base text-brand-black ${
+                  error && !password.trim() ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-brand-black/20'
+                }`}
+                placeholder={t('password')}
                 required
                 disabled={isLoading}
               />
@@ -123,14 +154,14 @@ function SigninPage() {
                 >
                   {rememberMe && <div className="w-2 h-2 bg-brand-primary rounded-sm" />}
                 </div>
-                <span className="text-sm text-base-gray-1 select-none">Remember me</span>
+                <span className="text-sm text-base-gray-1 select-none">{t('remember_me')}</span>
               </label>
 
               <Link
                 href="/auth/forgetpassword"
                 className="text-sm font-medium text-base-gray-1 hover:text-brand-black transition-colors"
               >
-                Forgot Password?
+                {t('forgot_password')}
               </Link>
             </div>
 
@@ -146,15 +177,15 @@ function SigninPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                   </svg>
-                  Logging in...
+                  {t('logging_in')}
                 </>
-              ) : 'Log In'}
+              ) : t('log_in')}
             </button>
           </form>
 
           {/* Demo Accounts */}
           <div className="mt-8 pt-6 border-t border-black/5 dark:border-white/5 space-y-3">
-            <p className="text-xs font-bold text-base-gray-1 text-center uppercase tracking-wider">Demo Accounts</p>
+            <p className="text-xs font-bold text-base-gray-1 text-center uppercase tracking-wider">{t('demo_accounts')}</p>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
@@ -173,7 +204,7 @@ function SigninPage() {
                 <p className="text-[10px] font-medium text-base-gray-1 mt-0.5">password: admin123</p>
               </button>
             </div>
-            <p className="text-[10px] text-base-gray-2 text-center">Klik salah satu untuk mengisi otomatis</p>
+            <p className="text-[10px] text-base-gray-2 text-center">{t('demo_autofill')}</p>
           </div>
         </section>
 

@@ -1,5 +1,7 @@
 import { IBM_Plex_Sans, Roboto } from "next/font/google";
 import { ThemeProvider } from "@/components/desktop/ThemeProvider";
+import { I18nProvider } from "@/lib/i18n";
+import { ToastProvider } from "@/components/ui/Toast";
 import "./globals.css";
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -24,7 +26,11 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body className={`${ibmPlexSans.variable} ${roboto.variable} antialiased`}>
         <ThemeProvider>
-          {children}
+          <I18nProvider>
+            <ToastProvider>
+              {children}
+            </ToastProvider>
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

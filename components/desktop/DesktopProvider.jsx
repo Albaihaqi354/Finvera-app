@@ -1,6 +1,7 @@
 "use client"
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { api } from '@/lib/api/client'
+import { CURRENCIES } from '@/lib/currency'
 
 const DesktopContext = createContext()
 
@@ -12,6 +13,7 @@ function applyBalanceChange(accounts, accountId, delta) {
 
 export function DesktopProvider({ children }) {
   const [isBalanceVisible, setIsBalanceVisible] = useState(true)
+  const [currency, setCurrencyState] = useState('IDR')
   const [accounts, setAccounts] = useState([])
   const [categories, setCategories] = useState([])
   const [tags, setTags] = useState([])
@@ -55,6 +57,11 @@ export function DesktopProvider({ children }) {
       
       const savedVisibility = localStorage.getItem('finvera_balance_visible')
       if (savedVisibility !== null) setIsBalanceVisible(savedVisibility === 'true')
+
+      const savedCurrency = localStorage.getItem('finvera_currency')
+      if (savedCurrency && CURRENCIES.find(c => c.code === savedCurrency)) {
+        setCurrencyState(savedCurrency)
+      }
       
       setIsLoaded(true)
     } catch (err) {
@@ -341,9 +348,18 @@ export function DesktopProvider({ children }) {
     }
   }, [])
 
+  const setCurrency = useCallback((code) => {
+    if (!CURRENCIES.find(c => c.code === code)) return
+    setCurrencyState(code)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('finvera_currency', code)
+    }
+  }, [])
+
   return (
     <DesktopContext.Provider value={{
       isBalanceVisible, setIsBalanceVisible,
+      currency, setCurrency,
       accounts, setAccounts, addAccount, updateAccount, deleteAccount,
       categories, addCategory, updateCategory, deleteCategory,
       tags, addTag, updateTag, deleteTag,
