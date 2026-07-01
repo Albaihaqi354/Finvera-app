@@ -1,5 +1,40 @@
+# Dependencies & build output (installed/built inside the image)
+node_modules
 .next
+out
+dist
+build
+.turbo
+.swc
+
+# VCS & IDE
 .git
 .gitignore
-README.md
-finvera_analysis.md
+.github
+.vscode
+.idea
+*.swp
+*.swo
+
+# Docs & local env
+*.md
+.env
+.env.*
+!.env.example
+
+# Test / cache
+coverage
+.cache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db

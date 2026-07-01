@@ -9,6 +9,12 @@ import { api, setToken } from '@/lib/api/client'
 import { useToast } from '@/components/ui/Toast'
 import { useI18n } from '@/lib/i18n'
 
+function mapLoginError(message, t) {
+  if (!message) return t('something_went_wrong')
+  if (message.toLowerCase().includes('invalid credentials')) return t('invalid_credentials')
+  return message
+}
+
 function SigninPage() {
   const router = useRouter()
   const toast = useToast()
@@ -46,9 +52,13 @@ function SigninPage() {
         }))
         toast.success(`Welcome back, ${username}!`)
         router.push('/desktop/overview')
+      } else {
+        const msg = t('something_went_wrong')
+        setError(msg)
+        toast.error(msg)
       }
     } catch (err) {
-      const msg = err.message || t('something_went_wrong')
+      const msg = mapLoginError(err.message, t)
       setError(msg)
       toast.error(msg)
     } finally {
@@ -85,7 +95,7 @@ function SigninPage() {
             </Link>
           </div>
 
-          <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+          <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
             {/* Error Alert */}
             {error && (
               <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-600 text-sm font-semibold px-4 py-3 rounded-xl">
