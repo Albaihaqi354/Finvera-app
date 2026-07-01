@@ -55,7 +55,7 @@ export default function Navbar({ onMenuClick }) {
 
   return (
     <>
-      <nav className="px-4 sm:px-6 py-3 flex items-center justify-between z-40 bg-white/70 backdrop-blur-sm border-b border-brand-black/5 sticky top-0">
+      <nav className="px-4 sm:px-6 py-3 flex items-center justify-between z-40 bg-surface/70 backdrop-blur-sm border-b border-brand-black/5 sticky top-0">
         {/* Left: hamburger (mobile) + logo */}
         <div className="flex items-center gap-3">
           {/* Mobile hamburger */}
@@ -100,7 +100,7 @@ export default function Navbar({ onMenuClick }) {
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-xl border border-brand-black/10 overflow-hidden z-50">
+            <div className="absolute right-0 mt-3 w-64 bg-surface rounded-2xl shadow-xl border border-brand-black/10 overflow-hidden z-50">
               {/* User info */}
               <div className="p-5 border-b border-brand-black/5 flex items-center gap-3">
                 <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#E6923F] to-[#D2691E] flex items-center justify-center text-white font-bold text-lg">
@@ -118,7 +118,7 @@ export default function Navbar({ onMenuClick }) {
                   onClick={() => navigateTo('settings/user')}
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-brand-black hover:bg-brand-black/5 rounded-xl transition-colors cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-500 dark:text-blue-400 flex items-center justify-center">
                     <MdiIcon path={mdiAccountCogOutline} size={16} />
                   </div>
                   User Settings
@@ -128,7 +128,7 @@ export default function Navbar({ onMenuClick }) {
                   onClick={() => navigateTo('settings/app')}
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-brand-black hover:bg-brand-black/5 rounded-xl transition-colors cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-950/60 text-orange-500 dark:text-orange-400 flex items-center justify-center">
                     <MdiIcon path={mdiCogOutline} size={16} />
                   </div>
                   Application Settings
@@ -139,9 +139,9 @@ export default function Navbar({ onMenuClick }) {
                 <button
                   type="button"
                   onClick={handleLogoutClick}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-xl transition-colors cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-red-50 text-red-400 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/60 text-red-400 dark:text-red-300 flex items-center justify-center">
                     <MdiIcon path={mdiLogout} size={16} />
                   </div>
                   Logout
@@ -155,8 +155,8 @@ export default function Navbar({ onMenuClick }) {
       {/* Logout confirm modal */}
       {isLogoutModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
-            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="bg-surface rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
+            <div className="w-16 h-16 bg-red-50 dark:bg-red-950/60 text-red-500 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-4">
               <MdiIcon path={mdiLogout} size={32} className="ml-1" />
             </div>
             <h3 className="text-xl font-bold text-brand-black mb-2">Logout</h3>

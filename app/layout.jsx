@@ -21,9 +21,14 @@ export const metadata = {
   description: "A premium financial application",
 };
 
+const themeInitScript = `(function(){try{var t=localStorage.getItem('finvera_theme');var d=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className={`${ibmPlexSans.variable} ${roboto.variable} antialiased`}>
         <ThemeProvider>
           <I18nProvider>

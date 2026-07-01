@@ -27,7 +27,7 @@ const InputField = ({ label, type = "text", placeholder, id }) => {
         <input 
           type={inputType} 
           id={id || label} 
-          className="w-full border-2 border-brand-black/10 focus:border-brand-black outline-none py-3 px-4 rounded-xl transition-all placeholder:text-black/40 text-sm sm:text-base bg-white" 
+          className="w-full border-2 border-brand-black/10 focus:border-brand-black outline-none py-3 px-4 rounded-xl transition-all placeholder:text-black/40 text-sm sm:text-base bg-surface" 
           placeholder={placeholder || `Enter your ${label.toLowerCase()}`} 
         />
         {isPassword && (
@@ -62,18 +62,18 @@ const SelectField = ({ label, value, addon, options }) => {
       <div className="relative">
         <select 
           id={label} 
-          className="block w-full border-2 border-brand-black/10 focus:border-brand-black outline-none py-3 px-4 rounded-xl transition-all text-sm sm:text-base bg-white appearance-none cursor-pointer text-brand-black"
+          className="block w-full border-2 border-brand-black/10 focus:border-brand-black outline-none py-3 px-4 rounded-xl transition-all text-sm sm:text-base bg-surface appearance-none cursor-pointer text-brand-black"
           defaultValue={value}
           onChange={options ? handleChange : undefined}
         >
           {options ? (
             options.map((opt, idx) => (
-              <option key={idx} className="bg-white text-brand-black" value={opt.value}>
+              <option key={idx} className="bg-surface text-brand-black" value={opt.value}>
                 {opt.label}
               </option>
             ))
           ) : (
-            <option className="bg-white text-brand-black" value={value}>{value}</option>
+            <option className="bg-surface text-brand-black" value={value}>{value}</option>
           )}
         </select>
         
@@ -99,7 +99,7 @@ function CategoryGroupItem({ item, isExpanded, onToggle, accentColor }) {
         type="button"
         id={`category-group-${item.name.replace(/\s+/g, '-').toLowerCase()}`}
         onClick={() => hasChildren && onToggle(item.name)}
-        className={`w-full flex items-center justify-between p-4 bg-white transition-colors group ${
+        className={`w-full flex items-center justify-between p-4 bg-surface transition-colors group ${
           hasChildren ? 'cursor-pointer hover:bg-brand-black/[0.02]' : 'cursor-default'
         } ${isExpanded ? 'border-b-2 border-brand-black/5' : ''}`}
       >
@@ -238,7 +238,7 @@ function SignupPage() {
       <Logo />
       
       {/* Background Shapes */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-white/10 blur-[100px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-surface/10 blur-[100px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full bg-[#E6923F]/20 blur-[120px] pointer-events-none" />
 
       {/* Main Container */}
@@ -359,7 +359,7 @@ function SignupPage() {
                         onClick={() => setUsePreset(!usePreset)}
                         className={`cursor-pointer relative flex items-center w-12 h-6 rounded-full transition-colors ${usePreset ? 'bg-[#D68E5A]' : 'bg-gray-200'}`}
                       >
-                        <span className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${usePreset ? 'translate-x-7' : 'translate-x-1'}`}></span>
+                        <span className={`w-4 h-4 rounded-full bg-surface absolute top-1 transition-transform ${usePreset ? 'translate-x-7' : 'translate-x-1'}`}></span>
                       </button>
                       <span className="text-sm font-semibold text-brand-black">Use Preset Transaction Categories</span>
                     </div>

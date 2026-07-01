@@ -5,6 +5,7 @@ import MdiIcon from '@/components/icons/MdiIcon'
 import EChart from '@/components/charts/EChart'
 import { buildTrendBarOption } from '@/lib/chart/options'
 import { EZ_EXPENSE_COLOR, EZ_INCOME_COLOR } from '@/lib/chart/colors'
+import { useTheme } from '@/components/desktop/ThemeProvider'
 import {
   mdiRefresh,
   mdiPencilOutline,
@@ -27,6 +28,7 @@ function SkeletonBlock({ className }) {
 
 export default function OverviewPage() {
   const { isBalanceVisible, accounts, getTotalsForRange, isLoaded } = useDesktop()
+  const { resolvedTheme } = useTheme()
   const now = useMemo(() => new Date(), [])
   // Toggle hero card between income/expense/net
   const [heroMode, setHeroMode] = useState('expense')
@@ -64,7 +66,7 @@ export default function OverviewPage() {
     return months
   }, [getTotalsForRange, now])
 
-  const trendOption = useMemo(() => buildTrendBarOption(monthlyTrend), [monthlyTrend])
+  const trendOption = useMemo(() => buildTrendBarOption(monthlyTrend), [monthlyTrend, resolvedTheme])
 
   const { totalAssets, totalLiabilities, netAssets } = useMemo(() => ({
     totalAssets:      accounts.filter(a => a.type === 'asset').reduce((s, a) => s + a.balance, 0),
@@ -109,7 +111,7 @@ export default function OverviewPage() {
     <section className="grow space-y-6">
       <div className="grid grid-cols-12 gap-6">
         {/* ── Hero Card ── */}
-        <div className="col-span-12 lg:col-span-5 bg-white rounded-3xl p-5 text-brand-black relative overflow-hidden shadow-sm border border-brand-black/5">
+        <div className="col-span-12 lg:col-span-5 bg-surface rounded-3xl p-5 text-brand-black relative overflow-hidden shadow-sm border border-brand-black/5">
           {/* Toggle pills */}
           <div className="flex items-center gap-2 mb-4">
             <span className="text-lg font-bold">{monthName}</span>
@@ -120,7 +122,7 @@ export default function OverviewPage() {
                   type="button"
                   onClick={() => setHeroMode(m.key)}
                   className={`px-3 py-1 rounded-md text-xs font-bold cursor-pointer transition-all ${
-                    heroMode === m.key ? 'bg-white shadow-sm text-brand-black' : 'text-brand-black/40 hover:text-brand-black/60'
+                    heroMode === m.key ? 'bg-surface shadow-sm text-brand-black' : 'text-brand-black/40 hover:text-brand-black/60'
                   }`}
                 >{m.label}</button>
               ))}
@@ -168,7 +170,7 @@ export default function OverviewPage() {
         </div>
 
         {/* ── Asset Summary ── */}
-        <div className="col-span-12 lg:col-span-7 bg-white rounded-3xl p-5 shadow-sm border border-brand-black/5">
+        <div className="col-span-12 lg:col-span-7 bg-surface rounded-3xl p-5 shadow-sm border border-brand-black/5">
           <h3 className="text-base font-bold mb-0.5">Asset Summary</h3>
           <p className="text-xs font-medium text-brand-black/40 mb-5">
             {accounts.length} account{accounts.length !== 1 ? 's' : ''} recorded
@@ -207,7 +209,7 @@ export default function OverviewPage() {
           {accounts.length > 0 && (
             <div className="mt-6 pt-5 border-t border-brand-black/5 flex flex-wrap gap-2">
               {accounts.slice(0, 5).map(acc => (
-                <div key={acc.id} className="flex items-center gap-2 px-3 py-1.5 bg-[#F8F8F8] rounded-xl">
+                <div key={acc.id} className="flex items-center gap-2 px-3 py-1.5 bg-base-light rounded-xl">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: acc.color || '#E6923F' }} />
                   <span className="text-xs font-bold text-brand-black/70">{acc.name}</span>
                   <span className={`text-xs font-semibold ${acc.balance < 0 ? 'text-rose-500' : 'text-brand-black/50'}`}>
@@ -227,7 +229,7 @@ export default function OverviewPage() {
         {/* ── Period Cards ── */}
         <div className="col-span-12 lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {periodCards.map((item) => (
-            <div key={item.title} className="bg-white rounded-2xl p-4 border border-brand-black/5 shadow-sm">
+            <div key={item.title} className="bg-surface rounded-2xl p-4 border border-brand-black/5 shadow-sm">
               <div className="w-7 h-7 rounded-full bg-brand-black/5 flex items-center justify-center text-brand-black/60 mb-2.5">
                 <MdiIcon path={item.icon} size={16} />
               </div>
@@ -248,7 +250,7 @@ export default function OverviewPage() {
         </div>
 
         {/* ── 12-Month Trend ── */}
-        <div className="col-span-12 lg:col-span-7 bg-white rounded-3xl p-5 shadow-sm border border-brand-black/5">
+        <div className="col-span-12 lg:col-span-7 bg-surface rounded-3xl p-5 shadow-sm border border-brand-black/5">
           <h3 className="text-base font-bold mb-0.5">Income &amp; Expense Trends</h3>
           <p className="text-xs text-brand-black/40 mb-2">12-month view</p>
           <EChart option={trendOption} style={{ minHeight: 280 }} className="pie-chart-container" />

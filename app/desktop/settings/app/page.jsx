@@ -31,7 +31,7 @@ export default function AppSettingsPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-brand-black/5 flex-1 p-6 lg:p-8 overflow-y-auto">
+      <div className="bg-surface rounded-3xl shadow-sm border border-brand-black/5 flex-1 p-6 lg:p-8 overflow-y-auto">
         <div className="max-w-3xl space-y-8">
           
           {/* General */}
@@ -47,7 +47,7 @@ export default function AppSettingsPage() {
                 <select 
                   value={lang}
                   onChange={(e) => setLang(e.target.value)}
-                  className="w-full appearance-none bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all"
+                  className="w-full appearance-none bg-base-light border border-transparent focus:bg-surface focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all"
                 >
                   <option value="en">English</option>
                   <option value="id">Bahasa Indonesia</option>
@@ -59,7 +59,7 @@ export default function AppSettingsPage() {
                   <Clock className="w-4 h-4 text-brand-black/40" />
                   Timezone
                 </label>
-                <select className="w-full appearance-none bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all">
+                <select className="w-full appearance-none bg-base-light border border-transparent focus:bg-surface focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all">
                   <option>UTC - Coordinated Universal Time</option>
                   <option>Asia/Jakarta (UTC+07:00)</option>
                   <option>America/New_York (UTC-05:00)</option>
@@ -81,7 +81,7 @@ export default function AppSettingsPage() {
                 <select 
                   value={theme}
                   onChange={e => setTheme(e.target.value)}
-                  className="w-full appearance-none bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all"
+                  className="w-full appearance-none bg-base-light border border-transparent focus:bg-surface focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all"
                 >
                   <option value="light">Light (Finvera Style)</option>
                   <option value="dark">Dark Mode</option>
@@ -97,7 +97,7 @@ export default function AppSettingsPage() {
                 <select 
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full appearance-none bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all"
+                  className="w-full appearance-none bg-base-light border border-transparent focus:bg-surface focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none transition-all"
                 >
                   {CURRENCIES.map(c => (
                     <option key={c.code} value={c.code}>{c.label}</option>

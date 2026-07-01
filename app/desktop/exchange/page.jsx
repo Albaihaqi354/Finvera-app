@@ -18,7 +18,7 @@ export default function ExchangeRatesPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-brand-black">Exchange Rates Data</h2>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-1.5 bg-[#F8F8F8] hover:bg-brand-black/5 text-brand-black/70 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm">
+          <button className="flex items-center gap-1.5 bg-base-light hover:bg-brand-black/5 text-brand-black/70 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm">
             <RefreshCw className="w-3.5 h-3.5" />
             Update All Rates
           </button>
@@ -29,7 +29,7 @@ export default function ExchangeRatesPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-brand-black/5 flex-1 flex flex-col min-h-0">
+      <div className="bg-surface rounded-3xl shadow-sm border border-brand-black/5 flex-1 flex flex-col min-h-0">
         <div className="p-4 border-b border-brand-black/5 flex items-center justify-between">
           <h3 className="text-sm font-bold text-brand-black">Currency Rates (Base: USD)</h3>
           <div className="relative">
@@ -39,13 +39,13 @@ export default function ExchangeRatesPage() {
               placeholder="Search currency"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-1.5 bg-[#F8F8F8] border border-transparent rounded-lg text-sm text-brand-black/70 placeholder:text-brand-black/30 focus:outline-none focus:bg-white focus:border-brand-black/20 transition-all w-48 sm:w-64"
+              className="pl-9 pr-4 py-1.5 bg-base-light border border-transparent rounded-lg text-sm text-brand-black/70 placeholder:text-brand-black/30 focus:outline-none focus:bg-surface focus:border-brand-black/20 transition-all w-48 sm:w-64"
             />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-white">
-          <div className="grid grid-cols-[80px_1fr_1fr_1fr_100px] gap-2 px-5 py-3 border-b border-brand-black/5 bg-[#F8F8F8]">
+        <div className="flex-1 overflow-y-auto bg-surface">
+          <div className="grid grid-cols-[80px_1fr_1fr_1fr_100px] gap-2 px-5 py-3 border-b border-brand-black/5 bg-base-light">
             {['ICON', 'CURRENCY PAIR', 'EXCHANGE RATE', 'LAST UPDATED', 'ACTIONS'].map(label => (
               <div key={label} className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider">{label}</div>
             ))}
@@ -53,7 +53,7 @@ export default function ExchangeRatesPage() {
 
           <div className="flex flex-col">
             {MOCK_EXCHANGE.map(ex => (
-              <div key={ex.id} className="grid grid-cols-[80px_1fr_1fr_1fr_100px] gap-2 px-5 py-4 border-b border-brand-black/5 hover:bg-[#F8F8F8] transition-colors items-center group">
+              <div key={ex.id} className="grid grid-cols-[80px_1fr_1fr_1fr_100px] gap-2 px-5 py-4 border-b border-brand-black/5 hover:bg-base-light transition-colors items-center group">
                 <div>
                   <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center">
                     <Globe className="w-4 h-4" />

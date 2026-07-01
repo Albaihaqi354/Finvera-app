@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #F8F8F8;
   --foreground: #000000;
@@ -13,6 +15,12 @@
   --base-gray-1: #7F8790;
   --base-gray-2: #8F92A1;
   --base-light: #F8F8F8;
+
+  /* Chart colors */
+  --chart-tooltip-bg: #ffffff;
+  --chart-text: #333333;
+  --chart-text-muted: #666666;
+  --chart-grid-line: #e1e6f2;
 }
 
 .dark {
@@ -20,14 +28,24 @@
   --foreground: #f8fafc;
   --surface: #1e293b;
 
-  /* Invert brand colors for dark mode */
   --brand-primary: #1e293b;
   --brand-black: #f8fafc;
 
-  --base-light: #1e293b;
+  --base-gray-1: #94a3b8;
+  --base-gray-2: #64748b;
+  --base-light: #0f172a;
+
+  --chart-tooltip-bg: #1e293b;
+  --chart-text: #f8fafc;
+  --chart-text-muted: #94a3b8;
+  --chart-grid-line: #334155;
 }
 
 @theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+
   --color-brand-primary: var(--brand-primary);
   --color-brand-black: var(--brand-black);
 
@@ -38,9 +56,6 @@
   --font-ibm: var(--font-ibm-plex-sans);
   --font-roboto: var(--font-roboto);
 }
-
-/* Force specific colors even in dark mode if needed, 
-   but for now let's keep it simple to fix the user's issue */
 
 body {
   background-color: var(--background);

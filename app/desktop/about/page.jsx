@@ -10,7 +10,7 @@ export default function AboutPage() {
         <h2 className="text-xl font-bold text-brand-black">About</h2>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-brand-black/5 flex-1 p-8 flex flex-col items-center justify-center text-center">
+      <div className="bg-surface rounded-3xl shadow-sm border border-brand-black/5 flex-1 p-8 flex flex-col items-center justify-center text-center">
         <div className="max-w-md w-full space-y-8 flex flex-col items-center">
           
           <div className="w-48">
@@ -44,11 +44,11 @@ export default function AboutPage() {
           <div className="w-full h-px bg-brand-black/5 my-4"></div>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <a href="#" className="flex items-center gap-2 text-sm font-bold text-brand-black/70 hover:text-brand-black transition-colors bg-[#F8F8F8] px-5 py-2.5 rounded-xl border border-transparent hover:border-brand-black/10">
+            <a href="#" className="flex items-center gap-2 text-sm font-bold text-brand-black/70 hover:text-brand-black transition-colors bg-base-light px-5 py-2.5 rounded-xl border border-transparent hover:border-brand-black/10">
               <Globe className="w-4 h-4" />
               Website
             </a>
-            <a href="#" className="flex items-center gap-2 text-sm font-bold text-brand-black/70 hover:text-brand-black transition-colors bg-[#F8F8F8] px-5 py-2.5 rounded-xl border border-transparent hover:border-brand-black/10">
+            <a href="#" className="flex items-center gap-2 text-sm font-bold text-brand-black/70 hover:text-brand-black transition-colors bg-base-light px-5 py-2.5 rounded-xl border border-transparent hover:border-brand-black/10">
               <Github className="w-4 h-4" />
               Source Code
             </a>

@@ -13,7 +13,7 @@ export default function DesktopLayout({ children }) {
   return (
     <AuthGuard>
       <DesktopProvider>
-        <div className="flex h-screen bg-[#F8F8F8] font-ibm overflow-hidden">
+        <div className="flex h-screen bg-base-light font-ibm overflow-hidden">
           <Sidebar
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}

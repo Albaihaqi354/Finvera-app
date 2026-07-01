@@ -15,7 +15,7 @@ function DeleteAccountModal({ account, onConfirm, onCancel }) {
   if (!account) return null
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
+      <div className="bg-surface rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
         <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
           <Trash2 className="w-8 h-8" />
         </div>
@@ -71,8 +71,8 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts 
 
   return (
     <div className="fixed inset-0 bg-brand-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="px-6 py-4 border-b border-brand-black/5 flex items-center justify-between bg-[#F8F8F8] shrink-0">
+      <div className="bg-surface rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="px-6 py-4 border-b border-brand-black/5 flex items-center justify-between bg-base-light shrink-0">
           <h3 className="font-bold text-lg text-brand-black">{isEdit ? 'Edit Account' : 'Add Account'}</h3>
           <button type="button" onClick={onClose} className="cursor-pointer p-1.5 rounded-full hover:bg-brand-black/10 transition-colors">
             <X className="w-4 h-4" />
@@ -80,8 +80,8 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts 
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto min-h-0">
           {/* Preview */}
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-[#F8F8F8]">
-            <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-lg font-bold"
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-base-light">
+            <div className="w-12 h-12 rounded-xl bg-surface shadow-sm flex items-center justify-center text-lg font-bold"
               style={{ color: form.color }}>
               {form.name.charAt(0) || '?'}
             </div>
@@ -98,7 +98,7 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts 
               value={form.name}
               onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
               placeholder="e.g. BCA Savings"
-              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border focus:border-brand-black/20 border border-transparent transition-colors"
+              className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:bg-surface focus:border focus:border-brand-black/20 border border-transparent transition-colors"
             />
           </div>
 
@@ -108,7 +108,7 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts 
               <select
                 value={form.category}
                 onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
-                className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none"
+                className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none"
               >
                 {ACCOUNT_CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
@@ -118,7 +118,7 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts 
               <select
                 value={form.type}
                 onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
-                className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none"
+                className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none"
               >
                 <option value="asset">Asset</option>
                 <option value="liability">Liability</option>
@@ -131,7 +131,7 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts 
             <select
               value={form.parentId}
               onChange={e => setForm(p => ({ ...p, parentId: e.target.value }))}
-              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none focus:bg-white focus:border focus:border-brand-black/20 border border-transparent transition-colors"
+              className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none focus:bg-surface focus:border focus:border-brand-black/20 border border-transparent transition-colors"
             >
               <option value="">-- None (Top Level) --</option>
               {accounts.filter(a => a.id !== editAccount?.id && !a.parentId).map(a => (
@@ -148,7 +148,7 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts 
               currency={currency}
               value={form.balance}
               onChange={val => setForm(p => ({ ...p, balance: val }))}
-              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-bold outline-none border border-transparent focus:border-brand-black/20"
+              className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-bold outline-none border border-transparent focus:border-brand-black/20"
             />
             {isEdit && (
               <p className="text-[10px] text-brand-black/40 mt-1.5">Note: changing balance won&apos;t retroactively adjust transactions.</p>
@@ -189,10 +189,10 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts 
 function AccountRow({ acc, isBalanceVisible, openEdit, setDeletingAccount, currency = 'IDR' }) {
   const fmt = (n) => (isBalanceVisible ? formatCurrency(Math.abs(n), currency) : formatCurrency(0, currency).replace(/0([.,]0+)?/, '•••••••'))
   return (
-    <div className="flex items-center justify-between p-4 rounded-2xl bg-[#F8F8F8] hover:bg-brand-black/5 transition-colors border border-transparent hover:border-brand-black/10 group">
+    <div className="flex items-center justify-between p-4 rounded-2xl bg-base-light hover:bg-brand-black/5 transition-colors border border-transparent hover:border-brand-black/10 group">
       <div className="flex items-center gap-4">
         <div
-          className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-sm font-bold"
+          className="w-10 h-10 rounded-xl bg-surface shadow-sm flex items-center justify-center text-sm font-bold"
           style={{ color: acc.color || '#E6923F' }}
         >
           {acc.name.charAt(0)}
@@ -303,7 +303,7 @@ export default function AccountsPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-brand-black/5 flex items-center gap-4">
+        <div className="bg-surface rounded-2xl p-4 shadow-sm border border-brand-black/5 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-brand-black/5 flex items-center justify-center text-brand-black/80 border border-brand-black/10">
             <Landmark className="w-6 h-6" />
           </div>
@@ -312,7 +312,7 @@ export default function AccountsPage() {
             <p className="text-lg font-bold text-brand-black/90">{fmt(totalAssets)}</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-brand-black/5 flex items-center gap-4">
+        <div className="bg-surface rounded-2xl p-4 shadow-sm border border-brand-black/5 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 border border-rose-100">
             <CreditCard className="w-6 h-6" />
           </div>
@@ -321,7 +321,7 @@ export default function AccountsPage() {
             <p className="text-lg font-bold text-brand-black/90">{fmt(totalLiabilities)}</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-brand-black/5 flex items-center gap-4">
+        <div className="bg-surface rounded-2xl p-4 shadow-sm border border-brand-black/5 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-[#E6923F]/10 flex items-center justify-center text-[#E6923F] border border-[#E6923F]/20">
             <PiggyBank className="w-6 h-6" />
           </div>
@@ -333,7 +333,7 @@ export default function AccountsPage() {
       </div>
 
       {/* Account list */}
-      <div className="bg-white rounded-3xl shadow-sm border border-brand-black/5 flex-1 p-6 min-h-0 overflow-y-auto">
+      <div className="bg-surface rounded-3xl shadow-sm border border-brand-black/5 flex-1 p-6 min-h-0 overflow-y-auto">
         <h3 className="text-sm font-bold text-brand-black mb-4">Account List</h3>
         <div className="space-y-4">
           {accounts.length === 0 && (

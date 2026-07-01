@@ -82,7 +82,7 @@ function SigninPage() {
 
       <div className="w-full max-w-sm z-10 flex flex-col items-center">
         {/* Card */}
-        <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-black/5 w-full relative z-10 mt-6">
+        <section className="bg-surface p-6 sm:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-black/5 w-full relative z-10 mt-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-brand-black">
               {t('log_in')}
@@ -98,7 +98,7 @@ function SigninPage() {
           <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
             {/* Error Alert */}
             {error && (
-              <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-600 text-sm font-semibold px-4 py-3 rounded-xl">
+              <div className="flex items-center gap-3 bg-red-50 dark:bg-red-950/60 border border-red-100 dark:border-red-900 text-red-600 dark:text-red-300 text-sm font-semibold px-4 py-3 rounded-xl">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 {error}
               </div>
@@ -117,7 +117,7 @@ function SigninPage() {
                   setUsername(e.target.value)
                   if (error) setError('')
                 }}
-                className={`w-full bg-[#F8F8F8] border focus:bg-white outline-none py-3.5 pl-12 pr-4 rounded-xl transition-all placeholder:text-base-gray-2 text-sm sm:text-base text-brand-black ${
+                className={`w-full bg-base-light border focus:bg-surface outline-none py-3.5 pl-12 pr-4 rounded-xl transition-all placeholder:text-base-gray-2 text-sm sm:text-base text-brand-black ${
                   error && !username.trim() ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-brand-black/20'
                 }`}
                 placeholder={t('username_or_email')}
@@ -139,7 +139,7 @@ function SigninPage() {
                   setPassword(e.target.value)
                   if (error) setError('')
                 }}
-                className={`w-full bg-[#F8F8F8] border focus:bg-white outline-none py-3.5 pl-12 pr-12 rounded-xl transition-all placeholder:text-base-gray-2 text-sm sm:text-base text-brand-black ${
+                className={`w-full bg-base-light border focus:bg-surface outline-none py-3.5 pl-12 pr-12 rounded-xl transition-all placeholder:text-base-gray-2 text-sm sm:text-base text-brand-black ${
                   error && !password.trim() ? 'border-red-400 focus:border-red-500' : 'border-transparent focus:border-brand-black/20'
                 }`}
                 placeholder={t('password')}
@@ -200,7 +200,7 @@ function SigninPage() {
               <button
                 type="button"
                 onClick={() => { setUsername('demo'); setPassword('ezbookkeeping'); setError('') }}
-                className="text-left p-3 rounded-xl bg-[#F8F8F8] hover:bg-brand-black/5 border border-transparent hover:border-brand-black/10 transition-all cursor-pointer"
+                className="text-left p-3 rounded-xl bg-base-light hover:bg-brand-black/5 border border-transparent hover:border-brand-black/10 transition-all cursor-pointer"
               >
                 <p className="text-xs font-bold text-brand-black">demo</p>
                 <p className="text-[10px] font-medium text-base-gray-1 mt-0.5">password: ezbookkeeping</p>
@@ -208,7 +208,7 @@ function SigninPage() {
               <button
                 type="button"
                 onClick={() => { setUsername('admin'); setPassword('admin123'); setError('') }}
-                className="text-left p-3 rounded-xl bg-[#F8F8F8] hover:bg-brand-black/5 border border-transparent hover:border-brand-black/10 transition-all cursor-pointer"
+                className="text-left p-3 rounded-xl bg-base-light hover:bg-brand-black/5 border border-transparent hover:border-brand-black/10 transition-all cursor-pointer"
               >
                 <p className="text-xs font-bold text-brand-black">admin</p>
                 <p className="text-[10px] font-medium text-base-gray-1 mt-0.5">password: admin123</p>

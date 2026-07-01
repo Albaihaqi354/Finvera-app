@@ -91,8 +91,8 @@ function ScheduledModal({ onClose, accounts, categories, tags, onSubmit, editIte
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="px-6 py-4 border-b border-brand-black/5 flex justify-between items-center bg-[#F8F8F8] sticky top-0 z-10">
+      <div className="bg-surface rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-brand-black/5 flex justify-between items-center bg-base-light sticky top-0 z-10">
           <h3 className="font-bold text-lg">{isEdit ? 'Edit Scheduled Transaction' : 'Add Scheduled Transaction'}</h3>
           <button type="button" onClick={onClose} className="cursor-pointer hover:bg-brand-black/10 p-1.5 rounded-full transition-colors">
             <X className="w-4 h-4" />
@@ -110,7 +110,7 @@ function ScheduledModal({ onClose, accounts, categories, tags, onSubmit, editIte
               value={form.name}
               onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
               placeholder="e.g., Netflix Subscription"
-              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold outline-none border border-transparent focus:border-brand-black/20"
+              className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-semibold outline-none border border-transparent focus:border-brand-black/20"
             />
           </div>
 
@@ -118,7 +118,7 @@ function ScheduledModal({ onClose, accounts, categories, tags, onSubmit, editIte
             <div>
               <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Frequency</label>
               <select value={form.frequency} onChange={e => setForm(p => ({ ...p, frequency: e.target.value }))}
-                className="w-full bg-[#F8F8F8] rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
+                className="w-full bg-base-light rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
                 {FREQUENCIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
               </select>
             </div>
@@ -128,7 +128,7 @@ function ScheduledModal({ onClose, accounts, categories, tags, onSubmit, editIte
                 type="datetime-local" required
                 value={form.nextRun}
                 onChange={e => setForm(p => ({ ...p, nextRun: e.target.value }))}
-                className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold outline-none cursor-pointer border border-transparent focus:border-brand-black/20"
+                className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-semibold outline-none cursor-pointer border border-transparent focus:border-brand-black/20"
               />
             </div>
           </div>
@@ -142,7 +142,7 @@ function ScheduledModal({ onClose, accounts, categories, tags, onSubmit, editIte
                   categoryId: categories.find(c => c.type === (t === 'transfer' ? 'transfer' : t))?.id || p.categoryId
                 }))}
                 className={`py-2 rounded-xl text-xs font-bold capitalize border-2 cursor-pointer transition-colors ${
-                  form.type === t ? typeColors[t]?.border : 'border-transparent bg-[#F8F8F8] text-brand-black/50 hover:bg-brand-black/10'
+                  form.type === t ? typeColors[t]?.border : 'border-transparent bg-base-light text-brand-black/50 hover:bg-brand-black/10'
                 }`}
               >{t}</button>
             ))}
@@ -155,7 +155,7 @@ function ScheduledModal({ onClose, accounts, categories, tags, onSubmit, editIte
               value={form.amount}
               onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
               placeholder="0"
-              className={`w-full bg-[#F8F8F8] rounded-xl px-4 py-3 text-xl font-bold outline-none border-2 border-transparent focus:border-brand-black/20 transition-colors ${typeColors[form.type]?.label || ''}`}
+              className={`w-full bg-base-light rounded-xl px-4 py-3 text-xl font-bold outline-none border-2 border-transparent focus:border-brand-black/20 transition-colors ${typeColors[form.type]?.label || ''}`}
             />
           </div>
 
@@ -164,14 +164,14 @@ function ScheduledModal({ onClose, accounts, categories, tags, onSubmit, editIte
               <div>
                 <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">From</label>
                 <select value={form.accountId} onChange={e => setForm(p => ({ ...p, accountId: e.target.value }))}
-                  className="w-full bg-[#F8F8F8] rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
+                  className="w-full bg-base-light rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">To</label>
                 <select value={form.targetAccountId} onChange={e => setForm(p => ({ ...p, targetAccountId: e.target.value }))}
-                  className="w-full bg-[#F8F8F8] rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
+                  className="w-full bg-base-light rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
@@ -181,14 +181,14 @@ function ScheduledModal({ onClose, accounts, categories, tags, onSubmit, editIte
               <div>
                 <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">Account</label>
                 <select value={form.accountId} onChange={e => setForm(p => ({ ...p, accountId: e.target.value }))}
-                  className="w-full bg-[#F8F8F8] rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
+                  className="w-full bg-base-light rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">Category</label>
                 <select value={form.categoryId} onChange={e => setForm(p => ({ ...p, categoryId: e.target.value }))}
-                  className="w-full bg-[#F8F8F8] rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
+                  className="w-full bg-base-light rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
                   {categories.filter(c => c.type === form.type && !c.parentId).map(c => (
                     <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
                   ))}
@@ -207,7 +207,7 @@ function ScheduledModal({ onClose, accounts, categories, tags, onSubmit, editIte
               onChange={e => setForm(p => ({ ...p, note: e.target.value }))}
               placeholder="Auto-scheduled..."
               maxLength={200}
-              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm outline-none border border-transparent focus:border-brand-black/20"
+              className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm outline-none border border-transparent focus:border-brand-black/20"
             />
           </div>
 
@@ -218,7 +218,7 @@ function ScheduledModal({ onClose, accounts, categories, tags, onSubmit, editIte
                 {tags.map(tag => (
                   <button key={tag.id} type="button" onClick={() => toggleTag(tag.id)}
                     className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer transition-colors ${
-                      form.tagIds.includes(tag.id) ? 'bg-brand-black text-brand-primary' : 'bg-[#F8F8F8] text-brand-black/60 hover:bg-brand-black/10'
+                      form.tagIds.includes(tag.id) ? 'bg-brand-black text-brand-primary' : 'bg-base-light text-brand-black/60 hover:bg-brand-black/10'
                     }`}>
                     {tag.name}
                   </button>
@@ -228,7 +228,7 @@ function ScheduledModal({ onClose, accounts, categories, tags, onSubmit, editIte
           )}
 
           {isEdit && (
-            <label className="flex items-center gap-2 cursor-pointer mt-4 bg-[#F8F8F8] p-3 rounded-xl border border-brand-black/5 hover:border-brand-black/10 transition-colors">
+            <label className="flex items-center gap-2 cursor-pointer mt-4 bg-base-light p-3 rounded-xl border border-brand-black/5 hover:border-brand-black/10 transition-colors">
               <input
                 type="checkbox"
                 checked={form.isActive}
@@ -252,7 +252,7 @@ function DeleteModal({ isOpen, onConfirm, onCancel }) {
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
+      <div className="bg-surface rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
         <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
           <Trash2 className="w-8 h-8" />
         </div>
@@ -332,7 +332,7 @@ export default function ScheduledPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-brand-black/5 flex-1 flex flex-col min-h-0">
+      <div className="bg-surface rounded-3xl shadow-sm border border-brand-black/5 flex-1 flex flex-col min-h-0">
         <div className="p-4 border-b border-brand-black/5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-bold text-brand-black">All Scheduled</h3>
@@ -345,7 +345,7 @@ export default function ScheduledPage() {
               placeholder="Search..."
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              className="pl-9 pr-4 py-1.5 bg-[#F8F8F8] border border-transparent rounded-lg text-sm focus:outline-none focus:bg-white focus:border-brand-black/20 w-48 sm:w-64"
+              className="pl-9 pr-4 py-1.5 bg-base-light border border-transparent rounded-lg text-sm focus:outline-none focus:bg-surface focus:border-brand-black/20 w-48 sm:w-64"
             />
             {searchInput && (
               <button onClick={() => setSearchInput('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/40 hover:text-brand-black cursor-pointer">
@@ -375,7 +375,7 @@ export default function ScheduledPage() {
                 const nextDate = new Date(item.nextRun).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
                 return (
-                  <div key={item.id} className={`bg-[#F8F8F8] rounded-2xl p-4 border flex flex-col group transition-all ${item.isActive ? 'border-brand-black/5 hover:border-brand-black/10' : 'border-dashed border-brand-black/10 opacity-70'}`}>
+                  <div key={item.id} className={`bg-base-light rounded-2xl p-4 border flex flex-col group transition-all ${item.isActive ? 'border-brand-black/5 hover:border-brand-black/10' : 'border-dashed border-brand-black/10 opacity-70'}`}>
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <div className="flex items-center gap-2">

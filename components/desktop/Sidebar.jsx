@@ -92,7 +92,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
       {/* Sidebar panel */}
       <aside className={`
         fixed top-0 left-0 h-full z-50 lg:z-auto
-        bg-[#f9efe5] rounded-r-4xl lg:rounded-4xl
+        bg-brand-primary rounded-r-4xl lg:rounded-4xl
         py-4 text-brand-black overflow-y-auto overflow-x-hidden
         border-r border-brand-black/5 shadow-sm
         flex flex-col
@@ -135,7 +135,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
             } ${
               isActive('overview')
                 ? 'bg-linear-to-r from-[#8B4513] to-[#D2691E] shadow-md'
-                : 'bg-white/60 hover:bg-white/80'
+                : 'bg-surface/60 hover:bg-surface/80'
             }`}
           >
             <MdiIcon

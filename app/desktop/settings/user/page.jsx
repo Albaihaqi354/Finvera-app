@@ -58,7 +58,7 @@ export default function UserSettingsPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-brand-black/5 flex-1 p-6 lg:p-8 overflow-y-auto">
+      <div className="bg-surface rounded-3xl shadow-sm border border-brand-black/5 flex-1 p-6 lg:p-8 overflow-y-auto">
         <div className="max-w-2xl space-y-8">
           
           {/* Profile Picture */}
@@ -92,7 +92,7 @@ export default function UserSettingsPage() {
                   type="text"
                   value={profile.username}
                   onChange={e => setProfile(p => ({ ...p, username: e.target.value }))}
-                  className="w-full bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 outline-none transition-all"
+                  className="w-full bg-base-light border border-transparent focus:bg-surface focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 outline-none transition-all"
                 />
               </div>
 
@@ -105,7 +105,7 @@ export default function UserSettingsPage() {
                   type="email"
                   value={profile.email}
                   onChange={e => setProfile(p => ({ ...p, email: e.target.value }))}
-                  className="w-full bg-[#F8F8F8] border border-transparent focus:bg-white focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 outline-none transition-all"
+                  className="w-full bg-base-light border border-transparent focus:bg-surface focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 outline-none transition-all"
                 />
               </div>
             </div>
@@ -116,9 +116,9 @@ export default function UserSettingsPage() {
             <h3 className="text-sm font-bold text-brand-black border-b border-brand-black/5 pb-2">Security</h3>
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-[#F8F8F8] border border-brand-black/5">
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-base-light border border-brand-black/5">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-brand-black/60">
+                  <div className="w-10 h-10 rounded-xl bg-surface shadow-sm flex items-center justify-center text-brand-black/60">
                     <Lock className="w-5 h-5" />
                   </div>
                   <div>
@@ -126,14 +126,14 @@ export default function UserSettingsPage() {
                     <p className="text-xs font-medium text-brand-black/50">Last changed 3 months ago</p>
                   </div>
                 </div>
-                <button className="text-xs font-bold bg-white border border-brand-black/10 px-4 py-2 rounded-lg hover:bg-brand-black/5 transition-colors shadow-sm">
+                <button className="text-xs font-bold bg-surface border border-brand-black/10 px-4 py-2 rounded-lg hover:bg-brand-black/5 transition-colors shadow-sm">
                   Change
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-[#F8F8F8] border border-brand-black/5">
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-base-light border border-brand-black/5">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-brand-black/60">
+                  <div className="w-10 h-10 rounded-xl bg-surface shadow-sm flex items-center justify-center text-brand-black/60">
                     <Shield className="w-5 h-5" />
                   </div>
                   <div>

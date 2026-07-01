@@ -26,8 +26,8 @@ function CategoryModal({ onClose, onSubmit, editCategory = null, parentOptions =
 
   return (
     <div className="fixed inset-0 bg-brand-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
-        <div className="px-6 py-4 border-b border-brand-black/5 flex items-center justify-between bg-[#F8F8F8] shrink-0">
+      <div className="bg-surface rounded-3xl w-full max-w-sm shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="px-6 py-4 border-b border-brand-black/5 flex items-center justify-between bg-base-light shrink-0">
           <h3 className="font-bold text-lg text-brand-black capitalize">
             {isEdit ? 'Edit Category' : `Add ${activeTab} Category`}
           </h3>
@@ -37,8 +37,8 @@ function CategoryModal({ onClose, onSubmit, editCategory = null, parentOptions =
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto min-h-0">
           {/* Preview */}
-          <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#F8F8F8]">
-            <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl">
+          <div className="flex items-center gap-3 p-3 rounded-2xl bg-base-light">
+            <div className="w-10 h-10 rounded-xl bg-surface shadow-sm flex items-center justify-center text-xl">
               {form.icon}
             </div>
             <div>
@@ -54,7 +54,7 @@ function CategoryModal({ onClose, onSubmit, editCategory = null, parentOptions =
               value={form.name}
               onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
               placeholder="e.g. Food & Dining"
-              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border focus:border-brand-black/20 border border-transparent transition-colors"
+              className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:bg-surface focus:border focus:border-brand-black/20 border border-transparent transition-colors"
             />
           </div>
 
@@ -66,7 +66,7 @@ function CategoryModal({ onClose, onSubmit, editCategory = null, parentOptions =
               value={form.icon}
               onChange={e => setForm(p => ({ ...p, icon: e.target.value }))}
               placeholder="Emoji icon"
-              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm outline-none border border-transparent focus:border-brand-black/20 mb-2"
+              className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm outline-none border border-transparent focus:border-brand-black/20 mb-2"
             />
             <div className="flex flex-wrap gap-2">
               {EMOJI_SUGGESTIONS.map(emoji => (
@@ -74,7 +74,7 @@ function CategoryModal({ onClose, onSubmit, editCategory = null, parentOptions =
                   key={emoji} type="button"
                   onClick={() => setForm(p => ({ ...p, icon: emoji }))}
                   className={`w-9 h-9 rounded-lg text-lg transition-all cursor-pointer ${
-                    form.icon === emoji ? 'bg-brand-black text-white scale-105' : 'bg-[#F8F8F8] hover:bg-brand-black/10'
+                    form.icon === emoji ? 'bg-brand-black text-white scale-105' : 'bg-base-light hover:bg-brand-black/10'
                   }`}
                 >
                   {emoji}
@@ -92,7 +92,7 @@ function CategoryModal({ onClose, onSubmit, editCategory = null, parentOptions =
               <select
                 value={form.parentId}
                 onChange={e => setForm(p => ({ ...p, parentId: e.target.value }))}
-                className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none"
+                className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer outline-none"
               >
                 <option value="">None (main category)</option>
                 {parentOptions.map(p => (
@@ -117,7 +117,7 @@ function DeleteCategoryModal({ category, subCount, onConfirm, onCancel }) {
   if (!category) return null
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
+      <div className="bg-surface rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
         <div className="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
           <Trash2 className="w-7 h-7" />
         </div>
@@ -243,7 +243,7 @@ export default function CategoriesPage() {
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-3 rounded-xl cursor-pointer text-sm font-bold transition-all capitalize border-2 ${
                 activeTab === tab
-                  ? `bg-white shadow-sm ${TAB_COLORS[tab]}`
+                  ? `bg-surface shadow-sm ${TAB_COLORS[tab]}`
                   : 'text-brand-black/60 hover:bg-brand-black/5 border-transparent'
               }`}
             >
@@ -256,7 +256,7 @@ export default function CategoriesPage() {
         </div>
 
         {/* Categories list */}
-        <div className="bg-white rounded-3xl shadow-sm border border-brand-black/5 flex-1 flex flex-col min-w-0">
+        <div className="bg-surface rounded-3xl shadow-sm border border-brand-black/5 flex-1 flex flex-col min-w-0">
           <div className="p-4 border-b border-brand-black/5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-brand-black capitalize">{activeTab} Categories</h3>
@@ -271,7 +271,7 @@ export default function CategoriesPage() {
                 placeholder="Search category..."
                 value={searchInput}
                 onChange={e => setSearchInput(e.target.value)}
-                className="pl-9 pr-4 py-1.5 bg-[#F8F8F8] rounded-lg text-sm focus:outline-none focus:bg-white focus:border-brand-black/20 w-48 sm:w-64"
+                className="pl-9 pr-4 py-1.5 bg-base-light rounded-lg text-sm focus:outline-none focus:bg-surface focus:border-brand-black/20 w-48 sm:w-64"
               />
             </div>
           </div>
@@ -286,11 +286,11 @@ export default function CategoriesPage() {
               </div>
             )}
             {grouped.map(cat => (
-              <div key={cat.id} className="bg-[#F8F8F8] rounded-2xl border border-brand-black/5 overflow-hidden">
+              <div key={cat.id} className="bg-base-light rounded-2xl border border-brand-black/5 overflow-hidden">
                 {/* Parent row */}
                 <div className="flex items-center justify-between p-4 group">
                   <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm shrink-0 ${cat.colorClass || 'bg-white'}`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm shrink-0 ${cat.colorClass || 'bg-surface'}`}>
                       <span className="text-lg leading-none">{cat.icon || '📁'}</span>
                     </div>
                     <div>
@@ -322,9 +322,9 @@ export default function CategoriesPage() {
 
                 {/* Sub-categories */}
                 {cat.subCategories.length > 0 && (
-                  <div className="border-t border-brand-black/5 bg-white/50 pl-14 pr-4 py-2 space-y-1">
+                  <div className="border-t border-brand-black/5 bg-surface/50 pl-14 pr-4 py-2 space-y-1">
                     {cat.subCategories.map(sub => (
-                      <div key={sub.id} className="flex items-center justify-between py-2 px-3 rounded-xl hover:bg-[#F8F8F8] group/sub transition-colors">
+                      <div key={sub.id} className="flex items-center justify-between py-2 px-3 rounded-xl hover:bg-base-light group/sub transition-colors">
                         <div className="flex items-center gap-3">
                           <span className="text-sm">{sub.icon || '📁'}</span>
                           <span className="text-xs font-bold text-brand-black/70">{sub.name}</span>

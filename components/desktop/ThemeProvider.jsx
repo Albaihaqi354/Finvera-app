@@ -3,40 +3,45 @@ import { createContext, useContext, useEffect, useState } from 'react'
 
 const ThemeContext = createContext({
   theme: 'system',
-  setTheme: () => {}
+  setTheme: () => {},
+  resolvedTheme: 'light',
 })
 
+function getStoredTheme() {
+  if (typeof window === 'undefined') return 'system'
+  return localStorage.getItem('finvera_theme') || 'system'
+}
+
+function resolveTheme(mode) {
+  if (mode === 'dark') return 'dark'
+  if (mode === 'light') return 'light'
+  if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark'
+  }
+  return 'light'
+}
+
+function applyThemeClass(mode) {
+  const root = window.document.documentElement
+  const resolved = resolveTheme(mode)
+  if (resolved === 'dark') {
+    root.classList.add('dark')
+  } else {
+    root.classList.remove('dark')
+  }
+  return resolved
+}
+
 export function ThemeProvider({ children }) {
-  const [theme, setThemeState] = useState('system')
+  const [theme, setThemeState] = useState(getStoredTheme)
+  const [resolvedTheme, setResolvedTheme] = useState('light')
 
   useEffect(() => {
-    // Load from local storage
-    const saved = localStorage.getItem('finvera_theme')
-    if (saved) setThemeState(saved)
-  }, [])
-
-  useEffect(() => {
-    const applyTheme = (mode) => {
-      const root = window.document.documentElement
-      if (mode === 'dark') {
-        root.classList.add('dark')
-      } else if (mode === 'light') {
-        root.classList.remove('dark')
-      } else {
-        // System
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          root.classList.add('dark')
-        } else {
-          root.classList.remove('dark')
-        }
-      }
-    }
-
-    applyTheme(theme)
+    setResolvedTheme(applyThemeClass(theme))
 
     if (theme === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-      const handler = () => applyTheme('system')
+      const handler = () => setResolvedTheme(applyThemeClass('system'))
       mediaQuery.addEventListener('change', handler)
       return () => mediaQuery.removeEventListener('change', handler)
     }
@@ -45,10 +50,11 @@ export function ThemeProvider({ children }) {
   const setTheme = (newTheme) => {
     setThemeState(newTheme)
     localStorage.setItem('finvera_theme', newTheme)
+    setResolvedTheme(applyThemeClass(newTheme))
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>
       {children}
     </ThemeContext.Provider>
   )

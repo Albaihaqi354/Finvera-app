@@ -5,6 +5,7 @@ import EChart from '@/components/charts/EChart'
 import { buildHorizontalBarOption } from '@/lib/chart/options'
 import { EZ_EXPENSE_COLOR, EZ_INCOME_COLOR } from '@/lib/chart/colors'
 import { mdiCompassOutline, mdiChevronDown } from '@/lib/icons/mdi'
+import { useTheme } from '@/components/desktop/ThemeProvider'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 
 const QUICK_RANGES = ['This Week', 'This Month', 'This Year', 'All Time', 'Custom']
@@ -42,6 +43,7 @@ function getRangeBounds(range, customStart, customEnd) {
 
 export default function InsightsPage() {
   const { transactions, categories, accounts, isLoaded } = useDesktop()
+  const { resolvedTheme } = useTheme()
   const [dimension, setDimension] = useState('category')
   const [typeFilter, setTypeFilter] = useState('expense')
   const [accountFilter, setAccountFilter] = useState('all')
@@ -83,7 +85,7 @@ export default function InsightsPage() {
   const barColor = typeFilter === 'income' ? EZ_INCOME_COLOR : EZ_EXPENSE_COLOR
   const chartOption = useMemo(
     () => buildHorizontalBarOption(chartItems, barColor),
-    [chartItems, barColor]
+    [chartItems, barColor, resolvedTheme]
   )
 
   if (!isLoaded) return (
@@ -105,7 +107,7 @@ export default function InsightsPage() {
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Type */}
-          <div className="flex items-center gap-1 bg-white border border-brand-black/10 rounded-xl p-1 shadow-sm">
+          <div className="flex items-center gap-1 bg-surface border border-brand-black/10 rounded-xl p-1 shadow-sm">
             {['expense', 'income'].map(t => (
               <button key={t} onClick={() => setTypeFilter(t)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize cursor-pointer transition-all ${
@@ -121,7 +123,7 @@ export default function InsightsPage() {
             <select
               value={dimension}
               onChange={e => setDimension(e.target.value)}
-              className="appearance-none bg-white border border-brand-black/10 rounded-xl px-4 py-2 text-xs font-bold pr-7 cursor-pointer outline-none shadow-sm"
+              className="appearance-none bg-surface border border-brand-black/10 rounded-xl px-4 py-2 text-xs font-bold pr-7 cursor-pointer outline-none shadow-sm"
             >
               <option value="category">By Category</option>
               <option value="account">By Account</option>
@@ -135,7 +137,7 @@ export default function InsightsPage() {
             <select
               value={accountFilter}
               onChange={e => setAccountFilter(e.target.value)}
-              className="appearance-none bg-white border border-brand-black/10 rounded-xl px-4 py-2 text-xs font-bold pr-7 cursor-pointer outline-none shadow-sm"
+              className="appearance-none bg-surface border border-brand-black/10 rounded-xl px-4 py-2 text-xs font-bold pr-7 cursor-pointer outline-none shadow-sm"
             >
               <option value="all">All Accounts</option>
               {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -144,7 +146,7 @@ export default function InsightsPage() {
           </div>
 
           {/* Date range */}
-          <div className="flex items-center gap-1.5 bg-white border border-brand-black/10 rounded-xl p-1 shadow-sm">
+          <div className="flex items-center gap-1.5 bg-surface border border-brand-black/10 rounded-xl p-1 shadow-sm">
             {QUICK_RANGES.map(r => (
               <button key={r} onClick={() => setDateRange(r)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${
@@ -156,10 +158,10 @@ export default function InsightsPage() {
           {dateRange === 'Custom' && (
             <div className="flex items-center gap-2">
               <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)}
-                className="bg-white border border-brand-black/10 rounded-xl px-3 py-2 text-xs font-semibold outline-none shadow-sm cursor-pointer" />
+                className="bg-surface border border-brand-black/10 rounded-xl px-3 py-2 text-xs font-semibold outline-none shadow-sm cursor-pointer" />
               <span className="text-xs text-brand-black/40 font-bold">→</span>
               <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
-                className="bg-white border border-brand-black/10 rounded-xl px-3 py-2 text-xs font-semibold outline-none shadow-sm cursor-pointer" />
+                className="bg-surface border border-brand-black/10 rounded-xl px-3 py-2 text-xs font-semibold outline-none shadow-sm cursor-pointer" />
             </div>
           )}
         </div>
@@ -167,7 +169,7 @@ export default function InsightsPage() {
 
       {/* Summary */}
       {chartItems.length > 0 && (
-        <div className="flex items-center gap-6 px-5 py-3 bg-white rounded-2xl border border-brand-black/5 shadow-sm">
+        <div className="flex items-center gap-6 px-5 py-3 bg-surface rounded-2xl border border-brand-black/5 shadow-sm">
           <div>
             <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider">Top {Math.min(chartItems.length, 15)} items</p>
             <p className={`text-lg font-bold ${typeFilter === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}>
@@ -182,7 +184,7 @@ export default function InsightsPage() {
       )}
 
       {/* Chart */}
-      <div className="bg-white rounded-3xl shadow-sm border border-brand-black/5 flex-1 p-4 min-h-[400px]">
+      <div className="bg-surface rounded-3xl shadow-sm border border-brand-black/5 flex-1 p-4 min-h-[400px]">
         {chartItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="text-5xl mb-3">🧭</div>

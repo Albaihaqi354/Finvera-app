@@ -11,7 +11,7 @@ const TAG_COLORS = [
 
 function TagCard({ tag, onEdit, onDelete }) {
   return (
-    <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#F8F8F8] border border-brand-black/5 hover:border-brand-black/10 group transition-all">
+    <div className="flex items-center justify-between p-3.5 rounded-2xl bg-base-light border border-brand-black/5 hover:border-brand-black/10 group transition-all">
       <div className="flex items-center gap-3">
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -60,8 +60,8 @@ function TagModal({ onClose, onSubmit, editTag = null }) {
 
   return (
     <div className="fixed inset-0 bg-brand-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-brand-black/5 flex items-center justify-between bg-[#F8F8F8]">
+      <div className="bg-surface rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-brand-black/5 flex items-center justify-between bg-base-light">
           <h3 className="font-bold text-lg text-brand-black">{isEdit ? 'Edit Tag' : 'Add Tag'}</h3>
           <button type="button" onClick={onClose} className="cursor-pointer p-1.5 rounded-full hover:bg-brand-black/10 transition-colors">
             <X className="w-4 h-4" />
@@ -69,7 +69,7 @@ function TagModal({ onClose, onSubmit, editTag = null }) {
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Preview */}
-          <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#F8F8F8]">
+          <div className="flex items-center gap-3 p-3 rounded-2xl bg-base-light">
             <div className="w-9 h-9 rounded-lg flex items-center justify-center"
               style={{ backgroundColor: color + '20', color }}>
               <TagIcon className="w-4 h-4" />
@@ -85,7 +85,7 @@ function TagModal({ onClose, onSubmit, editTag = null }) {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g. Vacation 2026"
-              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border focus:border-brand-black/20 border border-transparent transition-colors"
+              className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:bg-surface focus:border focus:border-brand-black/20 border border-transparent transition-colors"
             />
           </div>
 
@@ -127,7 +127,7 @@ function DeleteTagModal({ tag, onConfirm, onCancel }) {
   if (!tag) return null
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
+      <div className="bg-surface rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
         <div className="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
           <Trash2 className="w-7 h-7" />
         </div>
@@ -215,7 +215,7 @@ export default function TagsPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-brand-black/5 flex-1 flex flex-col min-h-0">
+      <div className="bg-surface rounded-3xl shadow-sm border border-brand-black/5 flex-1 flex flex-col min-h-0">
         <div className="p-4 border-b border-brand-black/5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-bold text-brand-black">All Tags</h3>
@@ -228,7 +228,7 @@ export default function TagsPage() {
               placeholder="Search tag..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-1.5 bg-[#F8F8F8] border border-transparent rounded-lg text-sm focus:outline-none focus:bg-white focus:border-brand-black/20 w-48 sm:w-64"
+              className="pl-9 pr-4 py-1.5 bg-base-light border border-transparent rounded-lg text-sm focus:outline-none focus:bg-surface focus:border-brand-black/20 w-48 sm:w-64"
             />
           </div>
         </div>

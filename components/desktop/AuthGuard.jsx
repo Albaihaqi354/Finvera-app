@@ -18,7 +18,7 @@ export default function AuthGuard({ children }) {
 
   if (!ready) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#F8F8F8] font-ibm">
+      <div className="flex h-screen items-center justify-center bg-base-light font-ibm">
         <p className="text-sm font-medium text-brand-black/50">Loading...</p>
       </div>
     )

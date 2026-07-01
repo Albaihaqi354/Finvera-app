@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import EChart from '@/components/charts/EChart'
 import { buildPieChartOption, buildGroupedBarOption } from '@/lib/chart/options'
 import { EZ_EXPENSE_COLOR, EZ_INCOME_COLOR } from '@/lib/chart/colors'
+import { useTheme } from '@/components/desktop/ThemeProvider'
 
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 
@@ -57,7 +58,7 @@ function aggregateByCategory(transactions, categories, type) {
 
 function StatCard({ label, value, color }) {
   return (
-    <div className="bg-white rounded-2xl px-5 py-4 border border-brand-black/5 shadow-sm">
+    <div className="bg-surface rounded-2xl px-5 py-4 border border-brand-black/5 shadow-sm">
       <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider mb-1">{label}</p>
       <p className={`text-xl font-bold ${color}`}>Rp {value.toLocaleString('id-ID')}</p>
     </div>
@@ -65,9 +66,10 @@ function StatCard({ label, value, color }) {
 }
 
 function CategoryPieCard({ title, items, emptyLabel }) {
-  const option = useMemo(() => buildPieChartOption(items), [items])
+  const { resolvedTheme } = useTheme()
+  const option = useMemo(() => buildPieChartOption(items), [items, resolvedTheme])
   return (
-    <div className="bg-white rounded-3xl p-4 shadow-sm border border-brand-black/5">
+    <div className="bg-surface rounded-3xl p-4 shadow-sm border border-brand-black/5">
       <h3 className="text-sm font-bold text-brand-black px-2 pt-2 pb-0">{title}</h3>
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -83,6 +85,7 @@ function CategoryPieCard({ title, items, emptyLabel }) {
 
 export default function StatisticsPage() {
   const { transactions, categories, isLoaded } = useDesktop()
+  const { resolvedTheme } = useTheme()
   const [dateRange, setDateRange] = useState('This Month')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
@@ -133,7 +136,7 @@ export default function StatisticsPage() {
       { name: 'Income',  data: monthlyBreakdown.map(m => m.income),  color: EZ_INCOME_COLOR },
       { name: 'Expense', data: monthlyBreakdown.map(m => m.expense), color: EZ_EXPENSE_COLOR },
     ]
-  ), [monthlyBreakdown])
+  ), [monthlyBreakdown, resolvedTheme])
 
   if (!isLoaded) return (
     <div className="space-y-4">
@@ -148,7 +151,7 @@ export default function StatisticsPage() {
         <h2 className="text-xl font-bold text-brand-black">Statistics & Analysis</h2>
         <div className="flex items-center gap-3 flex-wrap">
           {/* Quick range pills */}
-          <div className="flex items-center gap-1.5 bg-white border border-brand-black/10 rounded-xl p-1 shadow-sm flex-wrap">
+          <div className="flex items-center gap-1.5 bg-surface border border-brand-black/10 rounded-xl p-1 shadow-sm flex-wrap">
             {QUICK_RANGES.map(r => (
               <button
                 key={r}
@@ -168,14 +171,14 @@ export default function StatisticsPage() {
                 type="date"
                 value={customStart}
                 onChange={e => setCustomStart(e.target.value)}
-                className="bg-white border border-brand-black/10 rounded-xl px-3 py-2 text-xs font-semibold outline-none shadow-sm cursor-pointer"
+                className="bg-surface border border-brand-black/10 rounded-xl px-3 py-2 text-xs font-semibold outline-none shadow-sm cursor-pointer"
               />
               <span className="text-xs text-brand-black/40 font-bold">→</span>
               <input
                 type="date"
                 value={customEnd}
                 onChange={e => setCustomEnd(e.target.value)}
-                className="bg-white border border-brand-black/10 rounded-xl px-3 py-2 text-xs font-semibold outline-none shadow-sm cursor-pointer"
+                className="bg-surface border border-brand-black/10 rounded-xl px-3 py-2 text-xs font-semibold outline-none shadow-sm cursor-pointer"
               />
             </div>
           )}
@@ -194,7 +197,7 @@ export default function StatisticsPage() {
       </div>
 
       {/* 6-month trend bar chart */}
-      <div className="bg-white rounded-3xl p-5 shadow-sm border border-brand-black/5">
+      <div className="bg-surface rounded-3xl p-5 shadow-sm border border-brand-black/5">
         <h3 className="text-sm font-bold text-brand-black mb-1">6-Month Income & Expense Trend</h3>
         <p className="text-xs text-brand-black/40 mb-2">Comparison of the last 6 months</p>
         <EChart option={barOption} style={{ minHeight: 260 }} />

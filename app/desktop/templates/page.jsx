@@ -77,8 +77,8 @@ function TemplateModal({ onClose, accounts, categories, tags, onSubmit, editTpl 
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="px-6 py-4 border-b border-brand-black/5 flex justify-between items-center bg-[#F8F8F8] sticky top-0 z-10">
+      <div className="bg-surface rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-brand-black/5 flex justify-between items-center bg-base-light sticky top-0 z-10">
           <h3 className="font-bold text-lg">{isEdit ? 'Edit Template' : 'Add Template'}</h3>
           <button type="button" onClick={onClose} className="cursor-pointer hover:bg-brand-black/10 p-1.5 rounded-full transition-colors">
             <X className="w-4 h-4" />
@@ -96,7 +96,7 @@ function TemplateModal({ onClose, accounts, categories, tags, onSubmit, editTpl 
               value={form.templateName}
               onChange={e => setForm(p => ({ ...p, templateName: e.target.value }))}
               placeholder="e.g., Monthly Rent"
-              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm font-semibold outline-none border border-transparent focus:border-brand-black/20"
+              className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-semibold outline-none border border-transparent focus:border-brand-black/20"
             />
           </div>
 
@@ -109,7 +109,7 @@ function TemplateModal({ onClose, accounts, categories, tags, onSubmit, editTpl 
                   categoryId: categories.find(c => c.type === (t === 'transfer' ? 'transfer' : t))?.id || p.categoryId
                 }))}
                 className={`py-2 rounded-xl text-xs font-bold capitalize border-2 cursor-pointer transition-colors ${
-                  form.type === t ? typeColors[t]?.border : 'border-transparent bg-[#F8F8F8] text-brand-black/50 hover:bg-brand-black/10'
+                  form.type === t ? typeColors[t]?.border : 'border-transparent bg-base-light text-brand-black/50 hover:bg-brand-black/10'
                 }`}
               >{t}</button>
             ))}
@@ -124,7 +124,7 @@ function TemplateModal({ onClose, accounts, categories, tags, onSubmit, editTpl 
               value={form.amount}
               onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
               placeholder="0"
-              className={`w-full bg-[#F8F8F8] rounded-xl px-4 py-3 text-xl font-bold outline-none border-2 border-transparent focus:border-brand-black/20 transition-colors ${typeColors[form.type]?.label || ''}`}
+              className={`w-full bg-base-light rounded-xl px-4 py-3 text-xl font-bold outline-none border-2 border-transparent focus:border-brand-black/20 transition-colors ${typeColors[form.type]?.label || ''}`}
             />
           </div>
 
@@ -133,14 +133,14 @@ function TemplateModal({ onClose, accounts, categories, tags, onSubmit, editTpl 
               <div>
                 <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">From</label>
                 <select value={form.accountId} onChange={e => setForm(p => ({ ...p, accountId: e.target.value }))}
-                  className="w-full bg-[#F8F8F8] rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
+                  className="w-full bg-base-light rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">To</label>
                 <select value={form.targetAccountId} onChange={e => setForm(p => ({ ...p, targetAccountId: e.target.value }))}
-                  className="w-full bg-[#F8F8F8] rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
+                  className="w-full bg-base-light rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
@@ -150,14 +150,14 @@ function TemplateModal({ onClose, accounts, categories, tags, onSubmit, editTpl 
               <div>
                 <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">Account</label>
                 <select value={form.accountId} onChange={e => setForm(p => ({ ...p, accountId: e.target.value }))}
-                  className="w-full bg-[#F8F8F8] rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
+                  className="w-full bg-base-light rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">Category</label>
                 <select value={form.categoryId} onChange={e => setForm(p => ({ ...p, categoryId: e.target.value }))}
-                  className="w-full bg-[#F8F8F8] rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
+                  className="w-full bg-base-light rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
                   {categories.filter(c => c.type === form.type && !c.parentId).map(c => (
                     <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
                   ))}
@@ -176,7 +176,7 @@ function TemplateModal({ onClose, accounts, categories, tags, onSubmit, editTpl 
               onChange={e => setForm(p => ({ ...p, note: e.target.value }))}
               placeholder="Template note..."
               maxLength={200}
-              className="w-full bg-[#F8F8F8] rounded-xl px-4 py-2.5 text-sm outline-none border border-transparent focus:border-brand-black/20"
+              className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm outline-none border border-transparent focus:border-brand-black/20"
             />
           </div>
 
@@ -187,7 +187,7 @@ function TemplateModal({ onClose, accounts, categories, tags, onSubmit, editTpl 
                 {tags.map(tag => (
                   <button key={tag.id} type="button" onClick={() => toggleTag(tag.id)}
                     className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer transition-colors ${
-                      form.tagIds.includes(tag.id) ? 'bg-brand-black text-brand-primary' : 'bg-[#F8F8F8] text-brand-black/60 hover:bg-brand-black/10'
+                      form.tagIds.includes(tag.id) ? 'bg-brand-black text-brand-primary' : 'bg-base-light text-brand-black/60 hover:bg-brand-black/10'
                     }`}>
                     {tag.name}
                   </button>
@@ -209,7 +209,7 @@ function DeleteModal({ isOpen, onConfirm, onCancel }) {
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
+      <div className="bg-surface rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
         <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
           <Trash2 className="w-8 h-8" />
         </div>
@@ -303,7 +303,7 @@ export default function TemplatesPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-brand-black/5 flex-1 flex flex-col min-h-0">
+      <div className="bg-surface rounded-3xl shadow-sm border border-brand-black/5 flex-1 flex flex-col min-h-0">
         <div className="p-4 border-b border-brand-black/5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-bold text-brand-black">All Templates</h3>
@@ -316,7 +316,7 @@ export default function TemplatesPage() {
               placeholder="Search templates..."
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              className="pl-9 pr-4 py-1.5 bg-[#F8F8F8] border border-transparent rounded-lg text-sm focus:outline-none focus:bg-white focus:border-brand-black/20 w-48 sm:w-64"
+              className="pl-9 pr-4 py-1.5 bg-base-light border border-transparent rounded-lg text-sm focus:outline-none focus:bg-surface focus:border-brand-black/20 w-48 sm:w-64"
             />
             {searchInput && (
               <button onClick={() => setSearchInput('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/40 hover:text-brand-black cursor-pointer">
@@ -345,7 +345,7 @@ export default function TemplatesPage() {
                   : cat?.name || 'Unknown'
 
                 return (
-                  <div key={tpl.id} className="bg-[#F8F8F8] rounded-2xl p-4 border border-brand-black/5 flex flex-col group transition-all hover:border-brand-black/10">
+                  <div key={tpl.id} className="bg-base-light rounded-2xl p-4 border border-brand-black/5 flex flex-col group transition-all hover:border-brand-black/10">
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <h4 className="text-sm font-bold text-brand-black">{tpl.templateName}</h4>

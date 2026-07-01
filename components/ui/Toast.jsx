@@ -12,10 +12,10 @@ const ICONS = {
 }
 
 const STYLES = {
-  success: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-  error:   'bg-red-50    border-red-200    text-red-700',
-  warning: 'bg-amber-50  border-amber-200  text-amber-700',
-  info:    'bg-blue-50   border-blue-200   text-blue-700',
+  success: 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/80 dark:border-emerald-800 dark:text-emerald-300',
+  error:   'bg-red-50    border-red-200    text-red-700    dark:bg-red-950/80    dark:border-red-800    dark:text-red-300',
+  warning: 'bg-amber-50  border-amber-200  text-amber-700  dark:bg-amber-950/80  dark:border-amber-800  dark:text-amber-300',
+  info:    'bg-blue-50   border-blue-200   text-blue-700   dark:bg-blue-950/80   dark:border-blue-800   dark:text-blue-300',
 }
 
 function ToastItem({ toast, onRemove }) {
