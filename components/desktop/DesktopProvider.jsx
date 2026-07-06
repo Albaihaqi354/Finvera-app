@@ -53,7 +53,14 @@ export function DesktopProvider({ children }) {
       }))
       setTransactions(normalizedTxs)
       
-      setScheduled(Array.isArray(scheduledData) ? scheduledData : (scheduledData.data || []))
+      const rawScheduled = Array.isArray(scheduledData) ? scheduledData : (scheduledData.data || [])
+      const normalizedScheduled = rawScheduled.map(s => ({
+        ...s,
+        accountId:       s.account?.id  || s.accountId,
+        targetAccountId: s.targetAccount?.id || s.targetAccountId,
+        categoryId:      s.category?.id || s.categoryId,
+      }))
+      setScheduled(normalizedScheduled)
       
       const savedVisibility = localStorage.getItem('finvera_balance_visible')
       if (savedVisibility !== null) setIsBalanceVisible(savedVisibility === 'true')
@@ -291,23 +298,29 @@ export function DesktopProvider({ children }) {
   // ── Scheduled ─────────────────────────────────────────────────────────────
   const addScheduled = useCallback(async (item) => {
     try {
+      // Backend expects camelCase JSON fields matching CreateScheduledRequest struct tags
       const payload = {
-        name: item.name,
-        type: item.type,
-        amount: parseFloat(item.amount),
-        account_id: item.accountId || item.account_id,
-        target_account_id: item.targetAccountId || item.target_account_id,
-        category_id: item.categoryId || item.category_id,
-        frequency: item.frequency,
-        next_run: item.nextRun || item.next_run,
-        end_date: item.endDate || item.end_date,
-        note: item.note,
-        tag_ids: item.tagIds || item.tag_ids || [],
-        is_active: item.isActive ?? true
+        name:            item.name,
+        type:            item.type,
+        amount:          parseFloat(item.amount),
+        accountId:       item.accountId,
+        targetAccountId: item.targetAccountId || undefined,
+        categoryId:      item.categoryId,
+        frequency:       item.frequency,
+        nextRun:         item.nextRun,
+        note:            item.note || '',
+        isActive:        item.isActive ?? true,
       }
       const res = await api.scheduled.create(payload)
-      setScheduled(prev => [...prev, { ...item, ...res }])
-      return res
+      // Normalize nested objects from backend response
+      const normalized = {
+        ...res,
+        accountId:       res.account?.id  || res.accountId,
+        targetAccountId: res.targetAccount?.id || res.targetAccountId,
+        categoryId:      res.category?.id || res.categoryId,
+      }
+      setScheduled(prev => [...prev, normalized])
+      return normalized
     } catch (err) {
       console.error(err)
       throw err
@@ -316,19 +329,24 @@ export function DesktopProvider({ children }) {
 
   const updateScheduled = useCallback(async (id, updates) => {
     try {
+      // For toggleActive, updates may only contain isActive.
+      // We need the full current item to build a valid payload.
+      const current = scheduled.find(s => s.id === id)
+      if (!current) throw new Error('Scheduled transaction not found')
+
+      const merged = { ...current, ...updates }
+
       const payload = {
-        name: updates.name,
-        type: updates.type,
-        amount: parseFloat(updates.amount),
-        account_id: updates.accountId || updates.account_id,
-        target_account_id: updates.targetAccountId || updates.target_account_id,
-        category_id: updates.categoryId || updates.category_id,
-        frequency: updates.frequency,
-        next_run: updates.nextRun || updates.next_run,
-        end_date: updates.endDate || updates.end_date,
-        note: updates.note,
-        tag_ids: updates.tagIds || updates.tag_ids || [],
-        is_active: updates.isActive
+        name:            merged.name,
+        type:            merged.type,
+        amount:          parseFloat(merged.amount),
+        accountId:       merged.accountId,
+        targetAccountId: merged.targetAccountId || undefined,
+        categoryId:      merged.categoryId,
+        frequency:       merged.frequency,
+        nextRun:         merged.nextRun,
+        note:            merged.note || '',
+        isActive:        merged.isActive ?? true,
       }
       await api.scheduled.update(id, payload)
       setScheduled(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
@@ -336,7 +354,7 @@ export function DesktopProvider({ children }) {
       console.error(err)
       throw err
     }
-  }, [])
+  }, [scheduled])
 
   const deleteScheduled = useCallback(async (id) => {
     try {
