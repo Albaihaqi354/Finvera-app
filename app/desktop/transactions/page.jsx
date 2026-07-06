@@ -436,7 +436,7 @@ function TransactionsContent() {
       })
       
       const txs = Array.isArray(res) ? res : (res.data || [])
-      const total = res.meta?.total || 0
+      const total = res.meta?.total_items || 0
       
       const normalizedTxs = txs.map(tx => ({
         ...tx,

@@ -32,11 +32,11 @@ export function DesktopProvider({ children }) {
         transactionsData,
         scheduledData
       ] = await Promise.all([
-        api.accounts.getAll().catch(() => []),
-        api.categories.getAll().catch(() => []),
-        api.tags.getAll().catch(() => []),
+        api.accounts.getAll({ limit: 1000 }).catch(() => []),
+        api.categories.getAll({ limit: 1000 }).catch(() => []),
+        api.tags.getAll({ limit: 1000 }).catch(() => []),
         api.transactions.getAll().catch(() => ({ data: [] })),
-        api.scheduled.getAll().catch(() => [])
+        api.scheduled.getAll({ limit: 1000 }).catch(() => [])
       ])
 
       setAccounts(Array.isArray(accountsData) ? accountsData : (accountsData.data || []))
