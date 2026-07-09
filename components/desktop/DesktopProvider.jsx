@@ -201,12 +201,12 @@ export function DesktopProvider({ children }) {
       const payload = {
         type: tx.type,
         amount: parseFloat(tx.amount),
-        account_id: tx.accountId || tx.account_id,
-        target_account_id: tx.targetAccountId || tx.target_account_id,
-        category_id: tx.categoryId || tx.category_id,
+        accountId: tx.accountId || tx.account_id,
+        targetAccountId: tx.targetAccountId || tx.target_account_id,
+        categoryId: tx.categoryId || tx.category_id,
         date: tx.date,
         note: tx.note,
-        tag_ids: tx.tagIds || tx.tag_ids || []
+        tagIds: tx.tagIds || tx.tag_ids || []
       }
       const res = await api.transactions.create(payload)
       const newTx = {
@@ -233,12 +233,12 @@ export function DesktopProvider({ children }) {
       const payload = {
         type: updates.type,
         amount: parseFloat(updates.amount),
-        account_id: updates.accountId || updates.account_id,
-        target_account_id: updates.targetAccountId || updates.target_account_id,
-        category_id: updates.categoryId || updates.category_id,
+        accountId: updates.accountId || updates.account_id,
+        targetAccountId: updates.targetAccountId || updates.target_account_id,
+        categoryId: updates.categoryId || updates.category_id,
         date: updates.date,
         note: updates.note,
-        tag_ids: updates.tagIds || updates.tag_ids || []
+        tagIds: updates.tagIds || updates.tag_ids || []
       }
       const res = await api.transactions.update(id, payload)
       
