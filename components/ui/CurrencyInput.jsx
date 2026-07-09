@@ -4,7 +4,7 @@ import { getCurrency } from '@/lib/currency'
 
 /**
  * CurrencyInput
- * 
+ *
  * Props:
  *   value        — numeric value (number or string)
  *   onChange     — called with numeric value when input changes
@@ -14,9 +14,10 @@ import { getCurrency } from '@/lib/currency'
  *   disabled     — boolean
  *   required     — boolean
  *   id           — string
- * 
- * The display shows formatted number with thousand separators.
- * The onChange callback always fires with a plain numeric value.
+ *
+ * The display shows formatted number with thousand separators (dots for IDR)
+ * as the user types in real-time. The onChange callback always fires with a
+ * plain numeric value.
  */
 export default function CurrencyInput({
   value,
@@ -32,15 +33,50 @@ export default function CurrencyInput({
   const [displayValue, setDisplayValue] = useState('')
   const isEditing = useRef(false)
 
-  // Format a numeric value for display
+  // Format a numeric value for display with thousand separators
   const format = (num) => {
-    if (num === '' || num === null || num === undefined || isNaN(num)) return ''
+    if (num === '' || num === null || num === undefined) return ''
     const n = parseFloat(num)
-    if (isNaN(n)) return ''
+    if (isNaN(n) || n === 0) return ''
     return n.toLocaleString(cur.locale, {
       minimumFractionDigits: 0,
       maximumFractionDigits: cur.decimals,
     })
+  }
+
+  /**
+   * Format raw string input in real-time while user types.
+   * Strips non-numeric chars, then re-inserts thousand separators.
+   * Returns { display: string, numeric: number }
+   */
+  const parseAndFormat = (raw) => {
+    if (cur.code === 'IDR') {
+      // IDR: dot = thousands separator, no decimals expected
+      // Strip everything except digits and minus
+      const digitsOnly = raw.replace(/\./g, '').replace(/[^0-9\-]/g, '')
+      if (digitsOnly === '' || digitsOnly === '-') return { display: digitsOnly, numeric: 0 }
+      const numeric = parseFloat(digitsOnly) || 0
+      // Re-format with dot as thousands separator
+      const formatted = numeric.toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      })
+      return { display: formatted, numeric }
+    } else {
+      // Other currencies: comma = thousands separator, dot = decimal
+      const cleaned = raw.replace(/,/g, '').replace(/[^0-9.\-]/g, '')
+      if (cleaned === '' || cleaned === '.') return { display: cleaned, numeric: 0 }
+      const numeric = parseFloat(cleaned) || 0
+      // Only format if user isn't in the middle of typing decimals
+      const endsWithDot = cleaned.endsWith('.')
+      const formatted = endsWithDot
+        ? cleaned
+        : numeric.toLocaleString(cur.locale, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: cur.decimals,
+          })
+      return { display: formatted, numeric }
+    }
   }
 
   // Update display whenever external value changes (but not while user is typing)
@@ -53,35 +89,21 @@ export default function CurrencyInput({
 
   const handleChange = (e) => {
     const raw = e.target.value
-
-    // Allow only digits, one decimal point/comma, minus
-    // Strip thousand separators (dot for IDR, comma for others)
-    let cleaned = raw
-    if (cur.code === 'IDR') {
-      // IDR uses dots as thousands separator — strip them
-      cleaned = raw.replace(/\./g, '').replace(/[^0-9,\-]/g, '').replace(',', '.')
-    } else {
-      // Other currencies use commas as thousands — strip them
-      cleaned = raw.replace(/,/g, '').replace(/[^0-9.\-]/g, '')
-    }
-
-    const numeric = parseFloat(cleaned) || 0
-
-    // Show the raw input while typing (don't re-format mid-edit)
-    setDisplayValue(raw)
+    const { display, numeric } = parseAndFormat(raw)
+    setDisplayValue(display)
     onChange(numeric)
   }
 
   const handleFocus = () => {
     isEditing.current = true
-    // Show raw number without formatting on focus for easier editing
+    // Keep the formatted value visible on focus so user can see what they've typed
     const n = parseFloat(value) || 0
-    setDisplayValue(n === 0 ? '' : String(n))
+    setDisplayValue(n === 0 ? '' : format(n))
   }
 
   const handleBlur = () => {
     isEditing.current = false
-    // Re-format on blur
+    // Re-format cleanly on blur
     const n = parseFloat(value) || 0
     setDisplayValue(n === 0 ? '' : format(n))
   }

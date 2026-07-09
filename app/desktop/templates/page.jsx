@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react'
 import { PlusCircle, Search, X, Trash2, Pencil, Copy } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 import { useDebounce } from '@/hooks/useDebounce'
+import CurrencyInput from '@/components/ui/CurrencyInput'
 
 const amountColor = (type) => {
   if (type === 'income') return 'text-emerald-500'
@@ -119,10 +120,9 @@ function TemplateModal({ onClose, accounts, categories, tags, onSubmit, editTpl 
             <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">
               Default Amount <span className="normal-case font-normal">(optional)</span>
             </label>
-            <input
-              type="number" step="0.01"
+            <CurrencyInput
               value={form.amount}
-              onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
+              onChange={val => setForm(p => ({ ...p, amount: val }))}
               placeholder="0"
               className={`w-full bg-base-light rounded-xl px-4 py-3 text-xl font-bold outline-none border-2 border-transparent focus:border-brand-black/20 transition-colors ${typeColors[form.type]?.label || ''}`}
             />

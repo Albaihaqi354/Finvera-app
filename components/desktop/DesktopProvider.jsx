@@ -39,11 +39,11 @@ export function DesktopProvider({ children }) {
         api.scheduled.getAll({ limit: 1000 }).catch(() => [])
       ])
 
-      setAccounts(Array.isArray(accountsData) ? accountsData : (accountsData.data || []))
-      setCategories(Array.isArray(categoriesData) ? categoriesData : (categoriesData.data || []))
-      setTags(Array.isArray(tagsData) ? tagsData : (tagsData.data || []))
+      setAccounts(Array.isArray(accountsData) ? accountsData : (accountsData?.data || []))
+      setCategories(Array.isArray(categoriesData) ? categoriesData : (categoriesData?.data || []))
+      setTags(Array.isArray(tagsData) ? tagsData : (tagsData?.data || []))
       
-      const txs = Array.isArray(transactionsData) ? transactionsData : (transactionsData.data || []);
+      const txs = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
       const normalizedTxs = txs.map(tx => ({
         ...tx,
         accountId: tx.account?.id || tx.accountId,
@@ -53,7 +53,7 @@ export function DesktopProvider({ children }) {
       }))
       setTransactions(normalizedTxs)
       
-      const rawScheduled = Array.isArray(scheduledData) ? scheduledData : (scheduledData.data || [])
+      const rawScheduled = Array.isArray(scheduledData) ? scheduledData : (scheduledData?.data || [])
       const normalizedScheduled = rawScheduled.map(s => ({
         ...s,
         accountId:       s.account?.id  || s.accountId,
@@ -91,9 +91,11 @@ export function DesktopProvider({ children }) {
   // ── Accounts ──────────────────────────────────────────────────────────────
   const addAccount = useCallback(async (account) => {
     try {
-      const res = await api.accounts.create(account)
-      // res is the complete account object from backend
-      setAccounts(prev => [...prev, res])
+      const payload = { ...account, initialBalance: account.balance }
+      const res = await api.accounts.create(payload)
+      // Re-fetch accounts to ensure balance from backend (including initialBalance) is correct
+      const fresh = await api.accounts.getAll({ limit: 1000 })
+      setAccounts(Array.isArray(fresh) ? fresh : (fresh?.data || []))
       return res
     } catch (err) {
       console.error(err)
@@ -103,7 +105,8 @@ export function DesktopProvider({ children }) {
 
   const updateAccount = useCallback(async (id, updates) => {
     try {
-      await api.accounts.update(id, updates)
+      const payload = { ...updates, initialBalance: updates.balance }
+      await api.accounts.update(id, payload)
       setAccounts(prev =>
         prev.map(acc => acc.id === id ? { ...acc, ...updates } : acc)
       )
