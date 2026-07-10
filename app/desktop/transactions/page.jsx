@@ -230,8 +230,8 @@ function TransactionModal({ onClose, accounts, categories, tags, onSubmit, editT
   }
 
   const typeColors = {
-    expense: { border: 'border-rose-400 bg-rose-50 text-rose-600', label: 'text-rose-500' },
-    income:  { border: 'border-emerald-400 bg-emerald-50 text-emerald-600', label: 'text-emerald-500' },
+    expense:  { border: 'border-rose-400 bg-rose-50 text-rose-600',     label: 'text-rose-500'    },
+    income:   { border: 'border-emerald-400 bg-emerald-50 text-emerald-600', label: 'text-emerald-500' },
     transfer: { border: 'border-brand-black/30 bg-brand-black/5 text-brand-black', label: 'text-brand-black' },
   }
 
@@ -263,7 +263,6 @@ function TransactionModal({ onClose, accounts, categories, tags, onSubmit, editT
               >{t}</button>
             ))}
           </div>
-
           {/* Amount */}
           <div>
             <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Amount</label>
@@ -276,7 +275,6 @@ function TransactionModal({ onClose, accounts, categories, tags, onSubmit, editT
               className={`w-full bg-base-light rounded-xl px-4 py-3 text-xl font-bold outline-none border-2 border-transparent focus:border-brand-black/20 transition-colors ${typeColors[form.type]?.label || ''}`}
             />
           </div>
-
           {/* Account / Transfer */}
           {form.type === 'transfer' ? (
             <div className="grid grid-cols-2 gap-4">
@@ -315,7 +313,6 @@ function TransactionModal({ onClose, accounts, categories, tags, onSubmit, editT
               </div>
             </div>
           )}
-
           {/* Date */}
           <div>
             <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Date & Time</label>
@@ -326,7 +323,6 @@ function TransactionModal({ onClose, accounts, categories, tags, onSubmit, editT
               className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-semibold outline-none cursor-pointer border border-transparent focus:border-brand-black/20"
             />
           </div>
-
           {/* Note */}
           <div>
             <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">
@@ -341,7 +337,6 @@ function TransactionModal({ onClose, accounts, categories, tags, onSubmit, editT
               className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm outline-none border border-transparent focus:border-brand-black/20"
             />
           </div>
-
           {/* Tags */}
           {tags.length > 0 && (
             <div>
@@ -358,7 +353,6 @@ function TransactionModal({ onClose, accounts, categories, tags, onSubmit, editT
               </div>
             </div>
           )}
-
           <button type="submit" className="w-full bg-brand-black text-brand-primary rounded-xl py-3.5 text-sm font-bold cursor-pointer hover:bg-brand-black/80 transition-colors">
             {isEdit ? 'Save Changes' : 'Save Transaction'}
           </button>
@@ -434,18 +428,15 @@ function TransactionsContent() {
         accountId: accountFilter === 'All Accounts' ? '' : accountFilter,
         search: search
       })
-      
-      const txs = Array.isArray(res) ? res : (res.data || [])
+      const txs   = Array.isArray(res) ? res : (res.data || [])
       const total = res.meta?.total_items || 0
-      
       const normalizedTxs = txs.map(tx => ({
         ...tx,
-        accountId: tx.account?.id || tx.accountId,
+        accountId:       tx.account?.id       || tx.accountId,
         targetAccountId: tx.targetAccount?.id || tx.targetAccountId,
-        categoryId: tx.category?.id || tx.categoryId,
-        tagIds: tx.tags?.map(t => t.id) || tx.tagIds || []
+        categoryId:      tx.category?.id      || tx.categoryId,
+        tagIds:          tx.tags?.map(t => t.id) || tx.tagIds || []
       }))
-      
       setServerTxs(normalizedTxs)
       setTotalTxs(total)
     } catch (err) {
@@ -460,8 +451,7 @@ function TransactionsContent() {
   }, [fetchTransactions])
 
   // ── Handlers ────────────────────────────────────────────────────────────────
-  const openAdd = useCallback(() => { setEditingTx(null); setIsModalOpen(true) }, [])
-  const openEdit = useCallback((tx) => { setEditingTx(tx); setIsModalOpen(true) }, [])
+  const openEdit  = useCallback((tx) => { setEditingTx(tx); setIsModalOpen(true) }, [])
   const closeModal = useCallback(() => { setIsModalOpen(false); setEditingTx(null) }, [])
 
   const handleAddSubmit = async (data) => {
@@ -505,37 +495,145 @@ function TransactionsContent() {
   }
 
   // ── Memoised derivations ────────────────────────────────────────────────────
-  // We now use serverTxs for the list, but for Calendar we might still need all
-  // For simplicity, we just use serverTxs for both. Calendar will show the current page's txs.
   const filteredTransactions = serverTxs
 
-  const handleExportCSV = useCallback(() => {
+  const handleExportExcel = useCallback(async () => {
     if (filteredTransactions.length === 0) return
-    const headers = ['Date', 'Time', 'Type', 'Category', 'Amount', 'Account', 'Destination', 'Note']
-    const csvRows = [headers.join(',')]
-    for (const tx of filteredTransactions) {
-      const d = new Date(tx.date)
-      const dateStr = d.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })
-      const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-      const cat = categories.find(c => c.id === tx.categoryId)?.name || ''
-      const acc = accounts.find(a => a.id === tx.accountId)?.name || ''
-      const targetAcc = accounts.find(a => a.id === tx.targetAccountId)?.name || ''
-      const row = [
-        `"${dateStr}"`, `"${timeStr}"`, `"${tx.type}"`, `"${cat}"`,
-        `"${tx.amount}"`, `"${acc}"`, `"${targetAcc}"`,
-        `"${(tx.note || '').replace(/"/g, '""')}"`
-      ]
-      csvRows.push(row.join(','))
+    const ExcelJS = (await import('exceljs')).default
+    const workbook = new ExcelJS.Workbook()
+    workbook.creator = 'Finvera'
+    workbook.created = new Date()
+    const sheet = workbook.addWorksheet('Transactions', {
+      pageSetup: { fitToPage: true, orientation: 'landscape' }
+    })
+    sheet.columns = [
+      { key: 'no',      width: 6  },
+      { key: 'date',    width: 14 },
+      { key: 'time',    width: 10 },
+      { key: 'type',    width: 12 },
+      { key: 'cat',     width: 22 },
+      { key: 'amount',  width: 20 },
+      { key: 'account', width: 22 },
+      { key: 'dest',    width: 22 },
+      { key: 'note',    width: 36 },
+    ]
+    // Title
+    sheet.mergeCells('A1:I1')
+    const titleCell = sheet.getCell('A1')
+    titleCell.value = 'FINVERA — Transaction Report'
+    titleCell.font = { name: 'Calibri', size: 16, bold: true, color: { argb: 'FF1A1A1A' } }
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' }
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9F0' } }
+    sheet.getRow(1).height = 36
+    // Meta
+    sheet.mergeCells('A2:I2')
+    const now = new Date()
+    const metaCell = sheet.getCell('A2')
+    metaCell.value = `Exported: ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}   |   Total Records: ${filteredTransactions.length}`
+    metaCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF888888' } }
+    metaCell.alignment = { horizontal: 'center', vertical: 'middle' }
+    metaCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9F0' } }
+    sheet.getRow(2).height = 20
+    // Summary
+    const totalInc = filteredTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+    const totalExp = filteredTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+    const net = totalInc - totalExp
+    const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: currency || 'IDR', maximumFractionDigits: 0 }).format(n)
+    sheet.mergeCells('A3:C3')
+    sheet.getCell('A3').value = `Total Income: ${fmt(totalInc)}`
+    sheet.getCell('A3').font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF059669' } }
+    sheet.getCell('A3').alignment = { horizontal: 'center', vertical: 'middle' }
+    sheet.getCell('A3').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FDF4' } }
+    sheet.mergeCells('D3:F3')
+    sheet.getCell('D3').value = `Total Expense: ${fmt(totalExp)}`
+    sheet.getCell('D3').font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFE11D48' } }
+    sheet.getCell('D3').alignment = { horizontal: 'center', vertical: 'middle' }
+    sheet.getCell('D3').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF1F2' } }
+    sheet.mergeCells('G3:I3')
+    const isPositive = net >= 0
+    sheet.getCell('G3').value = `Net: ${fmt(net)}`
+    sheet.getCell('G3').font = { name: 'Calibri', size: 10, bold: true, color: { argb: isPositive ? 'FF059669' : 'FFE11D48' } }
+    sheet.getCell('G3').alignment = { horizontal: 'center', vertical: 'middle' }
+    sheet.getCell('G3').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isPositive ? 'FFF0FDF4' : 'FFFFF1F2' } }
+    sheet.getRow(3).height = 22
+    sheet.getRow(4).height = 6
+    // Header row
+    const headerRow = sheet.addRow(['#', 'Date', 'Time', 'Type', 'Category', 'Amount', 'Account', 'Destination', 'Note'])
+    headerRow.height = 26
+    headerRow.eachCell(cell => {
+      cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } }
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1A1A1A' } }
+      cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: false }
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF333333' } }, bottom: { style: 'thin', color: { argb: 'FF333333' } },
+        left: { style: 'thin', color: { argb: 'FF333333' } }, right: { style: 'thin', color: { argb: 'FF333333' } },
+      }
+    })
+    // Data rows
+    const typeColors = {
+      income:   { bg: 'FFD1FAE5', text: 'FF059669' },
+      expense:  { bg: 'FFFEE2E2', text: 'FFE11D48' },
+      transfer: { bg: 'FFE0F2FE', text: 'FF0284C7' },
     }
-    const csvString = csvRows.join('\n')
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' })
+    filteredTransactions.forEach((tx, idx) => {
+      const d = new Date(tx.date)
+      const dateStr = d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' })
+      const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+      const cat      = categories.find(c => c.id === tx.categoryId)?.name || '—'
+      const acc      = accounts.find(a => a.id === tx.accountId)?.name   || '—'
+      const targetAcc = tx.type === 'transfer' ? (accounts.find(a => a.id === tx.targetAccountId)?.name || '—') : ''
+      const typeLabel = tx.type ? tx.type.charAt(0).toUpperCase() + tx.type.slice(1) : ''
+      const rowBg = idx % 2 === 0 ? 'FFFFFFFF' : 'FFF9FAFB'
+      const row = sheet.addRow([idx + 1, dateStr, timeStr, typeLabel, cat, tx.amount, acc, targetAcc, tx.note || ''])
+      row.height = 22
+      row.eachCell((cell, colNumber) => {
+        cell.font = { name: 'Calibri', size: 10, color: { argb: 'FF374151' } }
+        cell.alignment = { vertical: 'middle', wrapText: false }
+        cell.border = {
+          top: { style: 'hair', color: { argb: 'FFE5E7EB' } }, bottom: { style: 'hair', color: { argb: 'FFE5E7EB' } },
+          left: { style: 'hair', color: { argb: 'FFE5E7EB' } }, right: { style: 'hair', color: { argb: 'FFE5E7EB' } },
+        }
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } }
+        if (colNumber === 1) {
+          cell.alignment = { horizontal: 'center', vertical: 'middle' }
+          cell.font = { name: 'Calibri', size: 10, color: { argb: 'FF9CA3AF' } }
+        } else if (colNumber === 4) {
+          const colors = typeColors[tx.type] || { bg: 'FFF3F4F6', text: 'FF6B7280' }
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colors.bg } }
+          cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: colors.text } }
+          cell.alignment = { horizontal: 'center', vertical: 'middle' }
+        } else if (colNumber === 6) {
+          cell.numFmt = currency === 'IDR' ? '"Rp "#,##0' : `"${currency} "#,##0.00`
+          const amtColors = typeColors[tx.type] || { text: 'FF374151' }
+          cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: amtColors.text } }
+          cell.alignment = { horizontal: 'right', vertical: 'middle' }
+        } else if (colNumber === 2 || colNumber === 3) {
+          cell.alignment = { horizontal: 'center', vertical: 'middle' }
+        } else if (colNumber === 9) {
+          cell.alignment = { vertical: 'middle', wrapText: true }
+          cell.font = { name: 'Calibri', size: 9, italic: true, color: { argb: 'FF9CA3AF' } }
+        }
+      })
+    })
+    // Footer
+    sheet.addRow([])
+    const footerIdx = sheet.rowCount + 1
+    sheet.mergeCells(`A${footerIdx}:I${footerIdx}`)
+    const footerCell = sheet.getCell(`A${footerIdx}`)
+    footerCell.value = `Generated by Finvera  •  ${now.toISOString()}`
+    footerCell.font = { name: 'Calibri', size: 9, italic: true, color: { argb: 'FFAAAAAA' } }
+    footerCell.alignment = { horizontal: 'center', vertical: 'middle' }
+    sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 5 }]
+    sheet.autoFilter = { from: 'A5', to: 'I5' }
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `transactions_${new Date().toISOString().slice(0, 10)}.csv`
+    a.download = `finvera_transactions_${now.toISOString().slice(0, 10)}.xlsx`
     a.click()
     URL.revokeObjectURL(url)
-  }, [filteredTransactions, categories, accounts])
+  }, [filteredTransactions, categories, accounts, currency])
 
   const { totalIncome, totalExpense } = useMemo(() => ({
     totalIncome:  filteredTransactions.filter(t => t.type === 'income').reduce((a, t) => a + t.amount, 0),
@@ -619,11 +717,11 @@ function TransactionsContent() {
             </h2>
             <div className="flex items-center gap-2">
               <button
-                type="button" onClick={handleExportCSV}
+                type="button" onClick={handleExportExcel}
                 className="flex items-center gap-1.5 bg-base-light hover:bg-brand-black/5 text-brand-black/70 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors border border-brand-black/5"
-                title="Export current view to CSV"
+                title="Export current view to Excel"
               >
-                <Download className="w-3.5 h-3.5" /> Export CSV
+                <Download className="w-3.5 h-3.5" /> Export Excel
               </button>
               <button
                 type="button" onClick={handleOpenAddModal}
@@ -673,7 +771,6 @@ function TransactionsContent() {
                 <span key={label} className="text-[10px] font-bold text-brand-black/40 uppercase">{label}</span>
               ))}
             </div>
-            
             <div className="flex-1 overflow-y-auto min-h-0 bg-surface rounded-t-xl pb-4">
               {isLoadingServer ? (
                 <div className="flex items-center justify-center h-full text-brand-black/40 text-sm font-bold animate-pulse">
@@ -689,15 +786,15 @@ function TransactionsContent() {
                     <TxRow
                       key={tx.id} tx={tx}
                       accounts={accounts} categories={categories}
-                      onDelete={(id) => { setTxToDelete(id); setDeleteModalOpen(true) }} onEdit={openEdit}
+                      onDelete={(id) => { setTxToDelete(id); setDeleteModalOpen(true) }}
+                      onEdit={openEdit}
                       currency={currency}
                     />
                   ))}
                 </div>
               )}
             </div>
-
-            {/* Pagination Controls */}
+            {/* Pagination */}
             {totalTxs > limit && (
               <div className="flex items-center justify-between border-t border-brand-black/5 pt-4 pb-4 px-5">
                 <span className="text-xs font-bold text-brand-black/40">
@@ -708,16 +805,12 @@ function TransactionsContent() {
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1 || isLoadingServer}
                     className="px-3 py-1.5 rounded-lg bg-base-light text-brand-black/70 font-bold text-xs hover:bg-brand-black/5 disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
+                  >Previous</button>
                   <button
                     onClick={() => setPage(p => p + 1)}
                     disabled={page * limit >= totalTxs || isLoadingServer}
                     className="px-3 py-1.5 rounded-lg bg-base-light text-brand-black/70 font-bold text-xs hover:bg-brand-black/5 disabled:opacity-50"
-                  >
-                    Next
-                  </button>
+                  >Next</button>
                 </div>
               </div>
             )}
