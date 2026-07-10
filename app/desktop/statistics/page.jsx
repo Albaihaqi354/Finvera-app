@@ -5,6 +5,7 @@ import EChart from '@/components/charts/EChart'
 import { buildPieChartOption, buildGroupedBarOption } from '@/lib/chart/options'
 import { EZ_EXPENSE_COLOR, EZ_INCOME_COLOR } from '@/lib/chart/colors'
 import { useTheme } from '@/components/desktop/ThemeProvider'
+import { formatConverted } from '@/lib/currency'
 
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 
@@ -56,18 +57,23 @@ function aggregateByCategory(transactions, categories, type) {
     .sort((a, b) => b.amount - a.amount)
 }
 
-function StatCard({ label, value, color }) {
+function StatCard({ label, value, color, currency, exchangeRates }) {
   return (
     <div className="bg-surface rounded-2xl px-5 py-4 border border-brand-black/5 shadow-sm">
       <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider mb-1">{label}</p>
-      <p className={`text-xl font-bold ${color}`}>Rp {value.toLocaleString('id-ID')}</p>
+      <p className={`text-xl font-bold ${color}`}>{formatConverted(value, currency, exchangeRates)}</p>
     </div>
   )
 }
 
-function CategoryPieCard({ title, items, emptyLabel }) {
+function CategoryPieCard({ title, items, emptyLabel, currency, exchangeRates }) {
   const { resolvedTheme } = useTheme()
-  const option = useMemo(() => buildPieChartOption(items), [items, resolvedTheme])
+  const option = useMemo(
+    () => buildPieChartOption(items, {
+      formatValue: (v) => formatConverted(v, currency, exchangeRates)
+    }),
+    [items, currency, exchangeRates, resolvedTheme]
+  )
   return (
     <div className="bg-surface rounded-3xl p-4 shadow-sm border border-brand-black/5">
       <h3 className="text-sm font-bold text-brand-black px-2 pt-2 pb-0">{title}</h3>
@@ -84,7 +90,7 @@ function CategoryPieCard({ title, items, emptyLabel }) {
 }
 
 export default function StatisticsPage() {
-  const { transactions, categories, isLoaded } = useDesktop()
+  const { transactions, categories, isLoaded, currency, exchangeRates } = useDesktop()
   const { resolvedTheme } = useTheme()
   const [dateRange, setDateRange] = useState('This Month')
   const [customStart, setCustomStart] = useState('')
@@ -135,8 +141,9 @@ export default function StatisticsPage() {
     [
       { name: 'Income',  data: monthlyBreakdown.map(m => m.income),  color: EZ_INCOME_COLOR },
       { name: 'Expense', data: monthlyBreakdown.map(m => m.expense), color: EZ_EXPENSE_COLOR },
-    ]
-  ), [monthlyBreakdown, resolvedTheme])
+    ],
+    { formatValue: (v) => formatConverted(v, currency, exchangeRates) }
+  ), [monthlyBreakdown, currency, exchangeRates, resolvedTheme])
 
   if (!isLoaded) return (
     <div className="space-y-4">
@@ -187,12 +194,14 @@ export default function StatisticsPage() {
 
       {/* Summary stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label="Total Income"  value={totalIncome}  color="text-emerald-500" />
-        <StatCard label="Total Expense" value={totalExpense} color="text-rose-500" />
+        <StatCard label="Total Income"  value={totalIncome}  color="text-emerald-500" currency={currency} exchangeRates={exchangeRates} />
+        <StatCard label="Total Expense" value={totalExpense} color="text-rose-500"    currency={currency} exchangeRates={exchangeRates} />
         <StatCard
           label="Net Flow"
           value={Math.abs(netFlow)}
           color={netFlow >= 0 ? 'text-emerald-500' : 'text-rose-500'}
+          currency={currency}
+          exchangeRates={exchangeRates}
         />
       </div>
 
@@ -209,11 +218,15 @@ export default function StatisticsPage() {
           title="Income by Category"
           items={incomeItems}
           emptyLabel="No income recorded in this period."
+          currency={currency}
+          exchangeRates={exchangeRates}
         />
         <CategoryPieCard
           title="Expense by Category"
           items={expenseItems}
           emptyLabel="No expenses recorded in this period."
+          currency={currency}
+          exchangeRates={exchangeRates}
         />
       </div>
     </div>

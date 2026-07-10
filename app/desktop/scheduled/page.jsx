@@ -4,6 +4,7 @@ import { PlusCircle, Search, X, Trash2, Pencil, CalendarClock, Power, PowerOff }
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 import { useDebounce } from '@/hooks/useDebounce'
 import CurrencyInput from '@/components/ui/CurrencyInput'
+import { formatConverted } from '@/lib/currency'
 
 const amountColor = (type) => {
   if (type === 'income') return 'text-emerald-500'
@@ -275,7 +276,7 @@ function DeleteModal({ isOpen, onConfirm, onCancel }) {
 }
 
 export default function ScheduledPage() {
-  const { scheduled, accounts, categories, tags, addScheduled, updateScheduled, deleteScheduled, isLoaded } = useDesktop()
+  const { scheduled, accounts, categories, tags, addScheduled, updateScheduled, deleteScheduled, isLoaded, currency, exchangeRates } = useDesktop()
 
   const [searchInput, setSearchInput] = useState('')
   const search = useDebounce(searchInput, 300)
@@ -386,7 +387,7 @@ export default function ScheduledPage() {
                         <p className="text-xs font-semibold text-brand-black/50 capitalize mt-0.5">{item.type} • {item.frequency}</p>
                       </div>
                       <span className={`text-sm font-bold ${amountColor(item.type)}`}>
-                        Rp {item.amount.toLocaleString('id-ID')}
+                        {formatConverted(item.amount, currency, exchangeRates)}
                       </span>
                     </div>
 

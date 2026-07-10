@@ -6,7 +6,7 @@ import { PlusCircle, Search, X, Trash2, ChevronLeft, ChevronRight, Pencil, Downl
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 import { useDebounce } from '@/hooks/useDebounce'
 import CurrencyInput from '@/components/ui/CurrencyInput'
-import { formatCurrency } from '@/lib/currency'
+import { formatCurrency, formatConverted } from '@/lib/currency'
 import { useToast } from '@/components/ui/Toast'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -17,7 +17,7 @@ const amountColor = (type) => {
 }
 
 // ─── Sub-component: Transaction Row ──────────────────────────────────────────
-function TxRow({ tx, accounts, categories, onDelete, onEdit, currency = 'IDR' }) {
+function TxRow({ tx, accounts, categories, onDelete, onEdit, currency = 'IDR', exchangeRates = null }) {
   const acc = accounts.find(a => a.id === tx.accountId)
   const cat = categories.find(c => c.id === tx.categoryId)
   const isTransfer = tx.type === 'transfer'
@@ -35,7 +35,7 @@ function TxRow({ tx, accounts, categories, onDelete, onEdit, currency = 'IDR' })
         <span className="text-xs font-semibold truncate text-brand-black/80">{label}</span>
       </div>
       <span className={`text-sm font-bold ${amountColor(tx.type)}`}>
-        {formatCurrency(tx.amount, currency)}
+        {formatConverted(tx.amount, currency, exchangeRates)}
       </span>
       <span className="text-xs font-semibold truncate text-brand-black/70">{acc?.name}</span>
       <span className="text-xs text-brand-black/50 truncate">{tx.note}</span>
@@ -95,7 +95,7 @@ function TransactionFilters({ typeFilter, setTypeFilter, accountFilter, setAccou
 }
 
 // ─── Sub-component: Transaction Calendar ─────────────────────────────────────
-function TransactionCalendar({ calendarMonth, setCalendarMonth, calendarDays, selectedDay, setSelectedDay, selectedDayTx, currency = 'IDR' }) {
+function TransactionCalendar({ calendarMonth, setCalendarMonth, calendarDays, selectedDay, setSelectedDay, selectedDayTx, currency = 'IDR', exchangeRates = null }) {
   return (
     <div className="flex-1 flex flex-col min-h-0 gap-4">
       <div className="flex items-center justify-between">
@@ -156,7 +156,7 @@ function TransactionCalendar({ calendarMonth, setCalendarMonth, calendarDays, se
             selectedDayTx.map(tx => (
               <div key={tx.id} className="flex justify-between py-1.5 text-xs">
                 <span>{tx.note || tx.type}</span>
-                <span className={`font-bold ${amountColor(tx.type)}`}>{formatCurrency(tx.amount, currency)}</span>
+                <span className={`font-bold ${amountColor(tx.type)}`}>{formatConverted(tx.amount, currency, exchangeRates)}</span>
               </div>
             ))
           )}
@@ -391,7 +391,7 @@ function DeleteModal({ isOpen, onConfirm, onCancel }) {
 // ─── Main Content Component ───────────────────────────────────────────────────
 function TransactionsContent() {
   const searchParams = useSearchParams()
-  const { transactions, accounts, categories, tags, addTransaction, updateTransaction, deleteTransaction, isLoaded, currency } = useDesktop()
+  const { transactions, accounts, categories, tags, addTransaction, updateTransaction, deleteTransaction, isLoaded, currency, exchangeRates } = useDesktop()
   const toast = useToast()
 
   const [searchInput, setSearchInput]       = useState('')
@@ -755,10 +755,10 @@ function TransactionsContent() {
           </span>
           <div className="flex items-center gap-6">
             <span className="text-xs font-bold text-brand-black/50">
-              Income <span className="text-emerald-500">{formatCurrency(totalIncome, currency)}</span>
+              Income <span className="text-emerald-500">{formatConverted(totalIncome, currency, exchangeRates)}</span>
             </span>
             <span className="text-xs font-bold text-brand-black/50">
-              Expense <span className="text-rose-500">{formatCurrency(totalExpense, currency)}</span>
+              Expense <span className="text-rose-500">{formatConverted(totalExpense, currency, exchangeRates)}</span>
             </span>
           </div>
         </div>
@@ -789,6 +789,7 @@ function TransactionsContent() {
                       onDelete={(id) => { setTxToDelete(id); setDeleteModalOpen(true) }}
                       onEdit={openEdit}
                       currency={currency}
+                      exchangeRates={exchangeRates}
                     />
                   ))}
                 </div>
@@ -824,6 +825,7 @@ function TransactionsContent() {
             setSelectedDay={setSelectedDay}
             selectedDayTx={selectedDayTx}
             currency={currency}
+            exchangeRates={exchangeRates}
           />
         )}
       </div>

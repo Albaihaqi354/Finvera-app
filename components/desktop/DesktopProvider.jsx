@@ -1,7 +1,7 @@
 "use client"
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { api } from '@/lib/api/client'
-import { CURRENCIES } from '@/lib/currency'
+import { CURRENCIES, fetchExchangeRates, convertAmount as convertAmountUtil } from '@/lib/currency'
 
 const DesktopContext = createContext()
 
@@ -14,6 +14,7 @@ function applyBalanceChange(accounts, accountId, delta) {
 export function DesktopProvider({ children }) {
   const [isBalanceVisible, setIsBalanceVisible] = useState(true)
   const [currency, setCurrencyState] = useState('IDR')
+  const [exchangeRates, setExchangeRates] = useState(null) // null = not yet loaded
   const [accounts, setAccounts] = useState([])
   const [categories, setCategories] = useState([])
   const [tags, setTags] = useState([])
@@ -71,6 +72,9 @@ export function DesktopProvider({ children }) {
       }
       
       setIsLoaded(true)
+
+      // Fetch live exchange rates (non-blocking — app works without it via fallback)
+      fetchExchangeRates().then(rates => setExchangeRates(rates))
     } catch (err) {
       console.error('Failed to load data from API:', err)
       setIsLoaded(true)
@@ -377,10 +381,17 @@ export function DesktopProvider({ children }) {
     }
   }, [])
 
+  // Convert an IDR-based amount to the current display currency
+  const convertAmount = useCallback((amount) => {
+    return convertAmountUtil(amount, currency, exchangeRates)
+  }, [currency, exchangeRates])
+
   return (
     <DesktopContext.Provider value={{
       isBalanceVisible, setIsBalanceVisible,
       currency, setCurrency,
+      exchangeRates,
+      convertAmount,
       accounts, setAccounts, addAccount, updateAccount, deleteAccount,
       categories, addCategory, updateCategory, deleteCategory,
       tags, addTag, updateTag, deleteTag,

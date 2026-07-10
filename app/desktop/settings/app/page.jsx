@@ -103,6 +103,11 @@ export default function AppSettingsPage() {
                     <option key={c.code} value={c.code}>{c.label}</option>
                   ))}
                 </select>
+                {currency !== 'IDR' && (
+                  <p className="text-[10px] text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-1.5 font-medium">
+                    ⚡ Live exchange rates applied. Values stored in IDR and converted for display.
+                  </p>
+                )}
               </div>
             </div>
           </section>

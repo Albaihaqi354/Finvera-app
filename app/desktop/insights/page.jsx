@@ -7,6 +7,7 @@ import { EZ_EXPENSE_COLOR, EZ_INCOME_COLOR } from '@/lib/chart/colors'
 import { mdiCompassOutline, mdiChevronDown } from '@/lib/icons/mdi'
 import { useTheme } from '@/components/desktop/ThemeProvider'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
+import { formatConverted } from '@/lib/currency'
 
 const QUICK_RANGES = ['This Week', 'This Month', 'This Year', 'All Time', 'Custom']
 
@@ -42,7 +43,7 @@ function getRangeBounds(range, customStart, customEnd) {
 }
 
 export default function InsightsPage() {
-  const { transactions, categories, accounts, isLoaded } = useDesktop()
+  const { transactions, categories, accounts, isLoaded, currency, exchangeRates } = useDesktop()
   const { resolvedTheme } = useTheme()
   const [dimension, setDimension] = useState('category')
   const [typeFilter, setTypeFilter] = useState('expense')
@@ -84,8 +85,12 @@ export default function InsightsPage() {
 
   const barColor = typeFilter === 'income' ? EZ_INCOME_COLOR : EZ_EXPENSE_COLOR
   const chartOption = useMemo(
-    () => buildHorizontalBarOption(chartItems, barColor),
-    [chartItems, barColor, resolvedTheme]
+    () => buildHorizontalBarOption(
+      chartItems,
+      barColor,
+      { formatValue: (v) => formatConverted(v, currency, exchangeRates) }
+    ),
+    [chartItems, barColor, currency, exchangeRates, resolvedTheme]
   )
 
   if (!isLoaded) return (
@@ -173,7 +178,7 @@ export default function InsightsPage() {
           <div>
             <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider">Top {Math.min(chartItems.length, 15)} items</p>
             <p className={`text-lg font-bold ${typeFilter === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}>
-              Rp {totalAmount.toLocaleString('id-ID')}
+              {formatConverted(totalAmount, currency, exchangeRates)}
             </p>
           </div>
           <div className="h-8 w-px bg-brand-black/10" />
