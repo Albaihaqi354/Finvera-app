@@ -259,7 +259,7 @@ function SignupPage() {
           <Logo />
         </div>
         {/* Card */}
-        <section className="bg-[#fcf8f4] p-6 sm:p-8 rounded-3xl shadow-2xl border border-brand-black/5 w-full relative z-10 flex flex-col gap-6 sm:gap-8">
+        <section className="bg-surface p-6 sm:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-black/5 w-full relative z-10 flex flex-col gap-6 sm:gap-8">
           {/* Progress Stepper */}
           <div className="flex items-center justify-center text-sm mb-2 overflow-x-auto whitespace-nowrap pb-2 scrollbar-none border-b border-brand-black/5 w-full">
             {/* Step 1 */}
@@ -351,7 +351,7 @@ function SignupPage() {
                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                        <span className="inline">Previous</span>
                     </button>
-                    <button type="submit" className="cursor-pointer w-full sm:w-auto flex-1 sm:flex-none px-8 py-3.5 sm:py-4 rounded-xl bg-brand-black border-2 border-transparent hover:bg-transparent hover:border-brand-black hover:text-brand-black text-white text-sm sm:text-base font-semibold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-none">
+                    <button type="submit" className="cursor-pointer w-full sm:w-auto flex-1 sm:flex-none px-8 py-3.5 sm:py-4 rounded-xl bg-brand-black border-2 border-brand-black hover:bg-transparent hover:text-brand-black text-brand-primary text-sm sm:text-base font-semibold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-none">
                       Next
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                     </button>
@@ -469,11 +469,11 @@ function SignupPage() {
                       onClick={handleRegister}
                       disabled={isLoading}
                       type="button"
-                      className="cursor-pointer w-full sm:w-auto flex-1 sm:flex-none px-8 py-3.5 sm:py-4 rounded-xl bg-brand-black border-2 border-transparent hover:bg-transparent hover:border-brand-black hover:text-brand-black text-white text-sm sm:text-base font-semibold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="cursor-pointer w-full sm:w-auto flex-1 sm:flex-none px-8 py-3.5 sm:py-4 rounded-xl bg-brand-black border-2 border-brand-black hover:bg-transparent hover:text-brand-black text-brand-primary text-sm sm:text-base font-semibold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {isLoading ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
                           <span>Registering...</span>
                         </>
                       ) : 'Submit ✓'}
