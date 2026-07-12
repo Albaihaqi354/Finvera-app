@@ -3,27 +3,23 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { api } from '@/lib/api/client'
 import { CURRENCIES, fetchExchangeRates, convertAmount as convertAmountUtil, formatConverted } from '@/lib/currency'
 
-const DesktopContext = createContext()
-
-function applyBalanceChange(accounts, accountId, delta) {
-  return accounts.map(acc =>
-    acc.id === accountId ? { ...acc, balance: (parseFloat(acc.balance) || 0) + delta } : acc
-  )
-}
+const DesktopContext = createContext(null)
 
 export function DesktopProvider({ children }) {
   const [isBalanceVisible, setIsBalanceVisible] = useState(true)
   const [currency, setCurrencyState] = useState('IDR')
-  const [exchangeRates, setExchangeRates] = useState(null) // null = not yet loaded
+  const [exchangeRates, setExchangeRates] = useState(null)
   const [accounts, setAccounts] = useState([])
   const [categories, setCategories] = useState([])
   const [tags, setTags] = useState([])
+  // transactions in context are used for aggregation (Overview, Statistics, Insights).
+  // The Transactions page fetches its own paginated data separately.
+  // We load up to 1000 here to keep aggregation accurate.
   const [transactions, setTransactions] = useState([])
   const [templates, setTemplates] = useState([])
   const [scheduled, setScheduled] = useState([])
   const [isLoaded, setIsLoaded] = useState(false)
 
-  // Fetch all initial data
   const loadData = useCallback(async () => {
     try {
       const [
@@ -38,15 +34,15 @@ export function DesktopProvider({ children }) {
         api.accounts.getAll({ limit: 1000 }).catch(() => []),
         api.categories.getAll({ limit: 1000 }).catch(() => []),
         api.tags.getAll({ limit: 1000 }).catch(() => []),
-        api.transactions.getAll().catch(() => ({ data: [] })),
+        api.transactions.getAll({ limit: 1000 }).catch(() => ({ data: [] })),
         api.scheduled.getAll({ limit: 1000 }).catch(() => [])
       ])
 
       setAccounts(Array.isArray(accountsData) ? accountsData : (accountsData?.data || []))
       setCategories(Array.isArray(categoriesData) ? categoriesData : (categoriesData?.data || []))
       setTags(Array.isArray(tagsData) ? tagsData : (tagsData?.data || []))
-      
-      const txs = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
+
+      const txs = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || [])
       const normalizedTxs = txs.map(tx => ({
         ...tx,
         accountId: tx.account?.id || tx.accountId,
@@ -55,20 +51,19 @@ export function DesktopProvider({ children }) {
         tagIds: tx.tags?.map(t => t.id) || tx.tagIds || []
       }))
       setTransactions(normalizedTxs)
-      
+
       const rawScheduled = Array.isArray(scheduledData) ? scheduledData : (scheduledData?.data || [])
       const normalizedScheduled = rawScheduled.map(s => ({
         ...s,
-        accountId:       s.account?.id  || s.accountId,
+        accountId: s.account?.id || s.accountId,
         targetAccountId: s.targetAccount?.id || s.targetAccountId,
-        categoryId:      s.category?.id || s.categoryId,
+        categoryId: s.category?.id || s.categoryId,
       }))
       setScheduled(normalizedScheduled)
-      
+
       const savedVisibility = localStorage.getItem('finvera_balance_visible')
       if (savedVisibility !== null) setIsBalanceVisible(savedVisibility === 'true')
 
-      // ── Currency: DB is the source of truth ─────────────────────────────
       if (profileData?.defaultCurrency && CURRENCIES.find(c => c.code === profileData.defaultCurrency)) {
         setCurrencyState(profileData.defaultCurrency)
         localStorage.setItem('finvera_currency', profileData.defaultCurrency)
@@ -78,16 +73,13 @@ export function DesktopProvider({ children }) {
           setCurrencyState(savedCurrency)
         }
       }
-      
-      setIsLoaded(true)
 
-      // Fetch live exchange rates
+      setIsLoaded(true)
       fetchExchangeRates().then(rates => setExchangeRates(rates))
     } catch (err) {
       console.error('Failed to load data from API:', err)
       setIsLoaded(true)
-    }
-  }, [])
+    }  }, [])
 
   useEffect(() => {
     loadData()
@@ -99,13 +91,11 @@ export function DesktopProvider({ children }) {
     }
   }, [isBalanceVisible, isLoaded])
 
-
   // ── Accounts ──────────────────────────────────────────────────────────────
   const addAccount = useCallback(async (account) => {
     try {
       const payload = { ...account, initialBalance: account.balance }
       const res = await api.accounts.create(payload)
-      // Re-fetch accounts to ensure balance from backend (including initialBalance) is correct
       const fresh = await api.accounts.getAll({ limit: 1000 })
       setAccounts(Array.isArray(fresh) ? fresh : (fresh?.data || []))
       return res
@@ -119,9 +109,7 @@ export function DesktopProvider({ children }) {
     try {
       const payload = { ...updates, initialBalance: updates.balance }
       await api.accounts.update(id, payload)
-      setAccounts(prev =>
-        prev.map(acc => acc.id === id ? { ...acc, ...updates } : acc)
-      )
+      setAccounts(prev => prev.map(acc => acc.id === id ? { ...acc, ...updates } : acc))
     } catch (err) {
       console.error(err)
       throw err
@@ -211,8 +199,6 @@ export function DesktopProvider({ children }) {
   // ── Transactions ──────────────────────────────────────────────────────────
   const addTransaction = useCallback(async (tx) => {
     try {
-      // Backend expects account_id, category_id, etc. 
-      // The API wrapper or component might pass camelCase.
       const payload = {
         type: tx.type,
         amount: parseFloat(tx.amount),
@@ -232,8 +218,6 @@ export function DesktopProvider({ children }) {
         tagIds: res.tags?.map(t => t.id) || res.tagIds || []
       }
       setTransactions(prev => [newTx, ...prev])
-
-      // Re-fetch accounts to get updated balances from server
       const accountsData = await api.accounts.getAll()
       setAccounts(Array.isArray(accountsData) ? accountsData : (accountsData.data || []))
       return newTx
@@ -256,7 +240,6 @@ export function DesktopProvider({ children }) {
         tagIds: updates.tagIds || updates.tag_ids || []
       }
       const res = await api.transactions.update(id, payload)
-      
       const newTx = {
         ...res,
         accountId: res.account?.id || res.accountId,
@@ -265,8 +248,6 @@ export function DesktopProvider({ children }) {
         tagIds: res.tags?.map(t => t.id) || res.tagIds || []
       }
       setTransactions(prev => prev.map(t => t.id === id ? newTx : t))
-      
-      // Re-fetch accounts to get updated balances from server
       const accountsData = await api.accounts.getAll()
       setAccounts(Array.isArray(accountsData) ? accountsData : (accountsData.data || []))
     } catch (err) {
@@ -279,8 +260,6 @@ export function DesktopProvider({ children }) {
     try {
       await api.transactions.delete(id)
       setTransactions(prev => prev.filter(t => t.id !== id))
-      
-      // Re-fetch accounts to get updated balances from server
       const accountsData = await api.accounts.getAll()
       setAccounts(Array.isArray(accountsData) ? accountsData : (accountsData.data || []))
     } catch (err) {
@@ -294,12 +273,16 @@ export function DesktopProvider({ children }) {
       const d = new Date(t.date)
       return d >= start && d <= end && t.type !== 'transfer'
     })
-    const income = filtered.filter(t => t.type === 'income').reduce((s, t) => s + convertAmountUtil(parseFloat(t.amount), t.currency || 'IDR', currency, exchangeRates), 0)
-    const expense = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + convertAmountUtil(parseFloat(t.amount), t.currency || 'IDR', currency, exchangeRates), 0)
+    const income = filtered
+      .filter(t => t.type === 'income')
+      .reduce((s, t) => s + convertAmountUtil(parseFloat(t.amount), t.currency || 'IDR', currency, exchangeRates), 0)
+    const expense = filtered
+      .filter(t => t.type === 'expense')
+      .reduce((s, t) => s + convertAmountUtil(parseFloat(t.amount), t.currency || 'IDR', currency, exchangeRates), 0)
     return { income, expense }
   }, [transactions, currency, exchangeRates])
 
-  // ── Templates (Mocked for now as backend doesn't have it fully yet) ─────────
+  // ── Templates (local-only — backend not implemented) ─────────────────────
   const addTemplate = useCallback((template) => {
     setTemplates(prev => [...prev, { ...template, id: 'tpl' + Date.now() }])
   }, [])
@@ -313,26 +296,24 @@ export function DesktopProvider({ children }) {
   // ── Scheduled ─────────────────────────────────────────────────────────────
   const addScheduled = useCallback(async (item) => {
     try {
-      // Backend expects camelCase JSON fields matching CreateScheduledRequest struct tags
       const payload = {
-        name:            item.name,
-        type:            item.type,
-        amount:          parseFloat(item.amount),
-        accountId:       item.accountId,
+        name: item.name,
+        type: item.type,
+        amount: parseFloat(item.amount),
+        accountId: item.accountId,
         targetAccountId: item.targetAccountId || undefined,
-        categoryId:      item.categoryId,
-        frequency:       item.frequency,
-        nextRun:         item.nextRun,
-        note:            item.note || '',
-        isActive:        item.isActive ?? true,
+        categoryId: item.categoryId,
+        frequency: item.frequency,
+        nextRun: item.nextRun,
+        note: item.note || '',
+        isActive: item.isActive ?? true,
       }
       const res = await api.scheduled.create(payload)
-      // Normalize nested objects from backend response
       const normalized = {
         ...res,
-        accountId:       res.account?.id  || res.accountId,
+        accountId: res.account?.id || res.accountId,
         targetAccountId: res.targetAccount?.id || res.targetAccountId,
-        categoryId:      res.category?.id || res.categoryId,
+        categoryId: res.category?.id || res.categoryId,
       }
       setScheduled(prev => [...prev, normalized])
       return normalized
@@ -344,24 +325,20 @@ export function DesktopProvider({ children }) {
 
   const updateScheduled = useCallback(async (id, updates) => {
     try {
-      // For toggleActive, updates may only contain isActive.
-      // We need the full current item to build a valid payload.
       const current = scheduled.find(s => s.id === id)
       if (!current) throw new Error('Scheduled transaction not found')
-
       const merged = { ...current, ...updates }
-
       const payload = {
-        name:            merged.name,
-        type:            merged.type,
-        amount:          parseFloat(merged.amount),
-        accountId:       merged.accountId,
+        name: merged.name,
+        type: merged.type,
+        amount: parseFloat(merged.amount),
+        accountId: merged.accountId,
         targetAccountId: merged.targetAccountId || undefined,
-        categoryId:      merged.categoryId,
-        frequency:       merged.frequency,
-        nextRun:         merged.nextRun,
-        note:            merged.note || '',
-        isActive:        merged.isActive ?? true,
+        categoryId: merged.categoryId,
+        frequency: merged.frequency,
+        nextRun: merged.nextRun,
+        note: merged.note || '',
+        isActive: merged.isActive ?? true,
       }
       await api.scheduled.update(id, payload)
       setScheduled(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
@@ -389,7 +366,6 @@ export function DesktopProvider({ children }) {
     }
   }, [])
 
-  // Convert an amount from its original currency to the user's default display currency
   const convertAmount = useCallback((amount, fromCurrency = 'IDR') => {
     return convertAmountUtil(amount, fromCurrency, currency, exchangeRates)
   }, [currency, exchangeRates])
@@ -419,6 +395,9 @@ export function DesktopProvider({ children }) {
   )
 }
 
+// Guard: throw a clear error if useDesktop is called outside DesktopProvider
 export function useDesktop() {
-  return useContext(DesktopContext)
+  const ctx = useContext(DesktopContext)
+  if (!ctx) throw new Error('useDesktop must be used within DesktopProvider')
+  return ctx
 }

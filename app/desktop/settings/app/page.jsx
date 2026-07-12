@@ -1,6 +1,5 @@
 "use client"
-import { useRef, useState } from 'react'
-import { Save, Globe, Clock, Palette, CreditCard, AlertTriangle } from 'lucide-react'
+import { Save, Globe, Clock, Palette, CreditCard } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 import { useTheme } from '@/components/desktop/ThemeProvider'
 import { useI18n } from '@/lib/i18n'

@@ -8,8 +8,8 @@ const ThemeContext = createContext({
 })
 
 function getStoredTheme() {
-  if (typeof window === 'undefined') return 'dark'
-  return localStorage.getItem('finvera_theme') || 'dark'
+  if (typeof window === 'undefined') return 'system'
+  return localStorage.getItem('finvera_theme') || 'system'
 }
 
 function resolveTheme(mode) {
@@ -34,7 +34,7 @@ function applyThemeClass(mode) {
 
 export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState(getStoredTheme)
-  const [resolvedTheme, setResolvedTheme] = useState('dark')
+  const [resolvedTheme, setResolvedTheme] = useState('system')
 
   useEffect(() => {
     setResolvedTheme(applyThemeClass(theme))

@@ -1,5 +1,4 @@
 "use client"
-import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -46,9 +45,13 @@ function SigninPage() {
       const response = await api.auth.login({ username, password })
       if (response && response.token) {
         setToken(response.token)
+        // rememberMe: store user info in localStorage (persists across tabs/restarts)
+        // Without rememberMe: still use localStorage for token (JWT handles expiry),
+        // but we mark the session as non-persistent so UI can reflect it if needed.
         localStorage.setItem('finvera_user', JSON.stringify({
           username,
-          loggedInAt: new Date().toISOString()
+          loggedInAt: new Date().toISOString(),
+          rememberMe,
         }))
         toast.success(`Welcome back, ${username}!`)
         router.push('/desktop/overview')

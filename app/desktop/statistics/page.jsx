@@ -152,16 +152,18 @@ export default function StatisticsPage() {
   return (
     <div className="flex flex-col min-h-[calc(100vh-140px)] space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-xl font-bold text-brand-black">Statistics & Analysis</h2>
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Quick range pills */}
-          <div className="flex items-center gap-1.5 bg-surface border border-brand-black/10 rounded-xl p-1 shadow-sm flex-wrap">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-bold text-brand-black">Statistics & Analysis</h2>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Quick range pills — scrollable if needed */}
+          <div className="flex items-center gap-1 bg-surface border border-brand-black/10 rounded-xl p-1 shadow-sm overflow-x-auto">
             {QUICK_RANGES.map(r => (
               <button
                 key={r}
                 onClick={() => setDateRange(r)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                   dateRange === r ? 'bg-brand-black text-brand-primary shadow-sm' : 'text-brand-black/60 hover:bg-brand-black/5'
                 }`}
               >
@@ -171,7 +173,7 @@ export default function StatisticsPage() {
           </div>
           {/* Custom date inputs */}
           {dateRange === 'Custom' && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <input
                 type="date"
                 value={customStart}
@@ -203,10 +205,10 @@ export default function StatisticsPage() {
         />
       </div>
 
-      {/* 6-month trend bar chart */}
+      {/* 6-month trend bar chart — always shows last 6 calendar months regardless of the filter above */}
       <div className="bg-surface rounded-3xl p-5 shadow-sm border border-brand-black/5">
-        <h3 className="text-sm font-bold text-brand-black mb-1">6-Month Income & Expense Trend</h3>
-        <p className="text-xs text-brand-black/40 mb-2">Comparison of the last 6 months</p>
+        <h3 className="text-sm font-bold text-brand-black mb-1">6-Month Income &amp; Expense Trend</h3>
+        <p className="text-xs text-brand-black/40 mb-2">Last 6 calendar months (independent of the date filter above)</p>
         <EChart option={barOption} style={{ minHeight: 260 }} />
       </div>
 

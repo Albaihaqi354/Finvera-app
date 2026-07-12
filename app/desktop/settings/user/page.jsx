@@ -1,12 +1,13 @@
 "use client"
 import { useEffect, useState } from 'react'
 import { Save, User, Mail, Lock, Shield } from 'lucide-react'
-
 import { api } from '@/lib/api/client'
+import { useToast } from '@/components/ui/Toast'
 
 export default function UserSettingsPage() {
   const [profile, setProfile] = useState({ username: '', email: '' })
   const [isLoading, setIsLoading] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -15,11 +16,14 @@ export default function UserSettingsPage() {
         setProfile({ username: res.username || '', email: res.email || '' })
       } catch (err) {
         console.error('Failed to load profile:', err)
-        // Fallback to local storage if API fails
-        const raw = localStorage.getItem('finvera_user')
-        if (raw) {
-          const u = JSON.parse(raw)
-          setProfile({ username: u.username || '', email: u.email || '' })
+        try {
+          const raw = localStorage.getItem('finvera_user')
+          if (raw) {
+            const u = JSON.parse(raw)
+            setProfile({ username: u.username || '', email: u.email || '' })
+          }
+        } catch {
+          // localStorage corrupt — ignore
         }
       }
     }
@@ -27,16 +31,23 @@ export default function UserSettingsPage() {
   }, [])
 
   const saveProfile = async () => {
+    if (!profile.username.trim()) {
+      toast.error('Username cannot be empty.')
+      return
+    }
     try {
       setIsLoading(true)
       await api.users.updateProfile(profile)
-      // Update local storage too for fallback/other UI parts
-      const raw = localStorage.getItem('finvera_user')
-      const prev = raw ? JSON.parse(raw) : {}
-      localStorage.setItem('finvera_user', JSON.stringify({ ...prev, ...profile }))
-      alert('Profile saved successfully!')
+      try {
+        const raw = localStorage.getItem('finvera_user')
+        const prev = raw ? JSON.parse(raw) : {}
+        localStorage.setItem('finvera_user', JSON.stringify({ ...prev, ...profile }))
+      } catch {
+        // localStorage update failed — non-critical
+      }
+      toast.success('Profile saved successfully!')
     } catch (err) {
-      alert(err.message || 'Failed to save profile')
+      toast.error(err.message || 'Failed to save profile')
     } finally {
       setIsLoading(false)
     }
@@ -44,7 +55,6 @@ export default function UserSettingsPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-brand-black">User Settings</h2>
         <button
@@ -60,7 +70,7 @@ export default function UserSettingsPage() {
 
       <div className="bg-surface rounded-3xl shadow-sm border border-brand-black/5 flex-1 p-6 lg:p-8 overflow-y-auto">
         <div className="max-w-2xl space-y-8">
-          
+
           {/* Profile Picture */}
           <div className="flex items-center gap-6">
             <div className="w-24 h-24 rounded-full bg-brand-black/5 border-4 border-white shadow-md flex items-center justify-center overflow-hidden relative group">
@@ -72,7 +82,7 @@ export default function UserSettingsPage() {
             <div>
               <h3 className="text-lg font-bold text-brand-black">Profile Picture</h3>
               <p className="text-xs font-medium text-brand-black/40 mt-1">Recommended size: 256x256px. Formats: JPG, PNG.</p>
-              <button className="mt-3 text-xs font-bold text-[#E6923F] hover:text-[#d08235] transition-colors">
+              <button type="button" className="mt-3 text-xs font-bold text-[#E6923F] hover:text-[#d08235] transition-colors">
                 Remove Picture
               </button>
             </div>
@@ -81,27 +91,27 @@ export default function UserSettingsPage() {
           {/* Profile Info */}
           <section className="space-y-4">
             <h3 className="text-sm font-bold text-brand-black border-b border-brand-black/5 pb-2">Profile Information</h3>
-            
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-brand-black/60 flex items-center gap-2">
+                <label htmlFor="profile-username" className="text-xs font-bold text-brand-black/60 flex items-center gap-2">
                   <User className="w-4 h-4 text-brand-black/40" />
                   Username
                 </label>
                 <input
+                  id="profile-username"
                   type="text"
                   value={profile.username}
                   onChange={e => setProfile(p => ({ ...p, username: e.target.value }))}
                   className="w-full bg-base-light border border-transparent focus:bg-surface focus:border-brand-black/20 rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 outline-none transition-all"
                 />
               </div>
-
               <div className="space-y-2">
-                <label className="text-xs font-bold text-brand-black/60 flex items-center gap-2">
+                <label htmlFor="profile-email" className="text-xs font-bold text-brand-black/60 flex items-center gap-2">
                   <Mail className="w-4 h-4 text-brand-black/40" />
                   Email Address
                 </label>
                 <input
+                  id="profile-email"
                   type="email"
                   value={profile.email}
                   onChange={e => setProfile(p => ({ ...p, email: e.target.value }))}
@@ -114,7 +124,6 @@ export default function UserSettingsPage() {
           {/* Security */}
           <section className="space-y-4">
             <h3 className="text-sm font-bold text-brand-black border-b border-brand-black/5 pb-2">Security</h3>
-            
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 rounded-2xl bg-base-light border border-brand-black/5">
                 <div className="flex items-center gap-4">
@@ -123,14 +132,13 @@ export default function UserSettingsPage() {
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-brand-black">Password</h4>
-                    <p className="text-xs font-medium text-brand-black/50">Last changed 3 months ago</p>
+                    <p className="text-xs font-medium text-brand-black/50">Change your account password</p>
                   </div>
                 </div>
-                <button className="text-xs font-bold bg-surface border border-brand-black/10 px-4 py-2 rounded-lg hover:bg-brand-black/5 transition-colors shadow-sm">
+                <button type="button" className="text-xs font-bold bg-surface border border-brand-black/10 px-4 py-2 rounded-lg hover:bg-brand-black/5 transition-colors shadow-sm">
                   Change
                 </button>
               </div>
-
               <div className="flex items-center justify-between p-4 rounded-2xl bg-base-light border border-brand-black/5">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-surface shadow-sm flex items-center justify-center text-brand-black/60">
@@ -141,7 +149,7 @@ export default function UserSettingsPage() {
                     <p className="text-xs font-medium text-brand-black/50">Not configured</p>
                   </div>
                 </div>
-                <button className="text-xs font-bold bg-brand-black text-brand-primary px-4 py-2 rounded-lg hover:bg-brand-black/80 transition-colors shadow-sm">
+                <button type="button" className="text-xs font-bold bg-brand-black text-brand-primary px-4 py-2 rounded-lg hover:bg-brand-black/80 transition-colors shadow-sm">
                   Enable
                 </button>
               </div>

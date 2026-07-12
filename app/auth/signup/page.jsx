@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Logo from '@/components/Logo'
@@ -206,6 +205,20 @@ function SignupPage() {
   };
 
   const handleRegister = async () => {
+    // Client-side validation before hitting the API
+    if (!username.trim() || username.trim().length < 3) {
+      setError('Username must be at least 3 characters.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim() || !emailRegex.test(email.trim())) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (!password || password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
     try {
       setIsLoading(true);
       setError('');

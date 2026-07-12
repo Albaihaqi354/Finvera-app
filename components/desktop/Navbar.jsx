@@ -17,7 +17,18 @@ export default function Navbar({ onMenuClick }) {
   const router = useRouter()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
+  // Fix #11: Hydration mismatch — read localStorage only on client via useEffect
+  const [user, setUser] = useState({ username: 'User', email: '' })
   const dropdownRef = useRef(null)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('finvera_user')
+      if (raw) setUser(JSON.parse(raw))
+    } catch {
+      // localStorage value is corrupt — fall back to default
+    }
+  }, [])
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -49,9 +60,6 @@ export default function Navbar({ onMenuClick }) {
       router.push('/auth/signin')
     }
   }
-
-  const userStr = typeof window !== 'undefined' ? localStorage.getItem('finvera_user') : null
-  const user = userStr ? JSON.parse(userStr) : { username: 'User', email: 'user@finvera.app' }
 
   return (
     <>

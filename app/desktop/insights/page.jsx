@@ -101,15 +101,16 @@ export default function InsightsPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-black/5 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-brand-black/5 flex items-center justify-center shrink-0">
             <MdiIcon path={mdiCompassOutline} size={22} className="text-brand-black/60" />
           </div>
           <h2 className="text-xl font-bold text-brand-black">Insights Explorer</h2>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Controls row — wraps on small screens */}
+        <div className="flex flex-wrap items-center gap-2">
           {/* Type */}
           <div className="flex items-center gap-1 bg-surface border border-brand-black/10 rounded-xl p-1 shadow-sm">
             {['expense', 'income'].map(t => (
@@ -127,7 +128,7 @@ export default function InsightsPage() {
             <select
               value={dimension}
               onChange={e => setDimension(e.target.value)}
-              className="appearance-none bg-surface border border-brand-black/10 rounded-xl px-4 py-2 text-xs font-bold pr-7 cursor-pointer outline-none shadow-sm"
+              className="appearance-none bg-surface border border-brand-black/10 rounded-xl px-3 py-2 text-xs font-bold pr-7 cursor-pointer outline-none shadow-sm"
             >
               <option value="category">By Category</option>
               <option value="account">By Account</option>
@@ -137,11 +138,11 @@ export default function InsightsPage() {
           </div>
 
           {/* Account filter */}
-          <div className="relative">
+          <div className="relative min-w-0">
             <select
               value={accountFilter}
               onChange={e => setAccountFilter(e.target.value)}
-              className="appearance-none bg-surface border border-brand-black/10 rounded-xl px-4 py-2 text-xs font-bold pr-7 cursor-pointer outline-none shadow-sm"
+              className="appearance-none bg-surface border border-brand-black/10 rounded-xl px-3 py-2 text-xs font-bold pr-7 cursor-pointer outline-none shadow-sm max-w-[160px] truncate"
             >
               <option value="all">All Accounts</option>
               {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -149,18 +150,19 @@ export default function InsightsPage() {
             <MdiIcon path={mdiChevronDown} size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-brand-black/40 pointer-events-none" />
           </div>
 
-          {/* Date range */}
-          <div className="flex items-center gap-1.5 bg-surface border border-brand-black/10 rounded-xl p-1 shadow-sm">
+          {/* Date range pills — scrollable on small screens */}
+          <div className="flex items-center gap-1 bg-surface border border-brand-black/10 rounded-xl p-1 shadow-sm overflow-x-auto max-w-full">
             {QUICK_RANGES.map(r => (
               <button key={r} onClick={() => setDateRange(r)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all whitespace-nowrap ${
                   dateRange === r ? 'bg-brand-black text-brand-primary shadow-sm' : 'text-brand-black/60 hover:bg-brand-black/5'
                 }`}>{r}</button>
             ))}
           </div>
 
+          {/* Custom date inputs */}
           {dateRange === 'Custom' && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)}
                 className="bg-surface border border-brand-black/10 rounded-xl px-3 py-2 text-xs font-semibold outline-none shadow-sm cursor-pointer" />
               <span className="text-xs text-brand-black/40 font-bold">→</span>

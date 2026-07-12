@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react'
 import { PlusCircle, Search, X, Trash2, Pencil, CalendarClock, Power, PowerOff } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useToast } from '@/components/ui/Toast'
 import CurrencyInput from '@/components/ui/CurrencyInput'
 
 const amountColor = (type) => {
@@ -280,6 +281,7 @@ export default function ScheduledPage() {
     addScheduled, updateScheduled, deleteScheduled, 
     isLoaded, currency, formatAmount
   } = useDesktop()
+  const toast = useToast()
 
   const [searchInput, setSearchInput] = useState('')
   const search = useDebounce(searchInput, 300)
@@ -292,19 +294,42 @@ export default function ScheduledPage() {
   const openEdit = (t) => { setEditingItem(t); setIsModalOpen(true) }
   const closeModal = () => { setIsModalOpen(false); setEditingItem(null) }
 
-  const handleSubmit = (data) => {
-    if (editingItem) updateScheduled(editingItem.id, data)
-    else addScheduled(data)
+  const handleSubmit = async (data) => {
+    try {
+      if (editingItem) {
+        await updateScheduled(editingItem.id, data)
+        toast.success('Scheduled transaction updated successfully')
+      } else {
+        await addScheduled(data)
+        toast.success('Scheduled transaction created successfully')
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to save scheduled transaction')
+    }
   }
 
   const handleDeleteClick = (id) => { setItemToDelete(id); setDeleteModalOpen(true) }
-  const confirmDelete = () => {
-    if (itemToDelete) { deleteScheduled(itemToDelete); setItemToDelete(null); setDeleteModalOpen(false) }
+  const confirmDelete = async () => {
+    if (itemToDelete) {
+      try {
+        await deleteScheduled(itemToDelete)
+        toast.success('Scheduled transaction deleted')
+      } catch (err) {
+        toast.error(err.message || 'Failed to delete scheduled transaction')
+      } finally {
+        setItemToDelete(null)
+        setDeleteModalOpen(false)
+      }
+    }
   }
 
-  const toggleActive = (e, item) => {
+  const toggleActive = async (e, item) => {
     e.stopPropagation()
-    updateScheduled(item.id, { isActive: !item.isActive })
+    try {
+      await updateScheduled(item.id, { isActive: !item.isActive })
+    } catch (err) {
+      toast.error(err.message || 'Failed to update status')
+    }
   }
 
   const filtered = useMemo(() => {
@@ -326,31 +351,32 @@ export default function ScheduledPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-bold text-brand-black">Scheduled Transactions</h2>
         <button
           type="button" onClick={openAdd}
-          className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+          className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer shrink-0"
         >
           <PlusCircle className="w-3.5 h-3.5" />
-          Add Scheduled
+          <span className="hidden sm:inline">Add Scheduled</span>
+          <span className="sm:hidden">Add</span>
         </button>
       </div>
 
       <div className="bg-surface rounded-3xl shadow-sm border border-brand-black/5 flex-1 flex flex-col min-h-0">
-        <div className="p-4 border-b border-brand-black/5 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="p-4 border-b border-brand-black/5 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 min-w-0">
             <h3 className="text-sm font-bold text-brand-black">All Scheduled</h3>
             <span className="text-xs font-bold text-brand-black/40 bg-brand-black/5 px-2 py-0.5 rounded-full">{scheduled.length}</span>
           </div>
-          <div className="relative">
+          <div className="relative min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-black/40" />
             <input
               type="text"
               placeholder="Search..."
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              className="pl-9 pr-4 py-1.5 bg-base-light border border-transparent rounded-lg text-sm focus:outline-none focus:bg-surface focus:border-brand-black/20 w-48 sm:w-64"
+              className="pl-9 pr-4 py-1.5 bg-base-light border border-transparent rounded-lg text-sm focus:outline-none focus:bg-surface focus:border-brand-black/20 w-40 sm:w-56"
             />
             {searchInput && (
               <button onClick={() => setSearchInput('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/40 hover:text-brand-black cursor-pointer">

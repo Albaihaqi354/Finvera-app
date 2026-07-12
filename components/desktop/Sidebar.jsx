@@ -38,8 +38,12 @@ function SidebarItem({ path, label, active = false, onClick, action, collapsed, 
   return (
     <div className={`flex items-center gap-1 ${collapsed ? 'pr-0 justify-center' : 'pr-1'}`}>
       <div
+        role="button"
+        tabIndex={0}
         onClick={onClick}
+        onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onClick()}
         title={collapsed ? tipTitle || label : undefined}
+        aria-label={label}
         className={`flex flex-1 items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
           collapsed ? 'justify-center px-0 w-10 h-10 mx-auto flex-none' : ''
         } ${
@@ -207,7 +211,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
           <SidebarItem path={mdiChartPieOutline} label="Statistics & Analysis" active={isActive('statistics')} onClick={() => navigateTo('statistics')} collapsed={isCollapsed} />
           <SidebarItem path={mdiCompassOutline} label="Insights Explorer" active={isActive('insights')} onClick={() => navigateTo('insights')} collapsed={isCollapsed} />
 
-          <NavSection title="Basis Data" collapsed={isCollapsed} />
+          <NavSection title="Base Data" collapsed={isCollapsed} />
           <SidebarItem path={mdiCreditCardOutline} label="Accounts" active={isActive('accounts')} onClick={() => navigateTo('accounts')} collapsed={isCollapsed} />
           <SidebarItem path={mdiViewDashboardOutline} label="Transaction Categories" active={isActive('categories')} onClick={() => navigateTo('categories')} collapsed={isCollapsed} />
           <SidebarItem path={mdiTagOutline} label="Transaction Tags" active={isActive('tags')} onClick={() => navigateTo('tags')} collapsed={isCollapsed} />

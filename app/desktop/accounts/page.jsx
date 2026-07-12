@@ -189,21 +189,21 @@ function AccountRow({ acc, isBalanceVisible, openEdit, setDeletingAccount, forma
   const fmt = (n) => (isBalanceVisible ? formatAmount(Math.abs(n), acc.currency || 'IDR') : formatAmount(0, 'IDR').replace(/0([.,]0+)?/, '•••••••'))
   return (
     <div className="flex items-center justify-between p-4 rounded-2xl bg-base-light hover:bg-brand-black/5 transition-colors border border-transparent hover:border-brand-black/10 group">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 min-w-0">
         <div
-          className="w-10 h-10 rounded-xl bg-surface shadow-sm flex items-center justify-center text-sm font-bold"
+          className="w-10 h-10 shrink-0 rounded-xl bg-surface shadow-sm flex items-center justify-center text-sm font-bold"
           style={{ color: acc.color || '#E6923F' }}
         >
           {acc.name.charAt(0)}
         </div>
-        <div>
-          <h4 className="text-sm font-bold text-brand-black">{acc.name}</h4>
-          <p className="text-xs font-medium text-brand-black/50 capitalize">
+        <div className="min-w-0">
+          <h4 className="text-sm font-bold text-brand-black truncate">{acc.name}</h4>
+          <p className="text-xs font-medium text-brand-black/50 capitalize truncate">
             {acc.category || acc.type} · {acc.type}
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 shrink-0 ml-2">
         <span className={`text-sm font-bold ${acc.balance < 0 ? 'text-rose-500' : 'text-brand-black'}`}>
           {fmt(acc.balance)}
         </span>
@@ -288,15 +288,16 @@ export default function AccountsPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-bold text-brand-black">Accounts</h2>
         <button
           type="button"
           onClick={openAdd}
-          className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+          className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer shrink-0"
         >
           <PlusCircle className="w-3.5 h-3.5" />
-          Add Account
+          <span className="hidden sm:inline">Add Account</span>
+          <span className="sm:hidden">Add</span>
         </button>
       </div>
 
@@ -363,6 +364,7 @@ export default function AccountsPage() {
       {/* Modals */}
       {modalOpen && (
         <AccountModal
+          key={editingAccount?.id || 'new'}
           isOpen={modalOpen}
           onClose={closeModal}
           onSubmit={handleSubmit}

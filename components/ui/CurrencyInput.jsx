@@ -37,7 +37,9 @@ export default function CurrencyInput({
   const format = (num) => {
     if (num === '' || num === null || num === undefined) return ''
     const n = parseFloat(num)
-    if (isNaN(n) || n === 0) return ''
+    if (isNaN(n)) return ''
+    // Show '0' explicitly when value is zero (was returning empty string before, causing confusion)
+    if (n === 0) return '0'
     return n.toLocaleString(cur.locale, {
       minimumFractionDigits: 0,
       maximumFractionDigits: cur.decimals,
@@ -96,14 +98,13 @@ export default function CurrencyInput({
 
   const handleFocus = () => {
     isEditing.current = true
-    // Keep the formatted value visible on focus so user can see what they've typed
     const n = parseFloat(value) || 0
+    // Clear '0' on focus so user can start typing cleanly, but keep real values
     setDisplayValue(n === 0 ? '' : format(n))
   }
 
   const handleBlur = () => {
     isEditing.current = false
-    // Re-format cleanly on blur
     const n = parseFloat(value) || 0
     setDisplayValue(n === 0 ? '' : format(n))
   }

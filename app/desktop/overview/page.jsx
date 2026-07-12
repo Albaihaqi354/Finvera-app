@@ -27,7 +27,7 @@ function SkeletonBlock({ className }) {
 }
 
 export default function OverviewPage() {
-  const { isBalanceVisible, accounts, getTotalsForRange, isLoaded, currency, formatAmount } = useDesktop()
+  const { isBalanceVisible, accounts, getTotalsForRange, isLoaded, currency, formatAmount, convertAmount } = useDesktop()
   const { resolvedTheme } = useTheme()
   const now = useMemo(() => new Date(), [])
   // Toggle hero card between income/expense/net
@@ -72,11 +72,11 @@ export default function OverviewPage() {
   )
 
   const { totalAssets, totalLiabilities, netAssets } = useMemo(() => ({
-    totalAssets:      accounts.filter(a => a.type === 'asset').reduce((s, a) => s + a.balance, 0),
-    totalLiabilities: accounts.filter(a => a.type === 'liability').reduce((s, a) => s + Math.abs(a.balance), 0),
-    netAssets:        accounts.filter(a => a.type === 'asset').reduce((s, a) => s + a.balance, 0) -
-                      accounts.filter(a => a.type === 'liability').reduce((s, a) => s + Math.abs(a.balance), 0),
-  }), [accounts])
+    totalAssets:      accounts.filter(a => a.type === 'asset').reduce((s, a) => s + convertAmount(a.balance, a.currency || 'IDR'), 0),
+    totalLiabilities: accounts.filter(a => a.type === 'liability').reduce((s, a) => s + Math.abs(convertAmount(a.balance, a.currency || 'IDR')), 0),
+    netAssets:        accounts.filter(a => a.type === 'asset').reduce((s, a) => s + convertAmount(a.balance, a.currency || 'IDR'), 0) -
+                      accounts.filter(a => a.type === 'liability').reduce((s, a) => s + Math.abs(convertAmount(a.balance, a.currency || 'IDR')), 0),
+  }), [accounts, convertAmount])
 
   const { income: monthlyIncome, expense: monthlyExpense } = useMemo(() => {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)

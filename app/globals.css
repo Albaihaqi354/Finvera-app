@@ -62,6 +62,13 @@ body {
   color: var(--foreground);
   font-family: var(--font-ibm-plex-sans), sans-serif;
   margin: 0;
+  /* Prevent horizontal overflow on all pages */
+  overflow-x: hidden;
+}
+
+/* Prevent any element from causing horizontal overflow */
+*, *::before, *::after {
+  max-width: 100%;
 }
 
 /* ezBookkeeping-style chart container heights */

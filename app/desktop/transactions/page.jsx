@@ -16,7 +16,6 @@ const amountColor = (type) => {
   return 'text-brand-black/70'
 }
 
-// ─── Sub-component: Transaction Row ──────────────────────────────────────────
 function TxRow({ tx, accounts, categories, onDelete, onEdit, formatAmount }) {
   const acc = accounts.find(a => a.id === tx.accountId)
   const cat = categories.find(c => c.id === tx.categoryId)
@@ -26,38 +25,84 @@ function TxRow({ tx, accounts, categories, onDelete, onEdit, formatAmount }) {
     : cat?.name || 'Unknown'
 
   return (
-    <div className="grid grid-cols-[100px_1fr_140px_160px_1fr_72px] gap-2 px-5 py-3.5 border-b hover:bg-base-light items-center group transition-colors">
-      <p className="text-xs font-bold text-brand-black/60">{tx.time}</p>
-      <div className="flex items-center gap-2 min-w-0">
-        {!isTransfer && cat?.icon && (
-          <span className="text-base shrink-0">{cat.icon}</span>
+    <>
+      {/* Desktop Layout */}
+      <div className="hidden lg:grid grid-cols-[100px_1fr_140px_160px_1fr_72px] gap-2 px-5 py-3.5 border-b hover:bg-base-light items-center group transition-colors">
+        <p className="text-xs font-bold text-brand-black/60">{tx.time}</p>
+        <div className="flex items-center gap-2 min-w-0">
+          {!isTransfer && cat?.icon && (
+            <span className="text-base shrink-0">{cat.icon}</span>
+          )}
+          <span className="text-xs font-semibold truncate text-brand-black/80">{label}</span>
+        </div>
+        <span className={`text-sm font-bold ${amountColor(tx.type)}`}>
+          {formatAmount(tx.amount, tx.currency || 'IDR')}
+        </span>
+        <span className="text-xs font-semibold truncate text-brand-black/70">{acc?.name}</span>
+        <span className="text-xs text-brand-black/50 truncate">{tx.note}</span>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+          <button
+            type="button"
+            onClick={() => onEdit(tx)}
+            className="p-1.5 text-brand-black/50 hover:text-brand-black hover:bg-brand-black/10 rounded-lg transition-colors cursor-pointer"
+            title="Edit"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onDelete(tx.id)}
+            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+            title="Delete"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="lg:hidden flex flex-col gap-2 px-4 py-3.5 border-b hover:bg-base-light transition-colors">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {!isTransfer && cat?.icon && (
+              <span className="text-lg shrink-0">{cat.icon}</span>
+            )}
+            <span className="text-sm font-bold truncate text-brand-black/80">{label}</span>
+          </div>
+          <span className={`text-sm font-bold shrink-0 ${amountColor(tx.type)}`}>
+            {formatAmount(tx.amount, tx.currency || 'IDR')}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs text-brand-black/60 font-semibold truncate">
+            <span>{tx.time}</span>
+            <span>•</span>
+            <span className="truncate">{acc?.name}</span>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={() => onEdit(tx)}
+              className="p-1.5 text-brand-black/50 hover:text-brand-black hover:bg-brand-black/10 rounded-lg transition-colors cursor-pointer"
+              title="Edit"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete(tx.id)}
+              className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        {tx.note && (
+          <p className="text-xs text-brand-black/50 italic line-clamp-1 mt-0.5">{tx.note}</p>
         )}
-        <span className="text-xs font-semibold truncate text-brand-black/80">{label}</span>
       </div>
-      <span className={`text-sm font-bold ${amountColor(tx.type)}`}>
-        {formatAmount(tx.amount, tx.currency || 'IDR')}
-      </span>
-      <span className="text-xs font-semibold truncate text-brand-black/70">{acc?.name}</span>
-      <span className="text-xs text-brand-black/50 truncate">{tx.note}</span>
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
-          type="button"
-          onClick={() => onEdit(tx)}
-          className="p-1.5 text-brand-black/50 hover:text-brand-black hover:bg-brand-black/10 rounded-lg transition-colors cursor-pointer"
-          title="Edit"
-        >
-          <Pencil className="w-3.5 h-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => onDelete(tx.id)}
-          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-          title="Delete"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
+    </>
   )
 }
 
@@ -686,16 +731,16 @@ function TransactionsContent() {
   )
 
   return (
-    <div className="flex h-[calc(100vh-140px)] bg-surface rounded-2xl p-4 shadow-sm border border-brand-black/5 relative">
-      {/* ── Sidebar ── */}
-      <div className="w-52 shrink-0 pr-4 space-y-6 overflow-y-auto">
-        <div className="space-y-1">
-          {['Transaction List', 'Transaction Calendar'].map(tab => (
+    <div className="flex flex-col lg:flex-row h-auto min-h-[calc(100vh-140px)] bg-surface rounded-2xl p-4 md:p-6 shadow-sm border border-brand-black/5 relative gap-6">
+      {/* ── Filter Sidebar ── */}
+      <div className="w-full lg:w-64 shrink-0 flex flex-col">
+        <div className="flex bg-base-light rounded-xl p-1 mb-6">
+          {['Transaction List', 'Calendar'].map(tab => (
             <div
               key={tab}
               onClick={() => setActiveSubTab(tab)}
-              className={`px-4 py-2.5 rounded-xl cursor-pointer text-sm font-bold transition-all ${
-                activeSubTab === tab ? 'bg-brand-black text-brand-primary shadow-sm' : 'text-brand-black/70 hover:bg-brand-black/5'
+              className={`flex-1 text-center py-2 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
+                activeSubTab === tab ? 'bg-surface shadow-sm text-brand-black' : 'text-brand-black/40 hover:text-brand-black/60'
               }`}
             >{tab}</div>
           ))}
@@ -708,20 +753,20 @@ function TransactionsContent() {
       </div>
 
       {/* ── Main area ── */}
-      <div className="grow flex flex-col min-w-0 border-l border-brand-black/5 pl-6">
+      <div className="grow flex flex-col min-w-0 lg:border-l lg:border-brand-black/5 lg:pl-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-bold text-brand-black">
               {activeSubTab === 'Transaction List' ? 'Transaction List' : 'Transaction Calendar'}
             </h2>
             <div className="flex items-center gap-2">
               <button
                 type="button" onClick={handleExportExcel}
-                className="flex items-center gap-1.5 bg-base-light hover:bg-brand-black/5 text-brand-black/70 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors border border-brand-black/5"
+                className="hidden sm:flex items-center gap-1.5 bg-base-light hover:bg-brand-black/5 text-brand-black/70 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors border border-brand-black/5"
                 title="Export current view to Excel"
               >
-                <Download className="w-3.5 h-3.5" /> Export Excel
+                <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Export</span>
               </button>
               <button
                 type="button" onClick={handleOpenAddModal}
@@ -731,14 +776,14 @@ function TransactionsContent() {
               </button>
             </div>
           </div>
-          <div className="relative">
+          <div className="relative w-full lg:w-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-black/40" />
             <input
               type="text"
               placeholder="Search by description, category, account..."
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-base-light rounded-xl text-sm focus:outline-none focus:bg-surface focus:border focus:border-brand-black/20 w-80"
+              className="pl-9 pr-4 py-2 bg-base-light rounded-xl text-sm focus:outline-none focus:bg-surface focus:border focus:border-brand-black/20 w-full lg:w-80"
             />
             {searchInput && (
               <button onClick={() => setSearchInput('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/40 hover:text-brand-black cursor-pointer">
@@ -749,11 +794,11 @@ function TransactionsContent() {
         </div>
 
         {/* Summary bar */}
-        <div className="flex items-center justify-between bg-base-light rounded-2xl px-5 py-3 mb-4">
+        <div className="flex flex-wrap items-center justify-between bg-base-light rounded-2xl px-4 py-3 mb-4 gap-2">
           <span className="text-xs font-bold text-brand-black/40">
             {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
           </span>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
             <span className="text-xs font-bold text-brand-black/50">
               Income <span className="text-emerald-500">{formatAmount(totalIncome, currency)}</span>
             </span>
@@ -766,7 +811,7 @@ function TransactionsContent() {
         {/* Content */}
         {activeSubTab === 'Transaction List' ? (
           <div className="bg-surface rounded-2xl border border-brand-black/5 flex-1 flex flex-col min-h-0 overflow-hidden">
-            <div className="grid grid-cols-[100px_1fr_140px_160px_1fr_72px] gap-2 px-5 py-3 border-b bg-base-light">
+            <div className="hidden lg:grid grid-cols-[100px_1fr_140px_160px_1fr_72px] gap-2 px-5 py-3 border-b bg-base-light">
               {['TIME', 'CATEGORY', 'AMOUNT', 'ACCOUNT', 'DESCRIPTION', ''].map(label => (
                 <span key={label} className="text-[10px] font-bold text-brand-black/40 uppercase">{label}</span>
               ))}

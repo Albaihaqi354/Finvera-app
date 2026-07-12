@@ -203,32 +203,33 @@ export default function TagsPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-bold text-brand-black">Transaction Tags</h2>
         <button
           type="button"
           onClick={openAdd}
-          className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+          className="flex items-center gap-1.5 bg-brand-black hover:bg-brand-black/80 text-brand-primary px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer shrink-0"
         >
           <PlusCircle className="w-3.5 h-3.5" />
-          Add Tag
+          <span className="hidden sm:inline">Add Tag</span>
+          <span className="sm:hidden">Add</span>
         </button>
       </div>
 
       <div className="bg-surface rounded-3xl shadow-sm border border-brand-black/5 flex-1 flex flex-col min-h-0">
-        <div className="p-4 border-b border-brand-black/5 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="p-4 border-b border-brand-black/5 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 min-w-0">
             <h3 className="text-sm font-bold text-brand-black">All Tags</h3>
             <span className="text-xs font-bold text-brand-black/40 bg-brand-black/5 px-2 py-0.5 rounded-full">{tags.length}</span>
           </div>
-          <div className="relative">
+          <div className="relative min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-black/40" />
             <input
               type="text"
               placeholder="Search tag..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-1.5 bg-base-light border border-transparent rounded-lg text-sm focus:outline-none focus:bg-surface focus:border-brand-black/20 w-48 sm:w-64"
+              className="pl-9 pr-4 py-1.5 bg-base-light border border-transparent rounded-lg text-sm focus:outline-none focus:bg-surface focus:border-brand-black/20 w-40 sm:w-56"
             />
           </div>
         </div>
