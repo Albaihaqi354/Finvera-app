@@ -5,8 +5,6 @@ import EChart from '@/components/charts/EChart'
 import { buildPieChartOption, buildGroupedBarOption } from '@/lib/chart/options'
 import { EZ_EXPENSE_COLOR, EZ_INCOME_COLOR } from '@/lib/chart/colors'
 import { useTheme } from '@/components/desktop/ThemeProvider'
-import { formatConverted } from '@/lib/currency'
-
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 
 const QUICK_RANGES = ['Today', 'This Week', 'This Month', 'This Year', 'All Time', 'Custom']
@@ -44,35 +42,35 @@ function getRangeBounds(range, customStart, customEnd) {
   return { start, end }
 }
 
-function aggregateByCategory(transactions, categories, type) {
+function aggregateByCategory(transactions, categories, type, convertAmount) {
   const map = {}
   transactions
     .filter(t => t.type === type)
     .forEach(tx => {
       const name = categories.find(c => c.id === tx.categoryId)?.name || 'Unknown'
-      map[name] = (map[name] || 0) + tx.amount
+      map[name] = (map[name] || 0) + convertAmount(tx.amount, tx.currency || 'IDR')
     })
   return Object.entries(map)
     .map(([name, amount]) => ({ name, amount }))
     .sort((a, b) => b.amount - a.amount)
 }
 
-function StatCard({ label, value, color, currency, exchangeRates }) {
+function StatCard({ label, value, color, currency, formatAmount }) {
   return (
     <div className="bg-surface rounded-2xl px-5 py-4 border border-brand-black/5 shadow-sm">
       <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider mb-1">{label}</p>
-      <p className={`text-xl font-bold ${color}`}>{formatConverted(value, currency, exchangeRates)}</p>
+      <p className={`text-xl font-bold ${color}`}>{formatAmount(value, currency)}</p>
     </div>
   )
 }
 
-function CategoryPieCard({ title, items, emptyLabel, currency, exchangeRates }) {
+function CategoryPieCard({ title, items, emptyLabel, currency, formatAmount }) {
   const { resolvedTheme } = useTheme()
   const option = useMemo(
     () => buildPieChartOption(items, {
-      formatValue: (v) => formatConverted(v, currency, exchangeRates)
+      formatValue: (v) => formatAmount(v, currency)
     }),
-    [items, currency, exchangeRates, resolvedTheme]
+    [items, currency, formatAmount, resolvedTheme]
   )
   return (
     <div className="bg-surface rounded-3xl p-4 shadow-sm border border-brand-black/5">
@@ -90,7 +88,7 @@ function CategoryPieCard({ title, items, emptyLabel, currency, exchangeRates }) 
 }
 
 export default function StatisticsPage() {
-  const { transactions, categories, isLoaded, currency, exchangeRates } = useDesktop()
+  const { transactions, categories, isLoaded, currency, convertAmount, formatAmount } = useDesktop()
   const { resolvedTheme } = useTheme()
   const [dateRange, setDateRange] = useState('This Month')
   const [customStart, setCustomStart] = useState('')
@@ -108,11 +106,11 @@ export default function StatisticsPage() {
     })
   }, [transactions, start, end])
 
-  const incomeItems  = useMemo(() => aggregateByCategory(filteredTx, categories, 'income'), [filteredTx, categories])
-  const expenseItems = useMemo(() => aggregateByCategory(filteredTx, categories, 'expense'), [filteredTx, categories])
+  const incomeItems  = useMemo(() => aggregateByCategory(filteredTx, categories, 'income', convertAmount), [filteredTx, categories, convertAmount])
+  const expenseItems = useMemo(() => aggregateByCategory(filteredTx, categories, 'expense', convertAmount), [filteredTx, categories, convertAmount])
 
-  const totalIncome  = useMemo(() => filteredTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0), [filteredTx])
-  const totalExpense = useMemo(() => filteredTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0), [filteredTx])
+  const totalIncome  = useMemo(() => filteredTx.filter(t => t.type === 'income').reduce((s, t) => s + convertAmount(t.amount, t.currency || 'IDR'), 0), [filteredTx, convertAmount])
+  const totalExpense = useMemo(() => filteredTx.filter(t => t.type === 'expense').reduce((s, t) => s + convertAmount(t.amount, t.currency || 'IDR'), 0), [filteredTx, convertAmount])
   const netFlow      = totalIncome - totalExpense
 
   // Monthly trend for bar chart (last 6 months or custom period breakdown by month)
@@ -129,12 +127,12 @@ export default function StatisticsPage() {
       })
       months.push({
         label: d.toLocaleString('default', { month: 'short', year: '2-digit' }),
-        income: txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
-        expense: txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+        income: txs.filter(t => t.type === 'income').reduce((s, t) => s + convertAmount(t.amount, t.currency || 'IDR'), 0),
+        expense: txs.filter(t => t.type === 'expense').reduce((s, t) => s + convertAmount(t.amount, t.currency || 'IDR'), 0),
       })
     }
     return months
-  }, [transactions])
+  }, [transactions, convertAmount])
 
   const barOption = useMemo(() => buildGroupedBarOption(
     monthlyBreakdown.map(m => m.label),
@@ -142,8 +140,8 @@ export default function StatisticsPage() {
       { name: 'Income',  data: monthlyBreakdown.map(m => m.income),  color: EZ_INCOME_COLOR },
       { name: 'Expense', data: monthlyBreakdown.map(m => m.expense), color: EZ_EXPENSE_COLOR },
     ],
-    { formatValue: (v) => formatConverted(v, currency, exchangeRates) }
-  ), [monthlyBreakdown, currency, exchangeRates, resolvedTheme])
+    { formatValue: (v) => formatAmount(v, currency) }
+  ), [monthlyBreakdown, currency, formatAmount, resolvedTheme])
 
   if (!isLoaded) return (
     <div className="space-y-4">
@@ -194,14 +192,14 @@ export default function StatisticsPage() {
 
       {/* Summary stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label="Total Income"  value={totalIncome}  color="text-emerald-500" currency={currency} exchangeRates={exchangeRates} />
-        <StatCard label="Total Expense" value={totalExpense} color="text-rose-500"    currency={currency} exchangeRates={exchangeRates} />
+        <StatCard label="Total Income"  value={totalIncome}  color="text-emerald-500" currency={currency} formatAmount={formatAmount} />
+        <StatCard label="Total Expense" value={totalExpense} color="text-rose-500"    currency={currency} formatAmount={formatAmount} />
         <StatCard
           label="Net Flow"
           value={Math.abs(netFlow)}
           color={netFlow >= 0 ? 'text-emerald-500' : 'text-rose-500'}
           currency={currency}
-          exchangeRates={exchangeRates}
+          formatAmount={formatAmount}
         />
       </div>
 
@@ -219,14 +217,14 @@ export default function StatisticsPage() {
           items={incomeItems}
           emptyLabel="No income recorded in this period."
           currency={currency}
-          exchangeRates={exchangeRates}
+          formatAmount={formatAmount}
         />
         <CategoryPieCard
           title="Expense by Category"
           items={expenseItems}
           emptyLabel="No expenses recorded in this period."
           currency={currency}
-          exchangeRates={exchangeRates}
+          formatAmount={formatAmount}
         />
       </div>
     </div>

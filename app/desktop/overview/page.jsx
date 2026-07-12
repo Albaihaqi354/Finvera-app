@@ -16,7 +16,6 @@ import {
   mdiLayers,
 } from '@/lib/icons/mdi'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
-import { formatConverted } from '@/lib/currency'
 import { ArrowUpCircle, ArrowDownCircle } from 'lucide-react'
 
 function startOfDay(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x }
@@ -28,7 +27,7 @@ function SkeletonBlock({ className }) {
 }
 
 export default function OverviewPage() {
-  const { isBalanceVisible, accounts, getTotalsForRange, isLoaded, currency, exchangeRates } = useDesktop()
+  const { isBalanceVisible, accounts, getTotalsForRange, isLoaded, currency, formatAmount } = useDesktop()
   const { resolvedTheme } = useTheme()
   const now = useMemo(() => new Date(), [])
   // Toggle hero card between income/expense/net
@@ -68,8 +67,8 @@ export default function OverviewPage() {
   }, [getTotalsForRange, now])
 
   const trendOption = useMemo(
-    () => buildTrendBarOption(monthlyTrend, { formatValue: (v) => formatConverted(v, currency, exchangeRates) }),
-    [monthlyTrend, currency, exchangeRates, resolvedTheme]
+    () => buildTrendBarOption(monthlyTrend, { formatValue: (v) => formatAmount(v, currency) }),
+    [monthlyTrend, currency, formatAmount, resolvedTheme]
   )
 
   const { totalAssets, totalLiabilities, netAssets } = useMemo(() => ({
@@ -85,9 +84,9 @@ export default function OverviewPage() {
   }, [getTotalsForRange, now])
 
   const monthName = now.toLocaleString('default', { month: 'long' })
-  const mask = (val) => {
+  const mask = (val, accCurrency = currency) => {
     if (!isBalanceVisible) return `${currency} •••••••`
-    return formatConverted(val, currency, exchangeRates)
+    return formatAmount(val, accCurrency)
   }
 
   // Hero card configuration
@@ -219,7 +218,7 @@ export default function OverviewPage() {
                   <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: acc.color || '#E6923F' }} />
                   <span className="text-xs font-bold text-brand-black/70">{acc.name}</span>
                   <span className={`text-xs font-semibold ${acc.balance < 0 ? 'text-rose-500' : 'text-brand-black/50'}`}>
-                    {isBalanceVisible ? formatConverted(Math.abs(acc.balance), currency, exchangeRates) : '•••'}
+                    {mask(Math.abs(acc.balance), acc.currency || currency)}
                   </span>
                 </div>
               ))}

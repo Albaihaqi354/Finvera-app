@@ -1,7 +1,7 @@
 "use client"
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { api } from '@/lib/api/client'
-import { CURRENCIES, fetchExchangeRates, convertAmount as convertAmountUtil } from '@/lib/currency'
+import { CURRENCIES, fetchExchangeRates, convertAmount as convertAmountUtil, formatConverted } from '@/lib/currency'
 
 const DesktopContext = createContext()
 
@@ -27,12 +27,14 @@ export function DesktopProvider({ children }) {
   const loadData = useCallback(async () => {
     try {
       const [
+        profileData,
         accountsData,
         categoriesData,
         tagsData,
         transactionsData,
         scheduledData
       ] = await Promise.all([
+        api.users.getProfile().catch(() => null),
         api.accounts.getAll({ limit: 1000 }).catch(() => []),
         api.categories.getAll({ limit: 1000 }).catch(() => []),
         api.tags.getAll({ limit: 1000 }).catch(() => []),
@@ -66,14 +68,20 @@ export function DesktopProvider({ children }) {
       const savedVisibility = localStorage.getItem('finvera_balance_visible')
       if (savedVisibility !== null) setIsBalanceVisible(savedVisibility === 'true')
 
-      const savedCurrency = localStorage.getItem('finvera_currency')
-      if (savedCurrency && CURRENCIES.find(c => c.code === savedCurrency)) {
-        setCurrencyState(savedCurrency)
+      // ── Currency: DB is the source of truth ─────────────────────────────
+      if (profileData?.defaultCurrency && CURRENCIES.find(c => c.code === profileData.defaultCurrency)) {
+        setCurrencyState(profileData.defaultCurrency)
+        localStorage.setItem('finvera_currency', profileData.defaultCurrency)
+      } else {
+        const savedCurrency = localStorage.getItem('finvera_currency')
+        if (savedCurrency && CURRENCIES.find(c => c.code === savedCurrency)) {
+          setCurrencyState(savedCurrency)
+        }
       }
       
       setIsLoaded(true)
 
-      // Fetch live exchange rates (non-blocking — app works without it via fallback)
+      // Fetch live exchange rates
       fetchExchangeRates().then(rates => setExchangeRates(rates))
     } catch (err) {
       console.error('Failed to load data from API:', err)
@@ -286,10 +294,10 @@ export function DesktopProvider({ children }) {
       const d = new Date(t.date)
       return d >= start && d <= end && t.type !== 'transfer'
     })
-    const income = filtered.filter(t => t.type === 'income').reduce((s, t) => s + parseFloat(t.amount), 0)
-    const expense = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0)
+    const income = filtered.filter(t => t.type === 'income').reduce((s, t) => s + convertAmountUtil(parseFloat(t.amount), t.currency || 'IDR', currency, exchangeRates), 0)
+    const expense = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + convertAmountUtil(parseFloat(t.amount), t.currency || 'IDR', currency, exchangeRates), 0)
     return { income, expense }
-  }, [transactions])
+  }, [transactions, currency, exchangeRates])
 
   // ── Templates (Mocked for now as backend doesn't have it fully yet) ─────────
   const addTemplate = useCallback((template) => {
@@ -381,9 +389,13 @@ export function DesktopProvider({ children }) {
     }
   }, [])
 
-  // Convert an IDR-based amount to the current display currency
-  const convertAmount = useCallback((amount) => {
-    return convertAmountUtil(amount, currency, exchangeRates)
+  // Convert an amount from its original currency to the user's default display currency
+  const convertAmount = useCallback((amount, fromCurrency = 'IDR') => {
+    return convertAmountUtil(amount, fromCurrency, currency, exchangeRates)
+  }, [currency, exchangeRates])
+
+  const formatAmount = useCallback((amount, fromCurrency = 'IDR') => {
+    return formatConverted(amount, fromCurrency, currency, exchangeRates)
   }, [currency, exchangeRates])
 
   return (
@@ -392,6 +404,7 @@ export function DesktopProvider({ children }) {
       currency, setCurrency,
       exchangeRates,
       convertAmount,
+      formatAmount,
       accounts, setAccounts, addAccount, updateAccount, deleteAccount,
       categories, addCategory, updateCategory, deleteCategory,
       tags, addTag, updateTag, deleteTag,

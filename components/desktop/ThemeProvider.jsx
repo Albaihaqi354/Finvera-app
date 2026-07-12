@@ -2,23 +2,23 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 
 const ThemeContext = createContext({
-  theme: 'system',
+  theme: 'dark',
   setTheme: () => {},
-  resolvedTheme: 'light',
+  resolvedTheme: 'dark',
 })
 
 function getStoredTheme() {
-  if (typeof window === 'undefined') return 'system'
-  return localStorage.getItem('finvera_theme') || 'system'
+  if (typeof window === 'undefined') return 'dark'
+  return localStorage.getItem('finvera_theme') || 'dark'
 }
 
 function resolveTheme(mode) {
-  if (mode === 'dark') return 'dark'
   if (mode === 'light') return 'light'
-  if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    return 'dark'
+  if (mode === 'dark') return 'dark'
+  if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: light)').matches) {
+    return 'light'
   }
-  return 'light'
+  return 'dark'
 }
 
 function applyThemeClass(mode) {
@@ -34,7 +34,7 @@ function applyThemeClass(mode) {
 
 export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState(getStoredTheme)
-  const [resolvedTheme, setResolvedTheme] = useState('light')
+  const [resolvedTheme, setResolvedTheme] = useState('dark')
 
   useEffect(() => {
     setResolvedTheme(applyThemeClass(theme))

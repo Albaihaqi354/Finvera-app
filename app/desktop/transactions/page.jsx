@@ -6,7 +6,7 @@ import { PlusCircle, Search, X, Trash2, ChevronLeft, ChevronRight, Pencil, Downl
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 import { useDebounce } from '@/hooks/useDebounce'
 import CurrencyInput from '@/components/ui/CurrencyInput'
-import { formatCurrency, formatConverted } from '@/lib/currency'
+import { formatCurrency } from '@/lib/currency'
 import { useToast } from '@/components/ui/Toast'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -17,7 +17,7 @@ const amountColor = (type) => {
 }
 
 // ─── Sub-component: Transaction Row ──────────────────────────────────────────
-function TxRow({ tx, accounts, categories, onDelete, onEdit, currency = 'IDR', exchangeRates = null }) {
+function TxRow({ tx, accounts, categories, onDelete, onEdit, formatAmount }) {
   const acc = accounts.find(a => a.id === tx.accountId)
   const cat = categories.find(c => c.id === tx.categoryId)
   const isTransfer = tx.type === 'transfer'
@@ -35,7 +35,7 @@ function TxRow({ tx, accounts, categories, onDelete, onEdit, currency = 'IDR', e
         <span className="text-xs font-semibold truncate text-brand-black/80">{label}</span>
       </div>
       <span className={`text-sm font-bold ${amountColor(tx.type)}`}>
-        {formatConverted(tx.amount, currency, exchangeRates)}
+        {formatAmount(tx.amount, tx.currency || 'IDR')}
       </span>
       <span className="text-xs font-semibold truncate text-brand-black/70">{acc?.name}</span>
       <span className="text-xs text-brand-black/50 truncate">{tx.note}</span>
@@ -95,7 +95,7 @@ function TransactionFilters({ typeFilter, setTypeFilter, accountFilter, setAccou
 }
 
 // ─── Sub-component: Transaction Calendar ─────────────────────────────────────
-function TransactionCalendar({ calendarMonth, setCalendarMonth, calendarDays, selectedDay, setSelectedDay, selectedDayTx, currency = 'IDR', exchangeRates = null }) {
+function TransactionCalendar({ calendarMonth, setCalendarMonth, calendarDays, selectedDay, setSelectedDay, selectedDayTx, formatAmount }) {
   return (
     <div className="flex-1 flex flex-col min-h-0 gap-4">
       <div className="flex items-center justify-between">
@@ -156,7 +156,7 @@ function TransactionCalendar({ calendarMonth, setCalendarMonth, calendarDays, se
             selectedDayTx.map(tx => (
               <div key={tx.id} className="flex justify-between py-1.5 text-xs">
                 <span>{tx.note || tx.type}</span>
-                <span className={`font-bold ${amountColor(tx.type)}`}>{formatConverted(tx.amount, currency, exchangeRates)}</span>
+                <span className={`font-bold ${amountColor(tx.type)}`}>{formatAmount(tx.amount, tx.currency || 'IDR')}</span>
               </div>
             ))
           )}
@@ -391,7 +391,7 @@ function DeleteModal({ isOpen, onConfirm, onCancel }) {
 // ─── Main Content Component ───────────────────────────────────────────────────
 function TransactionsContent() {
   const searchParams = useSearchParams()
-  const { transactions, accounts, categories, tags, addTransaction, updateTransaction, deleteTransaction, isLoaded, currency, exchangeRates } = useDesktop()
+  const { transactions, accounts, categories, tags, addTransaction, updateTransaction, deleteTransaction, isLoaded, currency, convertAmount, formatAmount } = useDesktop()
   const toast = useToast()
 
   const [searchInput, setSearchInput]       = useState('')
@@ -535,10 +535,10 @@ function TransactionsContent() {
     metaCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9F0' } }
     sheet.getRow(2).height = 20
     // Summary
-    const totalInc = filteredTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-    const totalExp = filteredTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+    const totalInc = filteredTransactions.filter(t => t.type === 'income').reduce((s, t) => s + convertAmount(t.amount, t.currency || 'IDR'), 0)
+    const totalExp = filteredTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + convertAmount(t.amount, t.currency || 'IDR'), 0)
     const net = totalInc - totalExp
-    const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: currency || 'IDR', maximumFractionDigits: 0 }).format(n)
+    const fmt = (n) => formatAmount(n, currency) // format as display currency
     sheet.mergeCells('A3:C3')
     sheet.getCell('A3').value = `Total Income: ${fmt(totalInc)}`
     sheet.getCell('A3').font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF059669' } }
@@ -633,12 +633,12 @@ function TransactionsContent() {
     a.download = `finvera_transactions_${now.toISOString().slice(0, 10)}.xlsx`
     a.click()
     URL.revokeObjectURL(url)
-  }, [filteredTransactions, categories, accounts, currency])
+  }, [filteredTransactions, categories, accounts, currency, convertAmount, formatAmount])
 
   const { totalIncome, totalExpense } = useMemo(() => ({
-    totalIncome:  filteredTransactions.filter(t => t.type === 'income').reduce((a, t) => a + t.amount, 0),
-    totalExpense: filteredTransactions.filter(t => t.type === 'expense').reduce((a, t) => a + t.amount, 0),
-  }), [filteredTransactions])
+    totalIncome:  filteredTransactions.filter(t => t.type === 'income').reduce((a, t) => a + convertAmount(t.amount, t.currency || 'IDR'), 0),
+    totalExpense: filteredTransactions.filter(t => t.type === 'expense').reduce((a, t) => a + convertAmount(t.amount, t.currency || 'IDR'), 0),
+  }), [filteredTransactions, convertAmount])
 
   const groupedTransactions = useMemo(() => {
     const groups = {}
@@ -755,10 +755,10 @@ function TransactionsContent() {
           </span>
           <div className="flex items-center gap-6">
             <span className="text-xs font-bold text-brand-black/50">
-              Income <span className="text-emerald-500">{formatConverted(totalIncome, currency, exchangeRates)}</span>
+              Income <span className="text-emerald-500">{formatAmount(totalIncome, currency)}</span>
             </span>
             <span className="text-xs font-bold text-brand-black/50">
-              Expense <span className="text-rose-500">{formatConverted(totalExpense, currency, exchangeRates)}</span>
+              Expense <span className="text-rose-500">{formatAmount(totalExpense, currency)}</span>
             </span>
           </div>
         </div>
@@ -786,10 +786,9 @@ function TransactionsContent() {
                     <TxRow
                       key={tx.id} tx={tx}
                       accounts={accounts} categories={categories}
-                      onDelete={(id) => { setTxToDelete(id); setDeleteModalOpen(true) }}
+                      onDelete={handleDeleteConfirm}
                       onEdit={openEdit}
-                      currency={currency}
-                      exchangeRates={exchangeRates}
+                      formatAmount={formatAmount}
                     />
                   ))}
                 </div>
@@ -824,8 +823,7 @@ function TransactionsContent() {
             selectedDay={selectedDay}
             setSelectedDay={setSelectedDay}
             selectedDayTx={selectedDayTx}
-            currency={currency}
-            exchangeRates={exchangeRates}
+            formatAmount={formatAmount}
           />
         )}
       </div>

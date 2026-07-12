@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { Landmark, CreditCard, PiggyBank, PlusCircle, Pencil, X, Trash2 } from 'lucide-react'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
 import CurrencyInput from '@/components/ui/CurrencyInput'
-import { formatCurrency } from '@/lib/currency'
 import { useToast } from '@/components/ui/Toast'
 
 const ACCOUNT_CATEGORIES = ['Cash', 'Checking', 'Savings', 'Credit Card', 'Investment', 'Wallet', 'Other']
@@ -186,8 +185,8 @@ function AccountModal({ isOpen, onClose, onSubmit, editAccount = null, accounts 
 }
 
 // ── Sub-component: Account Row ────────────────────────────────────────────────
-function AccountRow({ acc, isBalanceVisible, openEdit, setDeletingAccount, currency = 'IDR' }) {
-  const fmt = (n) => (isBalanceVisible ? formatCurrency(Math.abs(n), currency) : formatCurrency(0, currency).replace(/0([.,]0+)?/, '•••••••'))
+function AccountRow({ acc, isBalanceVisible, openEdit, setDeletingAccount, formatAmount, currency }) {
+  const fmt = (n) => (isBalanceVisible ? formatAmount(Math.abs(n), acc.currency || 'IDR') : formatAmount(0, 'IDR').replace(/0([.,]0+)?/, '•••••••'))
   return (
     <div className="flex items-center justify-between p-4 rounded-2xl bg-base-light hover:bg-brand-black/5 transition-colors border border-transparent hover:border-brand-black/10 group">
       <div className="flex items-center gap-4">
@@ -233,7 +232,7 @@ function AccountRow({ acc, isBalanceVisible, openEdit, setDeletingAccount, curre
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AccountsPage() {
-  const { accounts, addAccount, updateAccount, deleteAccount, isBalanceVisible, isLoaded, currency } = useDesktop()
+  const { accounts, addAccount, updateAccount, deleteAccount, isBalanceVisible, isLoaded, currency, convertAmount, formatAmount } = useDesktop()
   const toast = useToast()
   
   const [modalOpen, setModalOpen]           = useState(false)
@@ -248,10 +247,10 @@ export default function AccountsPage() {
     </div>
   )
 
-  const totalAssets      = accounts.filter(a => a.type === 'asset').reduce((s, a) => s + a.balance, 0)
-  const totalLiabilities = accounts.filter(a => a.type === 'liability').reduce((s, a) => s + Math.abs(a.balance), 0)
+  const totalAssets      = accounts.filter(a => a.type === 'asset').reduce((s, a) => s + convertAmount(a.balance, a.currency || 'IDR'), 0)
+  const totalLiabilities = accounts.filter(a => a.type === 'liability').reduce((s, a) => s + Math.abs(convertAmount(a.balance, a.currency || 'IDR')), 0)
   const netAssets        = totalAssets - totalLiabilities
-  const fmt = (n) => (isBalanceVisible ? formatCurrency(n, currency) : formatCurrency(0, currency).replace(/0([.,]0+)?/, '•••••••'))
+  const fmt = (n) => (isBalanceVisible ? formatAmount(n, currency) : formatAmount(0, currency).replace(/0([.,]0+)?/, '•••••••'))
 
   const openAdd = () => { setEditingAccount(null); setModalOpen(true) }
   const openEdit = (acc) => { setEditingAccount(acc); setModalOpen(true) }
@@ -344,14 +343,14 @@ export default function AccountsPage() {
           )}
           {topLevelAccounts.map(acc => (
             <div key={acc.id} className="space-y-2">
-              <AccountRow acc={acc} isBalanceVisible={isBalanceVisible} openEdit={openEdit} setDeletingAccount={setDeletingAccount} currency={currency} />
+              <AccountRow acc={acc} isBalanceVisible={isBalanceVisible} openEdit={openEdit} setDeletingAccount={setDeletingAccount} formatAmount={formatAmount} currency={currency} />
               
               {getChildren(acc.id).length > 0 && (
                 <div className="ml-6 pl-4 border-l-2 border-brand-black/5 space-y-2 relative">
                   {getChildren(acc.id).map(child => (
                     <div key={child.id} className="relative">
                       <div className="absolute top-1/2 -left-[18px] w-4 border-t-2 border-brand-black/5 -translate-y-1/2" />
-                      <AccountRow acc={child} isBalanceVisible={isBalanceVisible} openEdit={openEdit} setDeletingAccount={setDeletingAccount} currency={currency} />
+                      <AccountRow acc={child} isBalanceVisible={isBalanceVisible} openEdit={openEdit} setDeletingAccount={setDeletingAccount} formatAmount={formatAmount} currency={currency} />
                     </div>
                   ))}
                 </div>

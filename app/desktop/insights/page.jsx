@@ -7,7 +7,6 @@ import { EZ_EXPENSE_COLOR, EZ_INCOME_COLOR } from '@/lib/chart/colors'
 import { mdiCompassOutline, mdiChevronDown } from '@/lib/icons/mdi'
 import { useTheme } from '@/components/desktop/ThemeProvider'
 import { useDesktop } from '@/components/desktop/DesktopProvider'
-import { formatConverted } from '@/lib/currency'
 
 const QUICK_RANGES = ['This Week', 'This Month', 'This Year', 'All Time', 'Custom']
 
@@ -43,7 +42,7 @@ function getRangeBounds(range, customStart, customEnd) {
 }
 
 export default function InsightsPage() {
-  const { transactions, categories, accounts, isLoaded, currency, exchangeRates } = useDesktop()
+  const { transactions, categories, accounts, isLoaded, currency, convertAmount, formatAmount } = useDesktop()
   const { resolvedTheme } = useTheme()
   const [dimension, setDimension] = useState('category')
   const [typeFilter, setTypeFilter] = useState('expense')
@@ -73,13 +72,13 @@ export default function InsightsPage() {
           : dimension === 'account'
           ? accounts.find(a => a.id === tx.accountId)?.name || 'Unknown'
           : tx.note || 'No description'
-      map[key] = (map[key] || 0) + tx.amount
+      map[key] = (map[key] || 0) + convertAmount(tx.amount, tx.currency || 'IDR')
     })
     return Object.entries(map)
       .map(([name, amount]) => ({ name, amount }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 15)
-  }, [transactions, categories, accounts, dimension, typeFilter, accountFilter, start, end])
+  }, [transactions, categories, accounts, dimension, typeFilter, accountFilter, start, end, convertAmount])
 
   const totalAmount = useMemo(() => chartItems.reduce((s, i) => s + i.amount, 0), [chartItems])
 
@@ -88,9 +87,9 @@ export default function InsightsPage() {
     () => buildHorizontalBarOption(
       chartItems,
       barColor,
-      { formatValue: (v) => formatConverted(v, currency, exchangeRates) }
+      { formatValue: (v) => formatAmount(v, currency) }
     ),
-    [chartItems, barColor, currency, exchangeRates, resolvedTheme]
+    [chartItems, barColor, currency, formatAmount, resolvedTheme]
   )
 
   if (!isLoaded) return (
@@ -178,7 +177,7 @@ export default function InsightsPage() {
           <div>
             <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider">Top {Math.min(chartItems.length, 15)} items</p>
             <p className={`text-lg font-bold ${typeFilter === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}>
-              {formatConverted(totalAmount, currency, exchangeRates)}
+              {formatAmount(totalAmount, currency)}
             </p>
           </div>
           <div className="h-8 w-px bg-brand-black/10" />
