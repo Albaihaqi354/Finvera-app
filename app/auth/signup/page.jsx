@@ -242,7 +242,7 @@ function SignupPage() {
       {/* Main Container */}
       <div className="w-full max-w-2xl z-10 flex flex-col items-center py-8">
         {/* Logo centered above card */}
-        <div className="mb-6">
+        <div className="mb-3">
           <Logo />
         </div>
         {/* Card */}

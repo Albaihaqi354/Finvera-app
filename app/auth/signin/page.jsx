@@ -80,7 +80,7 @@ function SigninPage() {
 
       <div className="w-full max-w-sm z-10 flex flex-col items-center">
         {/* Logo centered above card */}
-        <div className="mb-6">
+        <div className="mb-3">
           <Logo />
         </div>
 

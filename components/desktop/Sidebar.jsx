@@ -112,24 +112,25 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
           <MdiIcon path={mdiClose} size={18} className="text-brand-black/60" />
         </button>
 
-        {/* Desktop collapse toggle */}
-        <div className={`hidden lg:flex ${isCollapsed ? 'justify-center' : 'justify-end'} mb-1 px-1`}>
+        {/* Sidebar Header: Logo and Desktop Toggle */}
+        <div className={`flex items-center mb-3 mt-1 ${isCollapsed ? 'flex-col gap-4 px-1 pt-2' : 'justify-between pr-2 pl-3 pt-1'}`}>
+          {/* Logo */}
+          <div className="flex items-center">
+            {isCollapsed
+              ? <FinveraLogo variant="icon" size="sm" priority />
+              : <FinveraLogo variant="full" size="sm" priority />
+            }
+          </div>
+
+          {/* Desktop collapse toggle */}
           <button
             type="button"
             onClick={onToggleCollapse}
             title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="p-1.5 rounded-xl hover:bg-brand-black/10 transition-colors cursor-pointer text-brand-black/50 hover:text-brand-black/70"
+            className="hidden lg:block p-1.5 rounded-xl hover:bg-brand-black/10 transition-colors cursor-pointer text-brand-black/50 hover:text-brand-black/70"
           >
             <MdiIcon path={isCollapsed ? mdiChevronRight : mdiChevronLeft} size={18} />
           </button>
-        </div>
-
-        {/* Logo header */}
-        <div className={`flex items-center mb-3 px-1 ${isCollapsed ? 'justify-center' : 'pl-3'}`}>
-          {isCollapsed
-            ? <FinveraLogo variant="icon" size="sm" priority />
-            : <FinveraLogo variant="full" size="sm" priority />
-          }
         </div>
 
         <div className="space-y-0.5 flex-1 min-w-0">

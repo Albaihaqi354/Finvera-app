@@ -16,11 +16,11 @@ import { useTheme } from '@/components/desktop/ThemeProvider'
  */
 
 const SIZE_MAP = {
-  xs: { w: 32, h: 32, cls: 'h-8 w-auto' },
-  sm: { w: 100, h: 40, cls: 'h-10 w-auto' },
-  md: { w: 140, h: 48, cls: 'h-12 w-auto' },
-  lg: { w: 190, h: 64, cls: 'h-16 w-auto' },
-  xl: { w: 280, h: 96, cls: 'h-24 w-auto' },
+  xs: { w: 48, h: 48, cls: 'h-12 w-auto' },
+  sm: { w: 160, h: 64, cls: 'h-16 w-auto' },
+  md: { w: 220, h: 80, cls: 'h-20 w-auto' },
+  lg: { w: 280, h: 96, cls: 'h-24 w-auto' },
+  xl: { w: 400, h: 128, cls: 'h-32 w-auto' },
 }
 
 const ICON_SIZE_MAP = {

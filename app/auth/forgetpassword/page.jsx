@@ -8,7 +8,7 @@ export default function ForgetPasswordPage() {
       {/* Main Container */}
       <div className="flex flex-col items-center justify-center max-w-md w-full">
         {/* Logo centered above form */}
-        <div className="mb-6">
+        <div className="mb-3">
           <Logo />
         </div>
 

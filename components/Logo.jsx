@@ -8,7 +8,7 @@ import FinveraLogo from '@/components/FinveraLogo'
  */
 export default function Logo() {
   return (
-    <div className="flex justify-center mb-6">
+    <div className="flex justify-center">
       <FinveraLogo variant="full" size="lg" priority />
     </div>
   )
