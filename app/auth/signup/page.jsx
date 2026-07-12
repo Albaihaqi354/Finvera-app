@@ -235,14 +235,16 @@ function SignupPage() {
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-brand-primary font-ibm p-4 sm:p-6 overflow-hidden">
       
-      <Logo />
-      
       {/* Background Shapes */}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-surface/10 blur-[100px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full bg-[#E6923F]/20 blur-[120px] pointer-events-none" />
 
       {/* Main Container */}
-      <div className="w-full max-w-2xl z-10 flex flex-col items-center mt-12 sm:mt-16">
+      <div className="w-full max-w-2xl z-10 flex flex-col items-center py-8">
+        {/* Logo centered above card */}
+        <div className="mb-6">
+          <Logo />
+        </div>
         {/* Card */}
         <section className="bg-[#fcf8f4] p-6 sm:p-8 rounded-3xl shadow-2xl border border-brand-black/5 w-full relative z-10 flex flex-col gap-6 sm:gap-8">
           {/* Progress Stepper */}

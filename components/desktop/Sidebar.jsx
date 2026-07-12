@@ -23,6 +23,7 @@ import {
 } from '@/lib/icons/mdi'
 import { useDesktop } from './DesktopProvider'
 import { useToast } from '@/components/ui/Toast'
+import FinveraLogo from '@/components/FinveraLogo'
 
 function NavSection({ title, collapsed }) {
   if (collapsed) return <div className="my-2 border-t border-brand-black/10 mx-2" />
@@ -121,6 +122,14 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
           >
             <MdiIcon path={isCollapsed ? mdiChevronRight : mdiChevronLeft} size={18} />
           </button>
+        </div>
+
+        {/* Logo header */}
+        <div className={`flex items-center mb-3 px-1 ${isCollapsed ? 'justify-center' : 'pl-3'}`}>
+          {isCollapsed
+            ? <FinveraLogo variant="icon" size="sm" priority />
+            : <FinveraLogo variant="full" size="sm" priority />
+          }
         </div>
 
         <div className="space-y-0.5 flex-1 min-w-0">

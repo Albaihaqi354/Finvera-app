@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { api, removeToken } from '@/lib/api/client'
-import Image from 'next/image'
+import FinveraLogo from '@/components/FinveraLogo'
 import MdiIcon from '@/components/icons/MdiIcon'
 import {
   mdiAccount,
@@ -69,15 +69,14 @@ export default function Navbar({ onMenuClick }) {
           </button>
 
           {/* Logo — shown on mobile (sidebar hidden), hidden on lg+ (sidebar shows logo) */}
-          <div className="lg:hidden">
-            <Image
-              src="/image/Finvera-logo.png"
-              alt="Finvera Logo"
-              width={120}
-              height={40}
-              className="h-7 w-auto object-contain"
-              priority
-            />
+          <div className="lg:hidden flex items-center">
+            {/* icon only on very small screens, full logo on sm+ */}
+            <span className="sm:hidden">
+              <FinveraLogo variant="icon" size="sm" priority />
+            </span>
+            <span className="hidden sm:block">
+              <FinveraLogo variant="full" size="sm" priority />
+            </span>
           </div>
         </div>
 

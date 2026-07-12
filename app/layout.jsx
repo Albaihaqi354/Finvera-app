@@ -17,8 +17,15 @@ const roboto = Roboto({
 });
 
 export const metadata = {
-  title: "Finvera App",
-  description: "A premium financial application",
+  title: "Finvera — Personal Finance App",
+  description: "A premium personal finance and bookkeeping application. Track expenses, analyze your financial health, and achieve your goals.",
+  icons: {
+    icon: [
+      { url: '/image/favicon.png', type: 'image/png' },
+    ],
+    shortcut: '/image/favicon.png',
+    apple: '/image/icon.png',
+  },
 };
 
 const themeInitScript = `(function(){try{var t=localStorage.getItem('finvera_theme');var d=t==='dark'||!t||(t==='system'&&!window.matchMedia('(prefers-color-scheme: light)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`

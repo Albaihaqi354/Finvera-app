@@ -68,8 +68,6 @@ function SigninPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-brand-primary font-ibm p-4 sm:p-8 overflow-hidden">
-      
-      <Logo />
 
       {/* Top right language switcher */}
       <div 
@@ -81,8 +79,13 @@ function SigninPage() {
       </div>
 
       <div className="w-full max-w-sm z-10 flex flex-col items-center">
+        {/* Logo centered above card */}
+        <div className="mb-6">
+          <Logo />
+        </div>
+
         {/* Card */}
-        <section className="bg-surface p-6 sm:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-black/5 w-full relative z-10 mt-6">
+        <section className="bg-surface p-6 sm:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-black/5 w-full relative z-10">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-brand-black">
               {t('log_in')}
