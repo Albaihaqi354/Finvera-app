@@ -202,24 +202,14 @@ function SigninPage() {
           {/* Demo Accounts */}
           <div className="mt-8 pt-6 border-t border-black/5 dark:border-white/5 space-y-3">
             <p className="text-xs font-bold text-base-gray-1 text-center uppercase tracking-wider">{t('demo_accounts')}</p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => { setUsername('demo'); setPassword('ezbookkeeping'); setError('') }}
-                className="text-left p-3 rounded-xl bg-base-light hover:bg-brand-black/5 border border-transparent hover:border-brand-black/10 transition-all cursor-pointer"
-              >
-                <p className="text-xs font-bold text-brand-black">demo</p>
-                <p className="text-[10px] font-medium text-base-gray-1 mt-0.5">password: ezbookkeeping</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setUsername('admin'); setPassword('admin123'); setError('') }}
-                className="text-left p-3 rounded-xl bg-base-light hover:bg-brand-black/5 border border-transparent hover:border-brand-black/10 transition-all cursor-pointer"
-              >
-                <p className="text-xs font-bold text-brand-black">admin</p>
-                <p className="text-[10px] font-medium text-base-gray-1 mt-0.5">password: admin123</p>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => { setUsername('admin'); setPassword('admin123@'); setError('') }}
+              className="w-full text-left p-3 rounded-xl bg-base-light hover:bg-brand-black/5 border border-transparent hover:border-brand-black/10 transition-all cursor-pointer"
+            >
+              <p className="text-xs font-bold text-brand-black">admin</p>
+              <p className="text-[10px] font-medium text-base-gray-1 mt-0.5">password: admin123@</p>
+            </button>
             <p className="text-[10px] text-base-gray-2 text-center">{t('demo_autofill')}</p>
           </div>
         </section>

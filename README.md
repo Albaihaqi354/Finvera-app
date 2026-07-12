@@ -7,6 +7,16 @@ Antarmuka web untuk aplikasi keuangan pribadi **Finvera**, dibangun dengan **Nex
 
 ---
 
+## 🌐 Live Demo
+
+**[➜ Buka Finvera di Browser](https://finvera-app.vercel.app)**
+
+| Akun Demo | Password |
+|---|---|
+| `admin` | `admin123@` |
+
+---
+
 ## Daftar Isi
 
 - [Tentang](#tentang)
