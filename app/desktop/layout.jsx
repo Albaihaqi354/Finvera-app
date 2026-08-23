@@ -5,6 +5,7 @@ import Navbar from '@/components/desktop/Navbar'
 import AuthGuard from '@/components/desktop/AuthGuard'
 import { DesktopProvider } from '@/components/desktop/DesktopProvider'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import CommandPalette from '@/components/desktop/CommandPalette'
 
 export default function DesktopLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -27,6 +28,7 @@ export default function DesktopLayout({ children }) {
                 {children}
               </ErrorBoundary>
             </main>
+            <CommandPalette />
           </div>
         </div>
       </DesktopProvider>

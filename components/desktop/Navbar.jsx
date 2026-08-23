@@ -11,6 +11,7 @@ import {
   mdiCogOutline,
   mdiLogout,
   mdiMenu,
+  mdiBellOutline,
 } from '@/lib/icons/mdi'
 
 export default function Navbar({ onMenuClick }) {
@@ -88,8 +89,19 @@ export default function Navbar({ onMenuClick }) {
           </div>
         </div>
 
-        {/* Right: user dropdown */}
-        <div className="relative" ref={dropdownRef}>
+        {/* Right: notifications + user dropdown */}
+        <div className="flex items-center gap-2 lg:gap-4 relative" ref={dropdownRef}>
+          {/* Notifications */}
+          <button
+            type="button"
+            className="relative p-2 rounded-xl hover:bg-brand-black/5 transition-colors text-brand-black/60 focus:outline-none cursor-pointer"
+            aria-label="Notifications"
+          >
+            <div className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-surface"></div>
+            <MdiIcon path={mdiBellOutline} size={20} />
+          </button>
+
+          {/* User dropdown */}
           <button
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}

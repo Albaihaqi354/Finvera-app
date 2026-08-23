@@ -40,17 +40,41 @@ export default function OverviewPage() {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const yearStart  = new Date(now.getFullYear(), 0, 1)
 
+    const prevTodayStart = new Date(todayStart); prevTodayStart.setDate(todayStart.getDate() - 1)
+    const prevTodayEnd   = new Date(todayEnd); prevTodayEnd.setDate(todayEnd.getDate() - 1)
+    const prevWeekStart  = new Date(weekStart); prevWeekStart.setDate(weekStart.getDate() - 7)
+    const prevWeekEnd    = new Date(todayEnd); prevWeekEnd.setDate(todayEnd.getDate() - 7)
+    const prevMonthStart = new Date(monthStart); prevMonthStart.setMonth(monthStart.getMonth() - 1)
+    const prevMonthEnd   = new Date(todayEnd); prevMonthEnd.setMonth(todayEnd.getMonth() - 1)
+    const prevYearStart  = new Date(yearStart); prevYearStart.setFullYear(yearStart.getFullYear() - 1)
+    const prevYearEnd    = new Date(todayEnd); prevYearEnd.setFullYear(todayEnd.getFullYear() - 1)
+
     const fmtRange = (start, end) => {
       const opts = { month: 'short', day: 'numeric', year: 'numeric' }
       if (start.toDateString() === end.toDateString()) return start.toLocaleDateString('en-US', opts)
       return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}–${end.toLocaleDateString('en-US', opts)}`
     }
 
+    const calcTrend = (curr, prev) => {
+      if (prev === 0) return null
+      return Math.round(((curr - prev) / prev) * 100)
+    }
+
+    const getStats = (start, end, prevStart, prevEnd) => {
+      const curr = getTotalsForRange(start, end)
+      const prev = getTotalsForRange(prevStart, prevEnd)
+      return {
+        ...curr,
+        incomeTrend: calcTrend(curr.income, prev.income),
+        expenseTrend: calcTrend(curr.expense, prev.expense)
+      }
+    }
+
     return [
-      { title: 'Today',      icon: mdiCalendarOutline, ...getTotalsForRange(todayStart, todayEnd),             date: fmtRange(todayStart, todayEnd)  },
-      { title: 'This Week',  icon: mdiCalendarOutline, ...getTotalsForRange(startOfDay(weekStart), todayEnd),  date: fmtRange(weekStart, now)          },
-      { title: 'This Month', icon: mdiCalendarOutline, ...getTotalsForRange(monthStart, todayEnd),             date: fmtRange(monthStart, now)         },
-      { title: 'This Year',  icon: mdiLayers,          ...getTotalsForRange(yearStart, todayEnd),              date: String(now.getFullYear())          },
+      { title: 'Today',      icon: mdiCalendarOutline, ...getStats(todayStart, todayEnd, prevTodayStart, prevTodayEnd),             date: fmtRange(todayStart, todayEnd)  },
+      { title: 'This Week',  icon: mdiCalendarOutline, ...getStats(startOfDay(weekStart), todayEnd, prevWeekStart, prevWeekEnd),  date: fmtRange(weekStart, now)          },
+      { title: 'This Month', icon: mdiCalendarOutline, ...getStats(monthStart, todayEnd, prevMonthStart, prevMonthEnd),             date: fmtRange(monthStart, now)         },
+      { title: 'This Year',  icon: mdiLayers,          ...getStats(yearStart, todayEnd, prevYearStart, prevYearEnd),              date: String(now.getFullYear())          },
     ]
   }, [getTotalsForRange, now])
 
@@ -127,7 +151,7 @@ export default function OverviewPage() {
                   type="button"
                   onClick={() => setHeroMode(m.key)}
                   className={`px-3 py-1 rounded-md text-xs font-bold cursor-pointer transition-all ${
-                    heroMode === m.key ? 'bg-surface shadow-sm text-brand-black' : 'text-brand-black/40 hover:text-brand-black/60'
+                    heroMode === m.key ? 'bg-surface shadow-sm text-brand-black' : 'text-brand-black/60 hover:text-brand-black/60'
                   }`}
                 >{m.label}</button>
               ))}
@@ -141,7 +165,7 @@ export default function OverviewPage() {
                 {mask(activeHero.value)}
               </span>
             </div>
-            <p className="text-sm font-medium text-brand-black/40">
+            <p className="text-sm font-medium text-brand-black/60">
               Monthly {otherHero.label.toLowerCase()}{' '}
               <span className="font-bold" style={{ color: otherHero.color }}>
                 {mask(otherHero.value)}
@@ -177,7 +201,7 @@ export default function OverviewPage() {
         {/* ── Asset Summary ── */}
         <div className="col-span-12 lg:col-span-7 bg-surface rounded-3xl p-5 shadow-sm border border-brand-black/5">
           <h3 className="text-base font-bold mb-0.5">Asset Summary</h3>
-          <p className="text-xs font-medium text-brand-black/40 mb-5">
+          <p className="text-xs font-medium text-brand-black/60 mb-5">
             {accounts.length} account{accounts.length !== 1 ? 's' : ''} recorded
           </p>
           <div className="flex flex-wrap items-center gap-5 md:gap-8">
@@ -186,7 +210,7 @@ export default function OverviewPage() {
                 <MdiIcon path={mdiBankOutline} size={20} className="text-brand-black/80" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider mb-0.5">Total Assets</p>
+                <p className="text-[10px] font-bold text-brand-black/60 uppercase tracking-wider mb-0.5">Total Assets</p>
                 <p className="text-base font-bold">{mask(totalAssets)}</p>
               </div>
             </div>
@@ -195,7 +219,7 @@ export default function OverviewPage() {
                 <MdiIcon path={mdiCreditCardOutline} size={20} />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider mb-0.5">Liabilities</p>
+                <p className="text-[10px] font-bold text-brand-black/60 uppercase tracking-wider mb-0.5">Liabilities</p>
                 <p className="text-base font-bold text-rose-500">{mask(totalLiabilities)}</p>
               </div>
             </div>
@@ -204,7 +228,7 @@ export default function OverviewPage() {
                 <MdiIcon path={mdiPiggyBankOutline} size={20} />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-wider mb-0.5">Net Assets</p>
+                <p className="text-[10px] font-bold text-brand-black/60 uppercase tracking-wider mb-0.5">Net Assets</p>
                 <p className={`text-base font-bold ${netAssets >= 0 ? 'text-brand-black' : 'text-rose-500'}`}>{mask(netAssets)}</p>
               </div>
             </div>
@@ -223,7 +247,7 @@ export default function OverviewPage() {
                 </div>
               ))}
               {accounts.length > 5 && (
-                <span className="text-xs font-bold text-brand-black/40 self-center">+{accounts.length - 5} more</span>
+                <span className="text-xs font-bold text-brand-black/60 self-center">+{accounts.length - 5} more</span>
               )}
             </div>
           )}
@@ -232,24 +256,40 @@ export default function OverviewPage() {
 
       <div className="grid grid-cols-12 gap-6">
         {/* ── Period Cards ── */}
-        <div className="col-span-12 lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="col-span-12 lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {periodCards.map((item) => (
-            <div key={item.title} className="bg-surface rounded-2xl p-4 border border-brand-black/5 shadow-sm">
-              <div className="w-7 h-7 rounded-full bg-brand-black/5 flex items-center justify-center text-brand-black/60 mb-2.5">
-                <MdiIcon path={item.icon} size={16} />
-              </div>
-              <p className="text-xs font-bold text-brand-black/60 mb-2">{item.title}</p>
-              <div className="space-y-1 mb-2.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: EZ_INCOME_COLOR }} />
-                  <p className="text-sm font-bold" style={{ color: EZ_INCOME_COLOR }}>{mask(item.income)}</p>
+            <div key={item.title} className="bg-surface rounded-3xl p-5 border border-brand-black/10 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="w-8 h-8 rounded-full bg-brand-black/5 flex items-center justify-center text-brand-black/70 mb-3">
+                  <MdiIcon path={item.icon} size={18} />
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: EZ_EXPENSE_COLOR }} />
-                  <p className="text-sm font-bold" style={{ color: EZ_EXPENSE_COLOR }}>{mask(item.expense)}</p>
+                <p className="text-sm font-bold text-brand-black/70 mb-3">{item.title}</p>
+                <div className="space-y-1.5 mb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: EZ_INCOME_COLOR }} />
+                      <p className="text-sm font-bold" style={{ color: EZ_INCOME_COLOR }}>{mask(item.income)}</p>
+                    </div>
+                    {item.incomeTrend !== null && (
+                      <span className={`text-[10px] font-bold ${item.incomeTrend >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        {item.incomeTrend >= 0 ? '↑' : '↓'} {Math.abs(item.incomeTrend)}%
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: EZ_EXPENSE_COLOR }} />
+                      <p className="text-sm font-bold" style={{ color: EZ_EXPENSE_COLOR }}>{mask(item.expense)}</p>
+                    </div>
+                    {item.expenseTrend !== null && (
+                      <span className={`text-[10px] font-bold ${item.expenseTrend <= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        {item.expenseTrend > 0 ? '↑' : '↓'} {Math.abs(item.expenseTrend)}%
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-              <p className="text-[10px] font-semibold text-brand-black/30">{item.date}</p>
+              <p className="text-[11px] font-semibold text-brand-black/50">{item.date}</p>
             </div>
           ))}
         </div>

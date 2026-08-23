@@ -9,428 +9,17 @@ import CurrencyInput from '@/components/ui/CurrencyInput'
 import { formatCurrency } from '@/lib/currency'
 import { useToast } from '@/components/ui/Toast'
 
+import TxRow from './components/TxRow'
+import TransactionFilters from './components/TransactionFilters'
+import TransactionCalendar from './components/TransactionCalendar'
+import TransactionModal from './components/TransactionModal'
+import DeleteModal from './components/DeleteModal'
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const amountColor = (type) => {
   if (type === 'income')  return 'text-emerald-500'
   if (type === 'expense') return 'text-rose-500'
   return 'text-brand-black/70'
-}
-
-function TxRow({ tx, accounts, categories, onDelete, onEdit, formatAmount }) {
-  const acc = accounts.find(a => a.id === tx.accountId)
-  const cat = categories.find(c => c.id === tx.categoryId)
-  const isTransfer = tx.type === 'transfer'
-  const label = isTransfer
-    ? `${acc?.name || '?'} → ${accounts.find(a => a.id === tx.targetAccountId)?.name || '?'}`
-    : cat?.name || 'Unknown'
-
-  return (
-    <>
-      {/* Desktop Layout */}
-      <div className="hidden lg:grid grid-cols-[100px_1fr_140px_160px_1fr_72px] gap-2 px-5 py-3.5 border-b hover:bg-base-light items-center group transition-colors">
-        <p className="text-xs font-bold text-brand-black/60">{tx.time}</p>
-        <div className="flex items-center gap-2 min-w-0">
-          {!isTransfer && cat?.icon && (
-            <span className="text-base shrink-0">{cat.icon}</span>
-          )}
-          <span className="text-xs font-semibold truncate text-brand-black/80">{label}</span>
-        </div>
-        <span className={`text-sm font-bold ${amountColor(tx.type)}`}>
-          {formatAmount(tx.amount, tx.currency || 'IDR')}
-        </span>
-        <span className="text-xs font-semibold truncate text-brand-black/70">{acc?.name}</span>
-        <span className="text-xs text-brand-black/50 truncate">{tx.note}</span>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
-          <button
-            type="button"
-            onClick={() => onEdit(tx)}
-            className="p-1.5 text-brand-black/50 hover:text-brand-black hover:bg-brand-black/10 rounded-lg transition-colors cursor-pointer"
-            title="Edit"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onDelete(tx.id)}
-            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-            title="Delete"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Layout */}
-      <div className="lg:hidden flex flex-col gap-2 px-4 py-3.5 border-b hover:bg-base-light transition-colors">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            {!isTransfer && cat?.icon && (
-              <span className="text-lg shrink-0">{cat.icon}</span>
-            )}
-            <span className="text-sm font-bold truncate text-brand-black/80">{label}</span>
-          </div>
-          <span className={`text-sm font-bold shrink-0 ${amountColor(tx.type)}`}>
-            {formatAmount(tx.amount, tx.currency || 'IDR')}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-brand-black/60 font-semibold truncate">
-            <span>{tx.time}</span>
-            <span>•</span>
-            <span className="truncate">{acc?.name}</span>
-          </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={() => onEdit(tx)}
-              className="p-1.5 text-brand-black/50 hover:text-brand-black hover:bg-brand-black/10 rounded-lg transition-colors cursor-pointer"
-              title="Edit"
-            >
-              <Pencil className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onDelete(tx.id)}
-              className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-              title="Delete"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-        {tx.note && (
-          <p className="text-xs text-brand-black/50 italic line-clamp-1 mt-0.5">{tx.note}</p>
-        )}
-      </div>
-    </>
-  )
-}
-
-// ─── Sub-component: Transaction Filters sidebar ───────────────────────────────
-function TransactionFilters({ typeFilter, setTypeFilter, accountFilter, setAccountFilter, accounts }) {
-  return (
-    <div className="space-y-4">
-      <div>
-        <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-2">Transaction Type</p>
-        <select
-          value={typeFilter}
-          onChange={e => setTypeFilter(e.target.value)}
-          className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none"
-        >
-          {['All Types', 'Income', 'Expense', 'Transfer'].map(t => (
-            <option key={t}>{t}</option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <p className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-2">Account</p>
-        <select
-          value={accountFilter}
-          onChange={e => setAccountFilter(e.target.value)}
-          className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-bold text-brand-black/80 cursor-pointer outline-none"
-        >
-          <option>All Accounts</option>
-          {accounts.map(a => (
-            <option key={a.id} value={a.id}>{a.name}</option>
-          ))}
-        </select>
-      </div>
-    </div>
-  )
-}
-
-// ─── Sub-component: Transaction Calendar ─────────────────────────────────────
-function TransactionCalendar({ calendarMonth, setCalendarMonth, calendarDays, selectedDay, setSelectedDay, selectedDayTx, formatAmount }) {
-  return (
-    <div className="flex-1 flex flex-col min-h-0 gap-4">
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}
-          className="p-2 rounded-lg hover:bg-brand-black/5 cursor-pointer"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <span className="text-sm font-bold">
-          {calendarMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
-        </span>
-        <button
-          type="button"
-          onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}
-          className="p-2 rounded-lg hover:bg-brand-black/5 cursor-pointer"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
-      <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-brand-black/40 mb-1">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-          <div key={d}>{d}</div>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 gap-1 flex-1">
-        {calendarDays.map((cell, i) =>
-          cell ? (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setSelectedDay(cell.date)}
-              className={`min-h-16 p-1 rounded-xl border text-left transition-colors cursor-pointer ${
-                selectedDay?.toDateString() === cell.date.toDateString()
-                  ? 'border-brand-black bg-brand-black/5'
-                  : 'border-brand-black/5 hover:border-brand-black/15'
-              }`}
-            >
-              <span className="text-xs font-bold">{cell.day}</span>
-              {cell.count > 0 && (
-                <span className="block mt-1 text-[9px] font-bold text-[#E6923F]">{cell.count} tx</span>
-              )}
-            </button>
-          ) : (
-            <div key={i} />
-          )
-        )}
-      </div>
-      {selectedDay && (
-        <div className="border-t pt-4 max-h-40 overflow-y-auto">
-          <p className="text-xs font-bold text-brand-black/50 mb-2">
-            {selectedDay.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </p>
-          {selectedDayTx.length === 0 ? (
-            <p className="text-xs text-brand-black/40">No transactions on this day.</p>
-          ) : (
-            selectedDayTx.map(tx => (
-              <div key={tx.id} className="flex justify-between py-1.5 text-xs">
-                <span>{tx.note || tx.type}</span>
-                <span className={`font-bold ${amountColor(tx.type)}`}>{formatAmount(tx.amount, tx.currency || 'IDR')}</span>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Sub-component: Add / Edit Transaction Modal ──────────────────────────────
-function TransactionModal({ onClose, accounts, categories, tags, onSubmit, editTx = null, currency = 'IDR' }) {
-  const isEdit = !!editTx
-
-  const [form, setForm] = useState(() => {
-    if (isEdit && editTx) {
-      return {
-        type: editTx.type,
-        amount: editTx.amount,
-        accountId: editTx.accountId || accounts[0]?.id || '',
-        targetAccountId: editTx.targetAccountId || accounts[1]?.id || accounts[0]?.id || '',
-        categoryId: editTx.categoryId || '',
-        date: editTx.date ? new Date(editTx.date).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
-        note: editTx.note || '',
-        tagIds: editTx.tagIds || []
-      }
-    }
-    return {
-      type: 'expense',
-      amount: '',
-      accountId: accounts[0]?.id || '',
-      targetAccountId: accounts[1]?.id || accounts[0]?.id || '',
-      categoryId: categories.find(c => c.type === 'expense')?.id || '',
-      date: new Date().toISOString().slice(0, 16),
-      note: '',
-      tagIds: []
-    }
-  })
-  const [formError, setFormError] = useState('')
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    setFormError('')
-    const amountVal = parseFloat(form.amount)
-    if (isNaN(amountVal) || amountVal <= 0) { setFormError('Amount must be greater than zero.'); return }
-    if (!form.accountId) { setFormError('Please select an account.'); return }
-    if (form.type === 'transfer' && !form.targetAccountId) { setFormError('Please select a destination account.'); return }
-    if (form.type === 'transfer' && form.accountId === form.targetAccountId) { setFormError('Source and destination accounts must be different.'); return }
-    if (form.type !== 'transfer' && !form.categoryId) { setFormError('Please select a category.'); return }
-    if (form.note && form.note.length > 200) { setFormError('Description cannot exceed 200 characters.'); return }
-
-    onSubmit({
-      type: form.type,
-      amount: parseFloat(form.amount),
-      accountId: form.accountId,
-      targetAccountId: form.type === 'transfer' ? form.targetAccountId : undefined,
-      categoryId: form.type === 'transfer'
-        ? (categories.find(c => c.type === 'transfer')?.id || form.categoryId)
-        : form.categoryId,
-      date: new Date(form.date).toISOString(),
-      note: form.note,
-      tagIds: form.tagIds
-    })
-    onClose()
-  }
-
-  const toggleTag = (tagId) => {
-    setForm(prev => ({
-      ...prev,
-      tagIds: prev.tagIds.includes(tagId) ? prev.tagIds.filter(id => id !== tagId) : [...prev.tagIds, tagId]
-    }))
-  }
-
-  const typeColors = {
-    expense:  { border: 'border-rose-400 bg-rose-50 text-rose-600',     label: 'text-rose-500'    },
-    income:   { border: 'border-emerald-400 bg-emerald-50 text-emerald-600', label: 'text-emerald-500' },
-    transfer: { border: 'border-brand-black/30 bg-brand-black/5 text-brand-black', label: 'text-brand-black' },
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-surface rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="px-6 py-4 border-b border-brand-black/5 flex justify-between items-center bg-base-light sticky top-0">
-          <h3 className="font-bold text-lg">{isEdit ? 'Edit Transaction' : 'Add Transaction'}</h3>
-          <button type="button" onClick={onClose} className="cursor-pointer hover:bg-brand-black/10 p-1.5 rounded-full transition-colors">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {formError && (
-            <div className="p-3 rounded-xl bg-red-50 text-red-500 text-xs font-bold border border-red-100">{formError}</div>
-          )}
-          {/* Type selector */}
-          <div className="grid grid-cols-3 gap-2">
-            {['expense', 'income', 'transfer'].map(t => (
-              <button
-                key={t} type="button"
-                onClick={() => setForm(p => ({
-                  ...p, type: t,
-                  categoryId: categories.find(c => c.type === (t === 'transfer' ? 'transfer' : t))?.id || p.categoryId
-                }))}
-                className={`py-2 rounded-xl text-xs font-bold capitalize border-2 cursor-pointer transition-colors ${
-                  form.type === t ? typeColors[t]?.border : 'border-transparent bg-base-light text-brand-black/50 hover:bg-brand-black/10'
-                }`}
-              >{t}</button>
-            ))}
-          </div>
-          {/* Amount */}
-          <div>
-            <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Amount</label>
-            <CurrencyInput
-              currency={currency}
-              required
-              value={form.amount}
-              onChange={val => setForm(p => ({ ...p, amount: val }))}
-              placeholder="0"
-              className={`w-full bg-base-light rounded-xl px-4 py-3 text-xl font-bold outline-none border-2 border-transparent focus:border-brand-black/20 transition-colors ${typeColors[form.type]?.label || ''}`}
-            />
-          </div>
-          {/* Account / Transfer */}
-          {form.type === 'transfer' ? (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">From</label>
-                <select value={form.accountId} onChange={e => setForm(p => ({ ...p, accountId: e.target.value }))}
-                  className="w-full bg-base-light rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">To</label>
-                <select value={form.targetAccountId} onChange={e => setForm(p => ({ ...p, targetAccountId: e.target.value }))}
-                  className="w-full bg-base-light rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                </select>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">Account</label>
-                <select value={form.accountId} onChange={e => setForm(p => ({ ...p, accountId: e.target.value }))}
-                  className="w-full bg-base-light rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-brand-black/40 uppercase mb-1 block">Category</label>
-                <select value={form.categoryId} onChange={e => setForm(p => ({ ...p, categoryId: e.target.value }))}
-                  className="w-full bg-base-light rounded-xl px-3 py-2.5 text-sm font-semibold cursor-pointer outline-none border border-transparent focus:border-brand-black/20">
-                  {categories.filter(c => c.type === form.type && !c.parentId).map(c => (
-                    <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
-          {/* Date */}
-          <div>
-            <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">Date & Time</label>
-            <input
-              type="datetime-local" required
-              value={form.date}
-              onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
-              className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm font-semibold outline-none cursor-pointer border border-transparent focus:border-brand-black/20"
-            />
-          </div>
-          {/* Note */}
-          <div>
-            <label className="text-[10px] font-bold text-brand-black/40 uppercase tracking-widest mb-1.5 block">
-              Description <span className="normal-case font-normal">(optional)</span>
-            </label>
-            <input
-              type="text"
-              value={form.note}
-              onChange={e => setForm(p => ({ ...p, note: e.target.value }))}
-              placeholder="Add a note..."
-              maxLength={200}
-              className="w-full bg-base-light rounded-xl px-4 py-2.5 text-sm outline-none border border-transparent focus:border-brand-black/20"
-            />
-          </div>
-          {/* Tags */}
-          {tags.length > 0 && (
-            <div>
-              <p className="text-[10px] font-bold text-brand-black/40 uppercase mb-2">Tags</p>
-              <div className="flex flex-wrap gap-2">
-                {tags.map(tag => (
-                  <button key={tag.id} type="button" onClick={() => toggleTag(tag.id)}
-                    className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer transition-colors ${
-                      form.tagIds.includes(tag.id) ? 'bg-brand-black text-brand-primary' : 'bg-base-light text-brand-black/60 hover:bg-brand-black/10'
-                    }`}>
-                    {tag.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          <button type="submit" className="w-full bg-brand-black text-brand-primary rounded-xl py-3.5 text-sm font-bold cursor-pointer hover:bg-brand-black/80 transition-colors">
-            {isEdit ? 'Save Changes' : 'Save Transaction'}
-          </button>
-        </form>
-      </div>
-    </div>
-  )
-}
-
-// ─── Sub-component: Delete Confirm Modal ─────────────────────────────────────
-function DeleteModal({ isOpen, onConfirm, onCancel }) {
-  if (!isOpen) return null
-  return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-surface rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
-        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Trash2 className="w-8 h-8" />
-        </div>
-        <h3 className="text-xl font-bold text-brand-black mb-2">Delete Transaction</h3>
-        <p className="text-brand-black/60 text-sm mb-6">Are you sure you want to delete this transaction? This action cannot be undone.</p>
-        <div className="flex items-center gap-3">
-          <button onClick={onCancel}
-            className="flex-1 py-3 px-4 bg-brand-black/5 hover:bg-brand-black/10 text-brand-black font-bold rounded-xl transition-colors cursor-pointer text-sm">
-            Cancel
-          </button>
-          <button onClick={onConfirm}
-            className="flex-1 py-3 px-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-colors cursor-pointer text-sm shadow-lg shadow-red-500/20">
-            Yes, Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 // ─── Main Content Component ───────────────────────────────────────────────────
@@ -442,6 +31,8 @@ function TransactionsContent() {
   const [searchInput, setSearchInput]       = useState('')
   const [typeFilter, setTypeFilter]         = useState('All Types')
   const [accountFilter, setAccountFilter]   = useState('All Accounts')
+  const [startDate, setStartDate]           = useState('')
+  const [endDate, setEndDate]               = useState('')
   const [activeSubTab, setActiveSubTab]     = useState('Transaction List')
   const [calendarMonth, setCalendarMonth]   = useState(() => new Date())
   const [selectedDay, setSelectedDay]       = useState(null)
@@ -471,10 +62,12 @@ function TransactionsContent() {
         limit,
         type: typeFilter === 'All Types' ? '' : typeFilter.toLowerCase(),
         accountId: accountFilter === 'All Accounts' ? '' : accountFilter,
-        search: search
+        search: search,
+        startDate: startDate ? new Date(startDate).toISOString() : undefined,
+        endDate: endDate ? new Date(endDate).toISOString() : undefined
       })
       const txs   = Array.isArray(res) ? res : (res.data || [])
-      const total = res.meta?.total_items || 0
+      const total = res.meta?.totalItems || 0
       const normalizedTxs = txs.map(tx => ({
         ...tx,
         accountId:       tx.account?.id       || tx.accountId,
@@ -489,7 +82,7 @@ function TransactionsContent() {
     } finally {
       setIsLoadingServer(false)
     }
-  }, [page, limit, typeFilter, accountFilter, search, isLoaded])
+  }, [page, limit, typeFilter, accountFilter, search, startDate, endDate, isLoaded])
 
   useEffect(() => {
     fetchTransactions()
@@ -749,6 +342,8 @@ function TransactionsContent() {
           typeFilter={typeFilter} setTypeFilter={setTypeFilter}
           accountFilter={accountFilter} setAccountFilter={setAccountFilter}
           accounts={accounts}
+          startDate={startDate} setStartDate={setStartDate}
+          endDate={endDate} setEndDate={setEndDate}
         />
       </div>
 

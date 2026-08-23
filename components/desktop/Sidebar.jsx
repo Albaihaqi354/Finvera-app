@@ -13,7 +13,6 @@ import {
   mdiClipboardTextOutline,
   mdiClipboardTextClockOutline,
   mdiSwapHorizontal,
-  mdiCellphone,
   mdiInformationOutline,
   mdiEyeOutline,
   mdiEyeOffOutline,
@@ -220,7 +219,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
 
           <NavSection title="Miscellaneous" collapsed={isCollapsed} />
           <SidebarItem path={mdiSwapHorizontal} label="Exchange Rates Data" active={isActive('exchange')} onClick={() => navigateTo('exchange')} collapsed={isCollapsed} />
-          <SidebarItem path={mdiCellphone} label="Use on Mobile Device" active={isActive('mobile')} onClick={() => navigateTo('mobile')} collapsed={isCollapsed} />
+
           <SidebarItem path={mdiInformationOutline} label="About" active={isActive('about')} onClick={() => navigateTo('about')} collapsed={isCollapsed} />
         </div>
       </aside>
