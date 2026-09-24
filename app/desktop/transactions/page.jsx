@@ -22,6 +22,18 @@ const amountColor = (type) => {
   return 'text-brand-black/70'
 }
 
+const toIsoDateString = (val, endOfDay = false) => {
+  if (!val) return undefined
+  const d = new Date(val)
+  if (isNaN(d.getTime())) return undefined
+  if (endOfDay) {
+    d.setHours(23, 59, 59, 999)
+  } else {
+    d.setHours(0, 0, 0, 0)
+  }
+  return d.toISOString()
+}
+
 // ─── Main Content Component ───────────────────────────────────────────────────
 function TransactionsContent() {
   const searchParams = useSearchParams()
@@ -63,8 +75,8 @@ function TransactionsContent() {
         type: typeFilter === 'All Types' ? '' : typeFilter.toLowerCase(),
         accountId: accountFilter === 'All Accounts' ? '' : accountFilter,
         search: search,
-        startDate: startDate ? new Date(startDate).toISOString() : undefined,
-        endDate: endDate ? new Date(endDate).toISOString() : undefined
+        startDate: toIsoDateString(startDate, false),
+        endDate: toIsoDateString(endDate, true)
       })
       const txs   = Array.isArray(res) ? res : (res.data || [])
       const total = res.meta?.totalItems || 0
